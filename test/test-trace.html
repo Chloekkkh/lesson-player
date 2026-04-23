@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试：汉字描红 trace</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <style>
+    body { padding: 40px; background: #f0f2f5; }
+    .test-label {
+      position: fixed; top: 12px; right: 16px;
+      background: #4a82ef; color: #fff; padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-label">trace 汉字描红</div>
+
+  <div class="exercise-card" style="max-width:900px;margin:0 auto;">
+    <h2>汉字描红</h2>
+    <p class="question-text">Please watch the demo on the left, then practice writing on the right</p>
+    <div class="trace-area" id="traceArea"></div>
+    <p class="trace-feedback" id="traceFeedback"></p>
+    <div class="trace-stars" id="traceStars"></div>
+  </div>
+
+  <script>
+    window.Sound = { init: function(){}, play: function(n){ console.log('[sound]', n); } };
+    window.Progress = { init: function(){}, setProgress: function(){}, hide: function(){} };
+    window.Celebration = { show: function(){}, hide: function(){} };
+    window.postToParent = function(action, data) { console.log('[→parent]', action, data); };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/exercise.js"></script>
+  <script src="/js/exercise/types/trace.js"></script>
+
+  <script>
+    var slideData = {
+      type: 'exercise',
+      exerciseType: 'trace',
+      char: '三',
+      stars: { '3': 0.85, '2': 0.6, '1': 0.3 }
+    };
+
+    window.addEventListener('load', function() {
+      console.log('Initializing TraceHandler with data:', slideData);
+      Exercise.init(slideData);
+    });
+  </script>
+</body>
+</html>

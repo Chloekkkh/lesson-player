@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试：听音识词 choice (listen)</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <style>
+    body { padding: 40px; background: #f0f2f5; }
+    .test-label {
+      position: fixed; top: 12px; right: 16px;
+      background: #e01873; color: #fff; padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-label">choice listen</div>
+
+  <div class="exercise-card" style="max-width:700px;margin:0 auto;">
+    <button class="play-audio-btn" id="playAudioBtn">▶ 听一听</button>
+    <p class="question-text" id="questionText">请听音频，选择正确的词</p>
+    <div class="options" id="optionsContainer"></div>
+    <button class="submit-btn" id="submitBtn">确认答案</button>
+  </div>
+
+  <script>
+    window.Sound = { init: function(){}, play: function(n){ console.log('[sound]', n); } };
+    window.Progress = { init: function(){}, setProgress: function(){}, hide: function(){} };
+    window.Celebration = { show: function(){}, hide: function(){} };
+    window.postToParent = function(action, data) { console.log('[→parent]', action, data); };
+  </script>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/exercise.js"></script>
+  <script src="/js/exercise/types/choice.js"></script>
+
+  <script>
+    var slideData = {
+      type: 'exercise',
+      exerciseType: 'listen',
+      audioBase: '/courses/lesson-thanks/audio/',
+      questions: [
+        {
+          audio: 'exercise/q1.wav',
+          options: [
+            { id: 'A', text: '谢谢' },
+            { id: 'B', text: '你好' },
+            { id: 'C', text: '再见' },
+            { id: 'D', text: '对不起' }
+          ],
+          answer: 'A'
+        },
+        {
+          audio: 'exercise/q2.wav',
+          options: [
+            { id: 'A', text: '不客气' },
+            { id: 'B', text: '没关系' },
+            { id: 'C', text: '谢谢' },
+            { id: 'D', text: '你好' }
+          ],
+          answer: 'B'
+        }
+      ]
+    };
+
+    window.addEventListener('load', function() {
+      console.log('Initializing ChoiceHandler (listen) with data:', slideData);
+      Exercise.init(slideData);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试：连线配对 match</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <style>
+    body { padding: 40px; background: #f0f2f5; }
+    .test-label {
+      position: fixed; top: 12px; right: 16px;
+      background: #4CAF50; color: #fff; padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-label">match 连线配对</div>
+
+  <div class="exercise-card" style="max-width:900px;margin:0 auto;">
+    <h2>连线配对</h2>
+    <div class="match-area" id="matchArea"></div>
+    <button class="submit-btn" id="submitBtn" style="display:none">确认答案</button>
+  </div>
+
+  <script>
+    window.Sound = { init: function(){}, play: function(n){ console.log('[sound]', n); } };
+    window.Progress = { init: function(){}, setProgress: function(){}, hide: function(){} };
+    window.Celebration = { show: function(){}, hide: function(){} };
+    window.postToParent = function(action, data) { console.log('[→parent]', action, data); };
+  </script>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/exercise.js"></script>
+  <script src="/js/exercise/types/match.js"></script>
+
+  <script>
+    var slideData = {
+      type: 'exercise',
+      exerciseType: 'match',
+      showPinyin: false,
+      pairs: [
+        { left: '谢谢',   right: 'thank you' },
+        { left: '不客气', right: "you're welcome" },
+        { left: '再见',   right: 'goodbye' },
+        { left: '对不起', right: 'sorry' }
+      ]
+    };
+
+    window.addEventListener('load', function() {
+      console.log('Initializing MatchHandler with data:', slideData);
+      Exercise.init(slideData);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试：生词展示 vocab (display)</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <style>
+    body { padding: 40px; background: #f0f2f5; }
+    .test-label {
+      position: fixed; top: 12px; right: 16px;
+      background: #4a82ef; color: #fff; padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-label">vocab display</div>
+
+  <div class="exercise-card" style="max-width:900px;margin:0 auto;">
+    <div class="vocab-grid" id="vocabGrid"></div>
+    <button class="submit-btn" id="nextBtn" style="display:none">下一页 →</button>
+  </div>
+
+  <!-- mock Sound 在加载 sound.js 之前 -->
+  <script>
+    window.Sound = { init: function(){}, play: function(n){ console.log('[sound]', n); } };
+    window.Progress = { init: function(){}, setProgress: function(){}, hide: function(){} };
+    window.Celebration = { show: function(){}, hide: function(){} };
+    window.postToParent = function(action, data) { console.log('[→parent]', action, data); };
+  </script>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/exercise.js"></script>
+  <script src="/js/exercise/types/vocab.js"></script>
+
+  <script>
+    var slideData = {
+      type: 'display',
+      audioBase: '/courses/lesson-thanks/audio/',
+      vocab: [
+        { id: 'w1', hanzi: '谢谢',   pinyin: 'xiè xie',    pos: '动词', en: 'thank you',     audio: 'vocab/w1.wav' },
+        { id: 'w2', hanzi: '不客气', pinyin: 'bù kèqi',   pos: '短语', en: "you're welcome", audio: 'vocab/w2.wav' },
+        { id: 'w3', hanzi: '再见',   pinyin: 'zàijiàn',   pos: '动词', en: 'goodbye',        audio: 'vocab/w3.wav' },
+        { id: 'w4', hanzi: '你好',   pinyin: 'nǐ hǎo',    pos: '动词', en: 'hello',          audio: 'vocab/w4.wav' },
+        { id: 'w5', hanzi: '对不起', pinyin: 'duìbuqǐ',   pos: '动词', en: 'sorry',          audio: 'vocab/w5.wav' },
+        { id: 'w6', hanzi: '没关系', pinyin: 'méi guānxi', pos: '短语', en: "that's okay",   audio: 'vocab/w6.wav' }
+      ],
+      showPinyin: true,
+      showEnglish: true,
+      hasRecording: false
+    };
+
+    window.addEventListener('load', function() {
+      console.log('Initializing VocabHandler with data:', slideData);
+      Exercise.init(slideData);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+/* ============================================================
+   player.css — 播放器专属样式
+   仅被 player.html 引用
+   ============================================================ */
+
+/* ── LOADING ──────────────────────────────────────────────── */
+.loading-screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; background: #f9fbff;
+  z-index: 999;
+  transition: opacity 0.4s ease;
+}
+.loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.loading-spinner {
+  width: 40px; height: 40px;
+  border: 3px solid var(--line);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.loading-screen p { margin: 0; color: var(--body); font-size: 0.95rem; }
+.loading-screen .course-name { color: var(--ink); font-weight: 600; font-size: 1.1rem; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── ERROR ───────────────────────────────────────────────── */
+.error-screen {
+  position: fixed; inset: 0;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 12px; background: #f9fbff;
+}
+.error-screen.visible { display: flex; }
+.error-screen h2 { margin: 0; color: var(--red); }
+.error-screen p  { margin: 0; color: var(--body); }
+
+/* ── PLAYER CONTAINER ─────────────────────────────────────── */
+.player-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  display: none; /* shown after init */
+}
+
+.player-container.visible { display: block; }
+
+.course-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.course-header h1 {
+  margin: 0 0 6px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.course-header p { margin: 0; font-size: 0.9rem; color: var(--body); }
+
+/* ── SLIDES WRAPPER ───────────────────────────────────────── */
+.slides-wrapper {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+}
+
+.slide-frame {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1200px; height: 675px;
+  border: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.slide-frame.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 透明点击拦截层，浮在所有 iframe 之上、确认按钮之下 */
+#clickInterceptor {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* ── OVERLAY SCREENS（start / pause）────────────────────── */
+.overlay-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 9;  /* 最高层 */
+  background: rgba(249, 251, 255, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+}
+.overlay-content {
+  text-align: center;
+  color: var(--blue);
+}
+.overlay-icon {
+  font-size: 3.5rem;
+  margin-bottom: 12px;
+  animation: breathe 1.5s ease-in-out infinite;
+}
+.overlay-content p {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  margin: 0;
+}
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(0.95); }
+}
+
+/* ── PROGRESS BAR ─────────────────────────────────────────── */
+.progress-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.progress-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s linear;
+}
+.progress-time {
+  font-size: 0.8rem;
+  color: var(--body);
+  white-space: nowrap;
+}
+
+/* ── STATUS BAR ───────────────────────────────────────────── */
+.status-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.status-indicator {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 1.5s infinite;
+}
+.status-indicator.paused { background: var(--red); animation: none; }
+.status-indicator.waiting { background: var(--orange); animation: pulse 1s infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+.click-hint { font-size: 0.85rem; color: var(--body); }
+
+/* ── DOTS ─────────────────────────────────────────────────── */
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--line);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+.dot:hover   { background: var(--blue); transform: scale(1.2); }
+.dot.active  {
+  background: var(--blue);
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(74, 130, 239, 0.5);
+}
+
+/* ── CONFIRM OVERLAY ──────────────────────────────────────── */
+.confirm-overlay {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 4;  /* 低于 overlay-screen */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.confirm-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.confirm-overlay button {
+  padding: 10px 28px;
+  border-radius: 50px;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.confirm-overlay button:active { transform: scale(0.96); }
+
+.btn-confirm {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(74, 130, 239, 0.35);
+}
+.btn-confirm:hover { box-shadow: 0 6px 20px rgba(74, 130, 239, 0.5); }
+
+/* ── CONTROL BAR ─────────────────────────────────────────── */
+.control-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.ctrl-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.ctrl-btn:hover {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+.ctrl-btn:active { transform: scale(0.92); }
+
+.ctrl-btn-play {
+  width: 48px;
+  height: 48px;
+  font-size: 1.2rem;
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+.ctrl-btn-play:hover {
+  background: var(--blue-deep);
+  border-color: var(--blue-deep);
+}
+
+.ctrl-btn.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.volume-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 8px;
+}
+
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  outline: none;
+  cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--blue);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.volume-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.volume-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--blue);
+  border: none;
+  cursor: pointer;
+}
+
+/* ── BACK LINK ────────────────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  color: var(--blue);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.back-link:hover { text-decoration: underline; }
+
+/* ── ASSISTANT ────────────────────────────────────────────── */
+.assistant {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: grab;
+}
+
+.assistant-bubble.hidden { display: none !important; }
+
+.assistant.dragging { cursor: grabbing; }
+
+.assistant-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(74, 130, 239, 0.4);
+  flex-shrink: 0;
+  border: 3px solid #fff;
+  order: 2; /* 头像在右侧 */
+}
+
+.assistant-bubble {
+  background: #fff;
+  border-radius: 16px 16px 4px 16px;
+  padding: 10px 16px;
+  box-shadow: 0 4px 20px rgba(32, 55, 102, 0.15);
+  width: 280px;
+  display: flex;
+  align-items: end;
+  border: 1.5px solid var(--line);
+  order: 1; /* 气泡在左侧 */
+}
+
+.assistant-subtitle {
+  font-size: 0.95rem;
+  color: var(--ink);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}

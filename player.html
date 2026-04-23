@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HSK 课程播放器</title>
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/player.css">
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-spinner"></div>
+  <p class="course-name" id="loadingCourseName">加载中...</p>
+  <p id="loadingHint">正在准备课程</p>
+</div>
+
+<!-- Error -->
+<div class="error-screen" id="errorScreen">
+  <h2>加载失败</h2>
+  <p id="errorMessage">无法加载课程配置</p>
+  <a href="index.html">返回课程列表</a>
+</div>
+
+<div class="player-container" id="playerContainer">
+  <a class="back-link" href="index.html">← 返回课程列表</a>
+
+  <div class="course-header">
+    <h1 id="courseTitle">课程标题</h1>
+    <p id="courseDesc">课程描述</p>
+  </div>
+
+  <div class="slides-wrapper" id="player">
+    <!-- 透明点击拦截层，接收 iframe 区域的点击事件 -->
+    <div id="clickInterceptor"></div>
+
+    <!-- 统一遮罩（start / pause）-->
+    <div class="overlay-screen" id="pauseScreen">
+      <div class="overlay-content">
+        <div class="overlay-icon">▶</div>
+      </div>
+    </div>
+
+    <div class="confirm-overlay" id="confirmOverlay">
+      <button class="btn-confirm" id="confirmBtn">确认答案 ✓</button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-time" id="progressTime">0:00 / 0:00</span>
+  </div>
+
+  <!-- Status -->
+  <div class="status-bar">
+    <span class="status-indicator" id="statusIndicator"></span>
+    <span id="statusText">点击开始</span>
+    <span class="click-hint">（点击幻灯片暂停）</span>
+  </div>
+
+  <!-- Control Bar -->
+  <div class="control-bar" id="controlBar">
+    <button class="ctrl-btn" id="btnPrev" title="上一页 (←)">◀</button>
+    <button class="ctrl-btn ctrl-btn-play" id="btnPlayPause" title="播放/暂停">▶</button>
+    <button class="ctrl-btn" id="btnNext" title="下一页 (→)">▶</button>
+    <div class="volume-wrap">
+      <span class="ctrl-btn" id="btnVolume">🔊</span>
+      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+    </div>
+    <button class="ctrl-btn" id="btnReplay" title="重播">↺</button>
+  </div>
+
+  <!-- Dots -->
+  <div class="dots" id="dots"></div>
+</div>
+
+<!-- Audio -->
+<audio id="audioEl" style="display:none"></audio>
+
+<!-- 伴学助手 -->
+<div class="assistant" id="assistant">
+  <div class="assistant-avatar">🤖</div>
+  <div class="assistant-bubble" id="assistant-bubble">
+    <span class="assistant-subtitle" id="assistantSubtitle"></span>
+  </div>
+</div>
+
+<script>
+(function() {
+  var assistant = document.getElementById('assistant');
+  var isDragging = false, startMX, startMY, startLeft, startTop;
+
+  function clamp(v, min, max) { return Math.max(min, Math.min(v, max)); }
+
+  assistant.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    isDragging = true;
+    assistant.classList.add('dragging');
+
+    // 统一转为 left/top 定位
+    if (assistant.style.right !== 'auto') {
+      assistant.style.left = (window.innerWidth - assistant.offsetWidth - 20) + 'px';
+      assistant.style.top = (window.innerHeight - assistant.offsetHeight - 20) + 'px';
+      assistant.style.right = 'auto';
+      assistant.style.bottom = 'auto';
+    }
+
+    startLeft = parseInt(assistant.style.left) || 0;
+    startTop = parseInt(assistant.style.top) || 0;
+    startMX = e.clientX;
+    startMY = e.clientY;
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    var dx = e.clientX - startMX;
+    var dy = e.clientY - startMY;
+    var maxLeft = window.innerWidth - assistant.offsetWidth;
+    var maxTop = window.innerHeight - assistant.offsetHeight;
+    assistant.style.left = clamp(startLeft + dx, 0, maxLeft) + 'px';
+    assistant.style.top  = clamp(startTop + dy, 0, maxTop) + 'px';
+  });
+
+  document.addEventListener('mouseup', function() {
+    isDragging = false;
+    assistant.classList.remove('dragging');
+  });
+})();
+</script>
+
+<!-- JS -->
+<script src="/js/shared.js"></script>
+<script src="/js/spotlight.js"></script>
+<script src="/js/player.js"></script>
+</body>
+</html>

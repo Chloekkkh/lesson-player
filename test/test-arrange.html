@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试：连词成句 arrange</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <style>
+    body { padding: 40px; background: #f0f2f5; }
+    .test-label {
+      position: fixed; top: 12px; right: 16px;
+      background: #f39a32; color: #fff; padding: 6px 14px;
+      border-radius: 20px; font-size: 13px; font-weight: 600;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-label">arrange 连词成句</div>
+
+  <div class="exercise-card" style="max-width:800px;margin:0 auto;">
+    <h2>连词成句</h2>
+    <p class="question-text" id="questionText">将词语排列成正确的句子</p>
+    <div class="arrange-area" id="arrangeArea"></div>
+    <button class="submit-btn" id="submitBtn">确认答案</button>
+  </div>
+
+  <script>
+    window.Sound = { init: function(){}, play: function(n){ console.log('[sound]', n); } };
+    window.Progress = { init: function(){}, setProgress: function(){}, hide: function(){} };
+    window.Celebration = { show: function(){}, hide: function(){} };
+    window.postToParent = function(action, data) { console.log('[→parent]', action, data); };
+  </script>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/exercise.js"></script>
+  <script src="/js/exercise/types/arrange.js"></script>
+
+  <script>
+    var slideData = {
+      type: 'exercise',
+      exerciseType: 'arrange',
+      showPinyin: true,
+      showHint: true,
+      questions: [
+        {
+          words: ['我', '谢谢', '你'],
+          pinyinMap: { '我': 'wǒ', '谢谢': 'xiè xie', '你': 'nǐ' },
+          answer: ['我', '谢谢', '你'],
+          question: '排列成正确的句子'
+        },
+        {
+          words: ['再见', '老师', '李'],
+          pinyinMap: { '再见': 'zàijiàn', '老师': 'lǎoshī', '李': 'Lǐ' },
+          answer: ['李', '老师', '再见'],
+          question: '排列成正确的句子'
+        }
+      ]
+    };
+
+    window.addEventListener('load', function() {
+      console.log('Initializing ArrangeHandler with data:', slideData);
+      Exercise.init(slideData);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+{
+  "id": "1",
+  "title": "1",
+  "description": "1",
+  "author": "teacher",
+  "created": "2026-04-23",
+  "slides": [
+    {
+      "index": 1,
+      "type": "content",
+      "title": "第 1 页"
+    },
+    {
+      "index": 2,
+      "type": "exercise",
+      "title": "练习",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "read",
+          "question": "111111111",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "选项 A"
+            },
+            {
+              "id": "B",
+              "text": "选项 B"
+            },
+            {
+              "id": "C",
+              "text": "选项 C"
+            },
+            {
+              "id": "D",
+              "text": "选项 D"
+            }
+          ],
+          "answer": "A"
+        },
+        {
+          "id": "q2",
+          "type": "read",
+          "question": "",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "选项 A"
+            },
+            {
+              "id": "B",
+              "text": "选项 B"
+            },
+            {
+              "id": "C",
+              "text": "选项 C"
+            },
+            {
+              "id": "D",
+              "text": "选项 D"
+            }
+          ],
+          "answer": "A"
+        },
+        {
+          "id": "q3",
+          "type": "listen",
+          "question": "",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "选项 A"
+            },
+            {
+              "id": "B",
+              "text": "选项 B"
+            },
+            {
+              "id": "C",
+              "text": "选项 C"
+            },
+            {
+              "id": "D",
+              "text": "选项 D"
+            }
+          ],
+          "answer": "A"
+        },
+        {
+          "id": "q4",
+          "type": "arrange",
+          "words": [
+            "词语1",
+            "词语2"
+          ],
+          "answer": [
+            "词语1",
+            "词语2"
+          ],
+          "pinyinMap": {}
+        },
+        {
+          "id": "q5",
+          "type": "match",
+          "pairs": [
+            {
+              "left": "左",
+              "right": "右"
+            }
+          ],
+          "pinyinMap": {}
+        },
+        {
+          "id": "q6",
+          "type": "fill",
+          "question": "请填空 _____",
+          "answer": ""
+        }
+      ],
+      "showPinyin": true
+    },
+    {
+      "index": 3,
+      "type": "video",
+      "title": "视频学习",
+      "video": "video/1.mp4"
+    },
+    {
+      "index": 4,
+      "type": "display",
+      "title": "生词学习",
+      "vocab": [
+        {
+          "id": "w1",
+          "hanzi": "我",
+          "pinyin": "w",
+          "pos": "w",
+          "en": "w",
+          "audio": ""
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true,
+      "hasRecording": true
+    }
+  ]
+}
