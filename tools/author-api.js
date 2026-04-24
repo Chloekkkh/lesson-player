@@ -116,7 +116,7 @@ function handleApi(req, res, urlPath) {
       fs.mkdirSync(path.join(courseDir, 'audio', 'narration'), { recursive: true });
       fs.mkdirSync(path.join(courseDir, 'audio', 'vocab'), { recursive: true });
       fs.mkdirSync(path.join(courseDir, 'audio', 'video'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'originals'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'pptimg'), { recursive: true });
 
       const courseJson = {
         id,
@@ -389,10 +389,10 @@ function handleApi(req, res, urlPath) {
       let data;
       try { data = JSON.parse(body); } catch (e) { return error(res, 'Invalid JSON'); }
       const { sub, filename, data: base64, chunks, chunkIdx, end } = data;
-      if (!['narration', 'vocab', 'video'].includes(sub)) return error(res, 'Invalid sub directory');
+      if (!['narration', 'vocab', 'video', 'pptimg'].includes(sub)) return error(res, 'Invalid sub directory');
       if (!filename) return error(res, 'Missing filename');
 
-      const subDir = path.join(courseDir, 'audio', sub);
+      const subDir = path.join(courseDir, sub === 'pptimg' ? 'pptimg' : 'audio', sub);
       if (!fs.existsSync(subDir)) fs.mkdirSync(subDir, { recursive: true });
       const filePath = path.join(subDir, filename);
 
@@ -419,56 +419,16 @@ function handleApi(req, res, urlPath) {
         } catch (e) {
           return error(res, 'Failed to assemble chunks: ' + e.message);
         }
-        return json(res, { path: `${sub}/${filename}` }, 201);
+        return json(res, { path: (sub === 'pptimg' ? 'pptimg/' : '') + filename }, 201);
       }
 
       // ── Single-shot upload (small files) ───────
       if (!base64) return error(res, 'Missing filename or data');
       const buf = Buffer.from(base64, 'base64');
       fs.writeFileSync(filePath, buf);
-      return json(res, { path: `${sub}/${filename}` }, 201);
+      return json(res, { path: (sub === 'pptimg' ? 'pptimg/' : '') + filename }, 201);
     });
     return;
-  }
-
-  // ── GET /api/courses/:id/unconfigured ─────────────────
-  if (m === 'GET' && rest === '/unconfigured') {
-    const slidesDir = path.join(courseDir, 'slides');
-    if (!fs.existsSync(slidesDir)) return json(res, []);
-    const allFiles = fs.readdirSync(slidesDir).filter(f => f.endsWith('.html'));
-    const configuredIndices = new Set((readCourseJson(courseDir).slides || []).map(s => s.index));
-    const unconfigured = allFiles
-      .filter(f => {
-        const n = parseInt(f.replace('.html', ''), 10);
-        return isNaN(n) || !configuredIndices.has(n);
-      })
-      .map(f => ({ name: f, index: parseInt(f.replace('.html', ''), 10) || null }));
-    return json(res, unconfigured);
-  }
-
-  // ── POST /api/courses/:id/unconfigured/:name/import ───
-  const importMatch = rest.match(/^\/unconfigured\/([^/]+)\/import$/);
-  if (m === 'POST' && importMatch) {
-    const originalName = decodeURIComponent(importMatch[1]);
-    const slidesDir = path.join(courseDir, 'slides');
-    const originalPath = path.join(slidesDir, originalName);
-    if (!fs.existsSync(originalPath)) return error(res, 'File not found', 404);
-
-    const course = readCourseJson(courseDir);
-    const maxIndex = course.slides.length
-      ? Math.max(...course.slides.map(s => s.index))
-      : 0;
-    const newIndex = maxIndex + 1;
-    const newPath = path.join(slidesDir, `${newIndex}.html`);
-
-    fs.renameSync(originalPath, newPath);
-
-    const entry = templates.buildSlideEntry('content', newIndex);
-    course.slides.push(entry);
-    course.slides.sort((a, b) => a.index - b.index);
-    writeCourseJson(courseDir, course);
-
-    return json(res, entry, 201);
   }
 
   return false; // not handled, fall through

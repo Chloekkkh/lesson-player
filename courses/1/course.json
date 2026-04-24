@@ -1,24 +1,219 @@
 {
   "id": "1",
-  "title": "1",
-  "description": "1",
+  "title": "HSK1 Lesson1",
+  "description": "",
   "author": "teacher",
   "created": "2026-04-23",
   "slides": [
     {
       "index": 1,
       "type": "content",
-      "title": "第 1 页"
+      "title": "第 1 页",
+      "audio": "narration/1.mp3",
+      "backgroundImage": "pptimg/content1.PNG",
+      "spotlights": [
+        {
+          "elementId": "zone-1",
+          "at": 9,
+          "duration": 2
+        },
+        {
+          "elementId": "zone-2",
+          "at": 16,
+          "duration": 2
+        },
+        {
+          "elementId": "zone-3",
+          "at": 26,
+          "duration": 2
+        }
+      ],
+      "spotlightZones": [
+        {
+          "elementId": "zone-1",
+          "x": 4.2,
+          "y": 25.2,
+          "w": 27.3,
+          "h": 28.2
+        },
+        {
+          "elementId": "zone-2",
+          "x": 32.3,
+          "y": 24.2,
+          "w": 62.4,
+          "h": 29.3
+        },
+        {
+          "elementId": "zone-3",
+          "x": 18.2,
+          "y": 61.7,
+          "w": 61.4,
+          "h": 31.5
+        }
+      ],
+      "subtitles": [
+        {
+          "at": 1,
+          "text": "We’ve already learned how to use “多少” to ask about quantity,"
+        },
+        {
+          "at": 5,
+          "text": "for example, “她有多少个学生？”."
+        },
+        {
+          "at": 8,
+          "text": "Now let’s look at “几”."
+        },
+        {
+          "at": 12,
+          "text": "We use “几” when the number is small, usually under 10."
+        },
+        {
+          "at": 15,
+          "text": "For example: “你有几个姐姐？” “你家有几口人？”."
+        },
+        {
+          "at": 22,
+          "text": "So here’s a simple rule. "
+        },
+        {
+          "at": 24,
+          "text": "If the number is large, use “多少”."
+        },
+        {
+          "at": 28,
+          "text": "If the number is small, under 10, use “几”. "
+        },
+        {
+          "at": 32,
+          "text": "Very clear, right?"
+        }
+      ]
     },
     {
       "index": 2,
+      "type": "content",
+      "title": "第 2 页",
+      "audio": "narration/2.mp3",
+      "subtitles": [
+        {
+          "at": 1,
+          "text": "There’s one more thing to remember. "
+        },
+        {
+          "at": 3,
+          "text": "When you use “多少”, the measure word can be used, or it can be left out."
+        },
+        {
+          "at": 8,
+          "text": " For example, you can say “你有多少个学生？”, or simply “你有多少学生？”."
+        },
+        {
+          "at": 15,
+          "text": "But when you use “几”, the measure word is required. "
+        },
+        {
+          "at": 19,
+          "text": "You must say “你有几个姐姐？”. You cannot say “你有几姐姐？”. Keep this in mind."
+        }
+      ],
+      "spotlights": [
+        {
+          "elementId": "zone-1",
+          "at": 4,
+          "duration": 2
+        },
+        {
+          "elementId": "zone-2",
+          "at": 8,
+          "duration": 2
+        }
+      ],
+      "spotlightZones": [
+        {
+          "elementId": "zone-1",
+          "x": 1,
+          "y": 52.1,
+          "w": 29.7,
+          "h": 46.2
+        },
+        {
+          "elementId": "zone-2",
+          "x": 29.2,
+          "y": 15.5,
+          "w": 68.6,
+          "h": 73.9
+        }
+      ],
+      "backgroundImage": "pptimg/content2.PNG"
+    },
+    {
+      "index": 3,
+      "type": "display",
+      "title": "生词学习",
+      "vocab": [
+        {
+          "id": "w1",
+          "hanzi": "请问",
+          "pinyin": "qǐngwèn",
+          "pos": "v.",
+          "en": "excuse me",
+          "audio": ""
+        },
+        {
+          "id": "w2",
+          "hanzi": "你",
+          "pinyin": "nǐ",
+          "pos": "pron.",
+          "en": "(singular) you",
+          "audio": ""
+        },
+        {
+          "id": "w3",
+          "hanzi": "叫",
+          "pinyin": "jiào",
+          "pos": "v.",
+          "en": "be called as",
+          "audio": ""
+        },
+        {
+          "id": "w4",
+          "hanzi": "什么",
+          "pinyin": "shénme",
+          "pos": "pron.",
+          "en": "what",
+          "audio": ""
+        },
+        {
+          "id": "w5",
+          "hanzi": "名字",
+          "pinyin": "míngzi",
+          "pos": "n.",
+          "en": " name",
+          "audio": ""
+        },
+        {
+          "id": "w6",
+          "hanzi": "我",
+          "pinyin": "wǒ",
+          "pos": "pron.",
+          "en": "I; me",
+          "audio": ""
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true,
+      "hasRecording": true
+    },
+    {
+      "index": 4,
       "type": "exercise",
-      "title": "练习",
+      "title": "Quiz Time！",
       "questions": [
         {
           "id": "q1",
           "type": "read",
-          "question": "111111111",
+          "question": "问题：",
           "audio": "",
           "options": [
             {
@@ -42,8 +237,8 @@
         },
         {
           "id": "q2",
-          "type": "read",
-          "question": "",
+          "type": "listen",
+          "question": "问题：",
           "audio": "",
           "options": [
             {
@@ -67,31 +262,6 @@
         },
         {
           "id": "q3",
-          "type": "listen",
-          "question": "",
-          "audio": "",
-          "options": [
-            {
-              "id": "A",
-              "text": "选项 A"
-            },
-            {
-              "id": "B",
-              "text": "选项 B"
-            },
-            {
-              "id": "C",
-              "text": "选项 C"
-            },
-            {
-              "id": "D",
-              "text": "选项 D"
-            }
-          ],
-          "answer": "A"
-        },
-        {
-          "id": "q4",
           "type": "arrange",
           "words": [
             "词语1",
@@ -104,7 +274,7 @@
           "pinyinMap": {}
         },
         {
-          "id": "q5",
+          "id": "q4",
           "type": "match",
           "pairs": [
             {
@@ -115,37 +285,25 @@
           "pinyinMap": {}
         },
         {
-          "id": "q6",
+          "id": "q5",
           "type": "fill",
           "question": "请填空 _____",
-          "answer": ""
+          "answer": "1"
+        },
+        {
+          "id": "q6",
+          "type": "trace",
+          "char": "谢",
+          "pinyin": "xiè",
+          "en": "thanks",
+          "stars": {
+            "1": 0.3,
+            "2": 0.6,
+            "3": 0.85
+          }
         }
       ],
       "showPinyin": true
-    },
-    {
-      "index": 3,
-      "type": "video",
-      "title": "视频学习",
-      "video": "video/1.mp4"
-    },
-    {
-      "index": 4,
-      "type": "display",
-      "title": "生词学习",
-      "vocab": [
-        {
-          "id": "w1",
-          "hanzi": "我",
-          "pinyin": "w",
-          "pos": "w",
-          "en": "w",
-          "audio": ""
-        }
-      ],
-      "showPinyin": true,
-      "showEnglish": true,
-      "hasRecording": true
     }
   ]
 }

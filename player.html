@@ -36,10 +36,20 @@
     <!-- 透明点击拦截层，接收 iframe 区域的点击事件 -->
     <div id="clickInterceptor"></div>
 
+    <!-- 左右导航箭头 -->
+    <button class="nav-arrow nav-arrow-left" id="navArrowLeft" title="上一页">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
+    <button class="nav-arrow nav-arrow-right" id="navArrowRight" title="下一页">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+    </button>
+
     <!-- 统一遮罩（start / pause）-->
     <div class="overlay-screen" id="pauseScreen">
       <div class="overlay-content">
-        <div class="overlay-icon">▶</div>
+        <div class="overlay-icon">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </div>
       </div>
     </div>
 
@@ -62,15 +72,34 @@
   </div>
 
   <!-- Control Bar -->
-  <div class="control-bar" id="controlBar">
-    <button class="ctrl-btn" id="btnPrev" title="上一页 (←)">◀</button>
-    <button class="ctrl-btn ctrl-btn-play" id="btnPlayPause" title="播放/暂停">▶</button>
-    <button class="ctrl-btn" id="btnNext" title="下一页 (→)">▶</button>
-    <div class="volume-wrap">
-      <span class="ctrl-btn" id="btnVolume">🔊</span>
-      <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="80">
+  <div class="ctrl-bar" id="controlBar">
+    <button class="ctrl-btn" id="btnPrev" title="上一页 (←)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
+    <button class="ctrl-btn ctrl-play" id="btnPlayPause" title="播放/暂停">
+      <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btnNext" title="下一页 (→)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
+    </button>
+    <div class="ctrl-vol">
+      <div class="vol-popup" id="volPopup">
+        <input type="range" class="vol-slider-pop" id="volumeSliderPop" min="0" max="100" value="80">
+      </div>
+      <button class="ctrl-btn ctrl-vol-icon" id="btnVolume" title="音量">
+        <svg class="icon-vol-high" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+        <svg class="icon-vol-low" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M18.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+        <svg class="icon-vol-mute" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>
+      </button>
     </div>
-    <button class="ctrl-btn" id="btnReplay" title="重播">↺</button>
+    <button class="ctrl-btn" id="btnReplay" title="重播">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+    </button>
+    <button class="ctrl-btn" id="btnFullscreen" title="全屏">
+      <svg class="icon-fullscreen" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+      <svg class="icon-exit-fullscreen" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></svg>
+    </button>
   </div>
 
   <!-- Dots -->
@@ -91,41 +120,82 @@
 <script>
 (function() {
   var assistant = document.getElementById('assistant');
-  var isDragging = false, startMX, startMY, startLeft, startTop;
+  var avatar    = assistant.querySelector('.assistant-avatar');
+  var bubble    = document.getElementById('assistant-bubble');
+  var subtitleOn = true;
+  var isDragging = false, dragStarted = false, startMX, startMY, startLeft, startTop;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(v, max)); }
 
   assistant.addEventListener('mousedown', function(e) {
-    e.preventDefault();
-    isDragging = true;
-    assistant.classList.add('dragging');
+    var onAvatar = e.target.closest('.assistant-avatar');
+    if (onAvatar) {
+      // 记录起始位置，区分点击和拖拽
+      startMX = e.clientX;
+      startMY = e.clientY;
+      isDragging = true;
+      dragStarted = false;
+    } else {
+      e.preventDefault();
+      isDragging = true;
+      dragStarted = true;
+      assistant.classList.add('dragging');
 
-    // 统一转为 left/top 定位
-    if (assistant.style.right !== 'auto') {
-      assistant.style.left = (window.innerWidth - assistant.offsetWidth - 20) + 'px';
-      assistant.style.top = (window.innerHeight - assistant.offsetHeight - 20) + 'px';
-      assistant.style.right = 'auto';
-      assistant.style.bottom = 'auto';
+      if (assistant.style.right !== 'auto') {
+        assistant.style.left = (window.innerWidth - assistant.offsetWidth - 20) + 'px';
+        assistant.style.top = (window.innerHeight - assistant.offsetHeight - 20) + 'px';
+        assistant.style.right = 'auto';
+        assistant.style.bottom = 'auto';
+      }
+
+      startLeft = parseInt(assistant.style.left) || 0;
+      startTop = parseInt(assistant.style.top) || 0;
+      startMX = e.clientX;
+      startMY = e.clientY;
     }
-
-    startLeft = parseInt(assistant.style.left) || 0;
-    startTop = parseInt(assistant.style.top) || 0;
-    startMX = e.clientX;
-    startMY = e.clientY;
   });
 
   document.addEventListener('mousemove', function(e) {
     if (!isDragging) return;
+
     var dx = e.clientX - startMX;
     var dy = e.clientY - startMY;
+    var dist = Math.sqrt(dx * dx + dy * dy);
+
+    // 移动超过 5px 才算拖拽
+    if (!dragStarted && dist > 10) {
+      dragStarted = true;
+      assistant.classList.add('dragging');
+      // 统一为 left/top 定位
+      if (assistant.style.right !== 'auto') {
+        assistant.style.left = (window.innerWidth - assistant.offsetWidth - 20) + 'px';
+        assistant.style.top = (window.innerHeight - assistant.offsetHeight - 20) + 'px';
+        assistant.style.right = 'auto';
+        assistant.style.bottom = 'auto';
+      }
+      startLeft = parseInt(assistant.style.left) || 0;
+      startTop = parseInt(assistant.style.top) || 0;
+    }
+
+    if (!dragStarted) return;
+
     var maxLeft = window.innerWidth - assistant.offsetWidth;
     var maxTop = window.innerHeight - assistant.offsetHeight;
     assistant.style.left = clamp(startLeft + dx, 0, maxLeft) + 'px';
     assistant.style.top  = clamp(startTop + dy, 0, maxTop) + 'px';
   });
 
-  document.addEventListener('mouseup', function() {
+  document.addEventListener('mouseup', function(e) {
+    if (isDragging && !dragStarted) {
+      // 是一次点击（未超过阈值）
+      if (e.target.closest('.assistant-avatar')) {
+        subtitleOn = !subtitleOn;
+        avatar.classList.toggle('muted', !subtitleOn);
+        bubble.classList.toggle('hidden', !subtitleOn);
+      }
+    }
     isDragging = false;
+    dragStarted = false;
     assistant.classList.remove('dragging');
   });
 })();

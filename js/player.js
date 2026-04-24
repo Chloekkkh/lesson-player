@@ -25,6 +25,7 @@ var timerTotal    = 0; // 当前音频总时长（秒），无音频时为 0
 var intervalId    = null;   // setInterval 的 ID，用于取消计时器
 var isTransitioning = false; // 切换锁，防止重复调用
 var pendingIndex    = null;  // 过渡期间记录的待切换目标
+var autoAdvanced   = false; // 音频结束自动切换后，下一页立即自动播放
 
 /* ─────────────────────────────────────────────────────────
    聚光灯（Spotlight）状态
@@ -68,18 +69,39 @@ var btnPrev      = $('btnPrev');
 var btnPlayPause = $('btnPlayPause');
 var btnNext      = $('btnNext');
 var btnVolume    = $('btnVolume');
-var volumeSlider = $('volumeSlider');
+var volumeSliderPop = $('volumeSliderPop');
+var volPopup     = $('volPopup');
+var btnFullscreen = $('btnFullscreen');
 var btnReplay    = $('btnReplay');
+var navArrowLeft  = $('navArrowLeft');
+var navArrowRight = $('navArrowRight');
 
 // 初始化音量
 audioEl.volume = 0.8;
-volumeSlider.addEventListener('input', function() {
+volumeSliderPop.addEventListener('input', function() {
   audioEl.volume = this.value / 100;
   updateVolumeIcon(this.value);
 });
 
+// 点击音量按钮显示/隐藏弹出式滑块
+btnVolume.addEventListener('click', function(e) {
+  e.stopPropagation();
+  volPopup.classList.toggle('visible');
+});
+document.addEventListener('click', function() {
+  volPopup.classList.remove('visible');
+});
+
 function updateVolumeIcon(vol) {
-  btnVolume.textContent = vol == 0 ? '🔇' : vol < 50 ? '🔉' : '🔊';
+  var high = btnVolume.querySelector('.icon-vol-high');
+  var low = btnVolume.querySelector('.icon-vol-low');
+  var mute = btnVolume.querySelector('.icon-vol-mute');
+  high.style.display = 'none';
+  low.style.display = 'none';
+  mute.style.display = 'none';
+  if (vol == 0) mute.style.display = '';
+  else if (vol < 0.1) low.style.display = '';
+  else high.style.display = '';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -464,9 +486,6 @@ function goToSlide(index) {
   }
 
   isTransitioning = true;
-  // 循环 wrap：-1 → 最后一页，4 → 第 0 页
-  if (index < 0) index = course.slides.length - 1;
-  if (index >= course.slides.length) index = 0;
 
   if (index < 0 || index >= course.slides.length) { isTransitioning = false; return; }
 
@@ -581,7 +600,7 @@ function runSpotlightSequence() {
   if (!playing) return;
 
   if (spotlightIndex >= spotlightList.length) {
-    goToSlide((current + 1) % course.slides.length);
+    goToSlide(current + 1);
     return;
   }
 
@@ -628,7 +647,12 @@ function runSpotlightSequence() {
  */
 function sendSpotlight(frame, elementId) {
   try {
-    frame.contentWindow.postMessage({ type: 'spotlight', elementId: elementId }, '*');
+    var slide = course.slides[current];
+    frame.contentWindow.postMessage({
+      type: 'spotlight',
+      elementId: elementId,
+      spotlightZones: slide.spotlightZones || []
+    }, '*');
   } catch (e) {}
 }
 
@@ -670,7 +694,16 @@ function loadAudio(src, slide) {
     audioDuration = audioEl.duration; // 保存总时长
     timerTotal    = audioDuration * 1000; // 以音频时长作为总时长
     progressTimeEl.textContent = '0:00 / ' + formatTime(audioDuration);
-    // 不在这里 play()，由 click handler 中的 playing=true 时调用
+// 自动切换后的下一页立即自动播放
+    if (autoAdvanced && slide.type === 'content') {
+      autoAdvanced = false;
+      playing = true;
+      statusIndicator.className = 'status-indicator';
+      statusText.textContent = '播放中';
+      audioEl.play().catch(function() {});
+      startSpotlightRaf();
+      updateControlBarState();
+    }
   };
 
   audioEl.ontimeupdate = function() {
@@ -745,16 +778,39 @@ function formatTime(secs) {
  * 仅 content 页面：播放/暂停、重播可用
  * exercise/display 页面：所有按钮可用，播放/暂停和重播灰显
  */
+function replayAudio() {
+  if (!playing) return;
+  audioEl.currentTime = 0;
+  audioEl.play();
+}
+
 function updateControlBarState() {
   var slide = course.slides[current];
   var isContentOrVideo = (slide.type === 'content' || slide.type === 'video');
+  var isFirst = current === 0;
+  var isLast = current === course.slides.length - 1;
 
   // 播放/暂停
-  btnPlayPause.textContent = playing ? '⏸' : '▶';
+  var iconPlay = btnPlayPause.querySelector('.icon-play');
+  var iconPause = btnPlayPause.querySelector('.icon-pause');
+  iconPlay.style.display = playing ? 'none' : '';
+  iconPause.style.display = playing ? '' : 'none';
   btnPlayPause.classList.toggle('disabled', !isContentOrVideo);
 
   // 重播
   btnReplay.classList.toggle('disabled', !isContentOrVideo);
+
+  // 上一页/下一页
+  btnPrev.classList.toggle('disabled', isFirst);
+  btnNext.classList.toggle('disabled', isLast);
+  navArrowLeft.classList.toggle('disabled', isFirst);
+  navArrowRight.classList.toggle('disabled', isLast);
+
+  // 全屏图标
+  var iconFs = btnFullscreen.querySelector('.icon-fullscreen');
+  var iconExitFs = btnFullscreen.querySelector('.icon-exit-fullscreen');
+  iconFs.style.display = document.fullscreenElement ? 'none' : '';
+  iconExitFs.style.display = document.fullscreenElement ? '' : 'none';
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -782,9 +838,12 @@ function onAudioEnded(slide) {
     statusIndicator.className = 'status-indicator waiting';
     statusText.textContent = '请确认答案';
     playing = false;
-  } else {
-    // 内容页：音频播完，自动进入下一页
-    goToSlide((current + 1) % course.slides.length);
+} else {
+    // 内容页：音频播完，延迟0.5s后进入下一页
+    autoAdvanced = true;
+    setTimeout(function() {
+      goToSlide(current + 1);
+    }, 500);
   }
 }
 
@@ -802,7 +861,7 @@ confirmBtn.addEventListener('click', function() {
   if (!exerciseReady) return; // 未作答时按钮不可用
   exerciseReady = false;
   confirmOverlay.classList.remove('visible');
-  goToSlide((current + 1) % course.slides.length);
+  goToSlide(current + 1);
 });
 
 /* ═══════════════════════════════════════════════════════
@@ -917,6 +976,9 @@ function resumeAudio() {
 
 btnPrev.addEventListener('click', function() { goToSlide(current - 1); });
 btnNext.addEventListener('click', function() { goToSlide(current + 1); });
+navArrowLeft.addEventListener('click', function() { goToSlide(current - 1); });
+navArrowRight.addEventListener('click', function() { goToSlide(current + 1); });
+btnReplay.addEventListener('click', replayAudio);
 
 btnPlayPause.addEventListener('click', function() {
   var slide = course.slides[current];
@@ -924,15 +986,12 @@ btnPlayPause.addEventListener('click', function() {
   if (playing) pauseAudio(); else resumeAudio();
 });
 
-btnReplay.addEventListener('click', function() {
-  var slide = course.slides[current];
-  if (slide.type !== 'content' && slide.type !== 'video') return;
-  if (!slide.audio) return;
-  spotlightFired = {};
-  audioEl.currentTime = 0;
-  if (!playing) resumeAudio();
-  audioEl.play().catch(function() {});
-  startSpotlightRaf();
+btnFullscreen.addEventListener('click', function() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    player.requestFullscreen();
+  }
 });
 
 /* ═══════════════════════════════════════════════════════
@@ -944,6 +1003,7 @@ btnReplay.addEventListener('click', function() {
  *   → / ↓       — 下一页
  *   ← / ↑       — 上一页
  *   Space（空格）— 暂停/恢复
+ *   F           — 全屏
  */
 document.addEventListener('keydown', function(e) {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
@@ -954,6 +1014,12 @@ document.addEventListener('keydown', function(e) {
     e.preventDefault(); // 阻止页面滚动
     if (course.slides[current].type === 'exercise') return;
     if (playing) pauseAudio(); else resumeAudio();
+  } else if (e.key === 'f' || e.key === 'F') {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      player.requestFullscreen();
+    }
   }
 });
 
@@ -999,7 +1065,7 @@ window.addEventListener('message', function(e) {
 
   } else if (msg.action === 'displayComplete') {
     // display 类型直接翻页
-    goToSlide((current + 1) % course.slides.length);
+    goToSlide(current + 1);
 
   } else if (msg.action === 'exerciseDone') {
     // legacy 题型：显示确认按钮，等学生点确认

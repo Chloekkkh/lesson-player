@@ -47,29 +47,66 @@ function contentTemplate(slideNum, courseTitle) {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: "Microsoft YaHei UI","PingFang SC",sans-serif;
-      background: #fff;
-      display: flex; align-items: center; justify-content: center;
-      height: 100vh; padding: 40px;
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
     }
-    .slide { max-width: 800px; text-align: center; }
-    h1 { font-size: 3rem; color: #2a3446; margin-bottom: 20px; }
-    p  { font-size: 1.4rem; color: #4d586f; line-height: 1.8; }
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      width: 1200px;
+      height: 675px;
+      background-size: cover;
+      background-position: center;
+      background-color: #f5f5f5;
+    }
+    .hotspot {
+      position: absolute;
+      background: transparent;
+    }
   </style>
 </head>
 <body>
-  <div class="slide">
-    <h1>第 ${slideNum} 页</h1>
-    <p>内容页</p>
-  </div>
+  <div class="slide-bg"></div>
+  <div id="hotspot-container"></div>
 
-  <!-- Spotlight -->
   <script src="/js/spotlight.js"></script>
   <script>
     Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', container: document.body });
+
+    function renderHotspots(zones) {
+      var container = document.getElementById('hotspot-container');
+      zones.forEach(function(zone) {
+        var div = document.createElement('div');
+        div.id = zone.elementId;
+        div.className = 'hotspot';
+        div.style.cssText = 'position:absolute;left:' + zone.x + '%;top:' + zone.y + '%;width:' + zone.w + '%;height:' + zone.h + '%;';
+        container.appendChild(div);
+      });
+    }
+
+    var zonesRendered = false;
+
     window.addEventListener('message', function(e) {
       var msg = e.data;
       if (!msg) return;
-      if (msg.type === 'slideData') console.log('slideData:', msg.data);
+
+      if (msg.spotlightZones && !zonesRendered) {
+        zonesRendered = true;
+        renderHotspots(msg.spotlightZones);
+      }
+
+      if (msg.type === 'slideData') {
+        if (msg.data.backgroundImage) {
+          var bg = document.querySelector('.slide-bg');
+          if (bg) bg.style.backgroundImage = 'url(/courses/' + msg.data.courseId + '/' + msg.data.backgroundImage + ')';
+        }
+        if (msg.data.spotlightZones && !zonesRendered) {
+          zonesRendered = true;
+          renderHotspots(msg.data.spotlightZones);
+        }
+      }
       if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
       if (msg.type === 'spotlightClear') Spotlight.clear();
     });

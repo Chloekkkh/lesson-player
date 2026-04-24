@@ -110,10 +110,10 @@ function main() {
     process.exit(1);
   }
 
-  const originalsDir = path.join(ROOT, 'courses', courseId, 'originals');
+  const originalsDir = path.join(ROOT, 'courses', courseId, 'pptimg');
 
   if (!fs.existsSync(originalsDir)) {
-    console.error(`错误: originals 目录不存在: ${originalsDir}`);
+    console.error(`错误: pptimg 目录不存在: ${originalsDir}`);
     process.exit(1);
   }
 

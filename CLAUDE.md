@@ -32,6 +32,7 @@ node tools/add-slide.js <course-id> --delete --index N
 **访问地址**:
 - 课程列表：http://localhost:3000/
 - 播放器：http://localhost:3000/player.html?course=<id>
+- 课程制作：http://localhost:3000/admin.html
 
 ---
 
@@ -79,8 +80,11 @@ node tools/add-slide.js <course-id> --delete --index N
     {
       "index": 1,
       "type": "content",
+      "title": "第 1 页",
       "audio": "narration/1.mp3",
-      "spotlights": [{ "elementId": "word-xie", "at": 1.5, "duration": 2 }],
+      "backgroundImage": "pptimg/bg1.png",
+      "spotlights": [{ "elementId": "zone-1", "at": 0, "duration": 2 }],
+      "spotlightZones": [{ "elementId": "zone-1", "x": 10, "y": 20, "w": 25, "h": 30 }],
       "subtitles": [{ "at": 1.0, "text": "字幕" }]
     },
     {
@@ -107,7 +111,14 @@ node tools/add-slide.js <course-id> --delete --index N
 }
 ```
 
-`spotlights[]` 只在 content 类型下使用，`at` 单位为秒。
+**content 类型字段说明：**
+- `audio`：旁白音频路径（相对于 `audio/` 目录）
+- `backgroundImage`：背景图路径（相对于课程根目录，如 `pptimg/bg.png`）
+- `spotlights[]`：聚光灯触发配置，`at` 单位为秒
+- `spotlightZones[]`：热区坐标（百分比），供 admin 热区编辑器使用
+- `subtitles[]`：伴学助手字幕
+
+**注意：** `originals/` 目录已改名为 `pptimg/`。
 
 ---
 
@@ -127,11 +138,13 @@ node tools/add-slide.js <course-id> --delete --index N
 hsk-player/
 ├── player.html           # 播放器外壳
 ├── index.html            # 课程列表
+├── admin.html            # 课程制作工具（可视化编辑）
 ├── js/
 │   ├── player.js         # 核心逻辑（iframe、音频、计时器、postMessage）
 │   ├── spotlight.js      # 聚光灯效果（SVG mask）
 │   ├── exercise.js       # 练习题入口
 │   ├── shared.js         # 通用工具
+│   ├── templates.js      # 幻灯片 HTML 模板
 │   └── exercise/
 │       ├── types/        # 各题型实现（choice, arrange, match, trace, fill）
 │       ├── progress.js   # 星星评分动画
@@ -139,17 +152,19 @@ hsk-player/
 │       └── sound.js      # 音效
 ├── css/
 │   ├── player.css        # 播放器样式
+│   ├── admin.css         # 制作工具样式
 │   ├── exercise.css      # 练习题样式
 │   └── shared.css        # CSS 变量 + reset
 ├── tools/
-│   ├── serve.js          # 本地服务器
+│   ├── serve.js          # 本地服务器（含 API）
 │   ├── new-course.js     # 创建新课程脚手架
 │   ├── add-slide.js      # 添加 / 删除幻灯片
+│   ├── author-api.js     # 课程制作 API 路由
 │   └── schema.js         # course.json 字段参考
 └── courses/              # 所有课程数据
     └── <course-id>/
         ├── course.json
         ├── slides/       # 每页幻灯片 HTML（n.html）
-        ├── audio/        # 音频文件（narration/, vocab/）
-        └── originals/    # 原始素材
+        ├── audio/        # 音频文件（narration/, vocab/, exercise/, video/）
+        └── pptimg/       # 背景图 / 原始图片
 ```

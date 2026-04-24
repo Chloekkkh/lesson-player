@@ -308,10 +308,6 @@ async function courseView(courseId) {
   try {
     const course = await api.get('/api/courses/' + courseId);
 
-    // Get unconfigured slides
-    let unconfigured = [];
-    try { unconfigured = await api.get('/api/courses/' + courseId + '/unconfigured'); } catch(e) {}
-
     // Build slide list
     let slideListHtml = '';
     (course.slides || []).forEach(s => {
@@ -333,19 +329,6 @@ async function courseView(courseId) {
           </div>
         </div>`;
     });
-
-    let unconfiguredHtml = '';
-    if (unconfigured.length) {
-      unconfiguredHtml = `
-        <div class="unconfigured-area">
-          <h3>📁 未配置幻灯片</h3>
-          ${unconfigured.map(f => `
-            <div class="unconfigured-item">
-              <span>${escHtml(f.name)}</span>
-              <button class="btn btn-sm btn-ghost btn-import-slide" data-name="${escAttr(f.name)}">导入</button>
-            </div>`).join('')}
-        </div>`;
-    }
 
     view.innerHTML = `
       <div class="view-header">
@@ -383,7 +366,6 @@ async function courseView(courseId) {
           ${slideListHtml || '<div class="empty-state" style="padding:20px">暂无幻灯片，点击下方添加</div>'}
         </div>
         <div class="add-slide-area" id="btnAddSlide">+ 添加幻灯片</div>
-        ${unconfiguredHtml}
       </div>`;
 
     // Save metadata
@@ -450,18 +432,7 @@ async function courseView(courseId) {
       });
     });
 
-    // Import unconfigured slides
-    view.querySelectorAll('.btn-import-slide').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const name = btn.dataset.name;
-        try {
-          const entry = await api.post('/api/courses/' + courseId + '/unconfigured/' + encodeURIComponent(name) + '/import', {});
-          showToast('已导入为第 ' + entry.index + ' 页', 'success');
-          courseView.call(null, courseId);
-        } catch (e) { showToast(e.message, 'error'); }
-      });
-    });
-
+    
   } catch (e) {
     view.innerHTML = '<div class="empty-state">加载失败: ' + escHtml(e.message) + '</div>';
   }
@@ -595,6 +566,9 @@ function renderContentEditor(slide, courseId, audioFiles) {
       <button class="btn btn-secondary btn-sm" id="btnUploadAudio">上传到 narration/</button>
       <input type="file" id="audioFileInput" accept="audio/*" style="display:none">
     </div>
+    <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
+      <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
+    </div>
 
     <div class="section-title">字幕（伴学助手）</div>
     <div id="subtitleList">
@@ -618,6 +592,32 @@ function renderContentEditor(slide, courseId, audioFiles) {
         </div>`).join('')) || ''}
     </div>
     <button class="btn btn-secondary btn-sm" id="btnAddSp">+ 添加聚光灯</button>
+
+    <div class="section-title">热区（背景图热点）</div>
+    <div class="hotspot-editor-row">
+      <div class="hotspot-canvas-wrap" id="hotspotCanvasWrap">
+        <img id="hotspotBgImg" src="/courses/${courseId}/${slide.backgroundImage || ''}" alt="背景图" style="display:none">
+        <div id="hotspotRects"></div>
+        <div id="hotspotDrawOverlay"></div>
+      </div>
+      <div class="hotspot-zone-list" id="hotspotZoneList">
+        ${((slide.spotlightZones || []).map((z, i) => `
+          <div class="hotspot-zone-row" data-i="${i}">
+            <input class="form-input" value="${escAttr(z.elementId)}" placeholder="ID" style="width:70px">
+            <span class="zone-coords">x:<input class="form-input" type="number" value="${z.x}" step="0.1" style="width:50px">%
+             y:<input class="form-input" type="number" value="${z.y}" step="0.1" style="width:50px">%
+             w:<input class="form-input" type="number" value="${z.w}" step="0.1" style="width:50px">%
+             h:<input class="form-input" type="number" value="${z.h}" step="0.1" style="width:50px">%</span>
+            <button class="btn btn-sm btn-danger btn-remove-hz">🗑</button>
+          </div>`).join('')) || '<div class="empty-hint">上传背景图后，在图上拖拽添加热区</div>'}
+      </div>
+    </div>
+    <div class="hotspot-toolbar">
+      <button class="btn btn-secondary btn-sm" id="btnUploadBgImg">上传背景图</button>
+      <button class="btn btn-secondary btn-sm" id="btnAddHotspot">+ 添加热区</button>
+      <button class="btn btn-ghost btn-sm" id="btnPreviewSpotlight">▶ 预览 Spotlight</button>
+      <input type="file" id="bgImgFileInput" accept="image/*" style="display:none">
+    </div>
 
     <div class="section-title">幻灯片 HTML</div>
     <textarea class="form-textarea" id="slideHtmlRaw" style="font-family:monospace;min-height:120px" placeholder="点击"加载 HTML"按钮加载..."></textarea>
@@ -872,6 +872,8 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       data.audio = document.getElementById('slideAudio')?.value || '';
       data.subtitles = collectSubtitles(view);
       data.spotlights = collectSpotlights(view);
+      data.spotlightZones = collectSpotlightZones(view);
+      data.backgroundImage = window._currentBgImage || slide.backgroundImage || '';
     } else if (slide.type === 'display') {
       data.showPinyin = document.getElementById('display-showPinyin')?.checked ?? true;
       data.showEnglish = document.getElementById('display-showEnglish')?.checked ?? true;
@@ -921,6 +923,198 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
   view.querySelectorAll('.btn-remove-sp').forEach(btn => {
     btn.addEventListener('click', () => btn.closest('.spotlight-row')?.remove());
   });
+
+  // ── Hotspot Editor ──────────────────────────
+  let isDrawing = false, drawStartX, drawStartY;
+  const canvas = document.getElementById('hotspotDrawOverlay');
+
+  function syncBgImg() {
+    const imgEl = document.getElementById('hotspotBgImg');
+    if (!imgEl) return;
+    const zones = (slide.spotlightZones || []).map(z => z);
+    // If we have a backgroundImage, show it
+    const bgPath = window._currentBgImage || slide.backgroundImage;
+    if (bgPath) {
+      const fullPath = bgPath.startsWith('pptimg/') ? bgPath : 'pptimg/' + bgPath;
+      imgEl.src = '/courses/' + courseId + '/' + fullPath;
+      imgEl.style.display = 'block';
+      imgEl.onload = () => syncRectsToCanvas(zones);
+    } else {
+      imgEl.style.display = 'none';
+    }
+  }
+
+  function syncRectsToCanvas(zones) {
+    const container = document.getElementById('hotspotCanvasWrap');
+    const img = document.getElementById('hotspotBgImg');
+    if (!container || !img || !img.naturalWidth) return;
+    const rectsEl = document.getElementById('hotspotRects');
+    if (!rectsEl) return;
+    const scaleX = container.offsetWidth / 1200;
+    const scaleY = container.offsetHeight / 675;
+    rectsEl.innerHTML = zones.map((z, i) => {
+      const left = z.x * 12 * scaleX; // 1200 * 0.01 = 12px per percent
+      const top = z.y * 6.75 * scaleY; // 675 * 0.01 = 6.75px per percent
+      const w = z.w * 12 * scaleX;
+      const h = z.h * 6.75 * scaleY;
+      return `<div class="hz-rect" data-i="${i}" style="left:${left}px;top:${top}px;width:${w}px;height:${h}px;${z.elementId ? '' : 'border-color:#f00'}">
+        <span class="hz-label">${escHtml(z.elementId || '?')}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Upload background image
+  document.getElementById('btnUploadBgImg')?.addEventListener('click', () => {
+    document.getElementById('bgImgFileInput')?.click();
+  });
+  document.getElementById('bgImgFileInput')?.addEventListener('change', async function() {
+    const file = this.files && this.files[0];
+    if (!file) return;
+    try {
+      const result = await uploadFileChunked(file, 'pptimg', courseId);
+      const filename = result.path ? result.path.split('/').pop() : file.name;
+      window._currentBgImage = 'pptimg/' + filename;
+      const img = document.getElementById('hotspotBgImg');
+      if (img) { img.src = '/courses/' + courseId + '/pptimg/' + filename; img.style.display = 'block'; }
+      showToast('上传成功', 'success');
+    } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
+    this.value = '';
+  });
+
+  // Draw hotspot on canvas
+  canvas?.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    drawStartX = e.clientX - rect.left;
+    drawStartY = e.clientY - rect.top;
+    isDrawing = true;
+  });
+  canvas?.addEventListener('mousemove', e => {
+    if (!isDrawing) return;
+    const rect = canvas.getBoundingClientRect();
+    const curX = e.clientX - rect.left;
+    const curY = e.clientY - rect.top;
+    // Draw preview rect
+    let preview = canvas.querySelector('.draw-preview');
+    if (!preview) {
+      preview = document.createElement('div');
+      preview.className = 'draw-preview';
+      canvas.appendChild(preview);
+    }
+    const left = Math.min(drawStartX, curX);
+    const top = Math.min(drawStartY, curY);
+    const w = Math.abs(curX - drawStartX);
+    const h = Math.abs(curY - drawStartY);
+    preview.style.cssText = 'position:absolute;left:' + left + 'px;top:' + top + 'px;width:' + w + 'px;height:' + h + 'px;border:2px dashed #0b5fff;background:rgba(11,95,255,0.15);pointer-events:none;';
+  });
+  canvas?.addEventListener('mouseup', e => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    const rect = canvas.getBoundingClientRect();
+    const curX = e.clientX - rect.left;
+    const curY = e.clientY - rect.top;
+    const left = Math.min(drawStartX, curX);
+    const top = Math.min(drawStartY, curY);
+    const w = Math.abs(curX - drawStartX);
+    const h = Math.abs(curY - drawStartY);
+    canvas.querySelector('.draw-preview')?.remove();
+    if (w < 10 || h < 10) return;
+
+    // Convert to percent of canvas size
+    const pX = left / rect.width * 100;
+    const pY = top / rect.height * 100;
+    const pW = w / rect.width * 100;
+    const pH = h / rect.height * 100;
+    const zoneList = document.getElementById('hotspotZoneList');
+    const i = zoneList.querySelectorAll('.hotspot-zone-row').length;
+    zoneList.insertAdjacentHTML('beforeend', `
+      <div class="hotspot-zone-row" data-i="${i}">
+        <input class="form-input" value="zone-${i + 1}" placeholder="ID" style="width:70px">
+        <span class="zone-coords">x:<input class="form-input" type="number" value="${pX.toFixed(1)}" step="0.1" style="width:50px">%
+         y:<input class="form-input" type="number" value="${pY.toFixed(1)}" step="0.1" style="width:50px">%
+         w:<input class="form-input" type="number" value="${pW.toFixed(1)}" step="0.1" style="width:50px">%
+         h:<input class="form-input" type="number" value="${pH.toFixed(1)}" step="0.1" style="width:50px">%</span>
+        <button class="btn btn-sm btn-danger btn-remove-hz">🗑</button>
+      </div>`);
+    // Sync visual rects
+    updateVisualRects();
+    // Bind remove
+    zoneList.lastElementChild.querySelector('.btn-remove-hz')?.addEventListener('click', () => {
+      zoneList.lastElementChild.remove();
+      updateVisualRects();
+    });
+    // Re-render visual rects on input change
+    zoneList.querySelectorAll('.hotspot-zone-row').forEach(row => {
+      row.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', updateVisualRects);
+      });
+    });
+  });
+
+  function updateVisualRects() {
+    const rows = document.querySelectorAll('.hotspot-zone-row');
+    const container = document.getElementById('hotspotCanvasWrap');
+    const bgEl = document.getElementById('hotspotBgImg');
+    if (!container || !bgEl) return;
+    const w = container.offsetWidth;
+    const h = container.offsetHeight;
+    const rectsEl = document.getElementById('hotspotRects');
+    rectsEl.innerHTML = Array.from(rows).map(row => {
+      const inputs = row.querySelectorAll('input');
+      const x = parseFloat(inputs[1]?.value || 0);
+      const y = parseFloat(inputs[2]?.value || 0);
+      const wP = parseFloat(inputs[3]?.value || 0);
+      const hP = parseFloat(inputs[4]?.value || 0);
+      const id = inputs[0]?.value || '?';
+      return `<div class="hz-rect" style="left:${x * w / 100}px;top:${y * h / 100}px;width:${wP * w / 100}px;height:${hP * h / 100}px">
+        <span class="hz-label">${escHtml(id)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Remove hotspot zone
+  view.querySelectorAll('.btn-remove-hz').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.hotspot-zone-row')?.remove();
+      updateVisualRects();
+    });
+  });
+
+  // Sync on input changes
+  view.querySelectorAll('.hotspot-zone-row input').forEach(inp => {
+    inp.addEventListener('input', updateVisualRects);
+  });
+
+  // Preview spotlight
+  document.getElementById('btnPreviewSpotlight')?.addEventListener('click', () => {
+    const previewWin = window.open('/player.html?course=' + courseId + '&slide=' + idx, '_blank');
+    // Notify the player slide to show spotlights without waiting for slideData
+    let notified = false;
+    const check = setInterval(() => {
+      if (notified || !previewWin || previewWin.closed) { clearInterval(check); return; }
+      try {
+        previewWin.postMessage({ type: '_hotspotPreview', courseId, slideIndex: idx }, '*');
+        notified = true;
+      } catch(e) {}
+    }, 500);
+  });
+
+  // Init: sync bg img and rects
+  syncBgImg();
+  setTimeout(updateVisualRects, 200);
+
+  // Init: sync audio preview if already selected
+  (function() {
+    const sel = document.getElementById('slideAudio');
+    const previewRow = document.getElementById('audioPreviewRow');
+    if (sel?.value) {
+      const previewAudio = document.getElementById('audioPreview');
+      if (previewAudio) {
+        previewAudio.src = '/courses/' + courseId + '/audio/' + sel.value;
+        previewRow.style.display = 'flex';
+      }
+    }
+  })();
+
 
   // Display: add vocab
   document.getElementById('btnAddVocab')?.addEventListener('click', () => {
@@ -984,14 +1178,35 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     try {
       const result = await uploadFileChunked(file, 'narration', courseId);
       const select = document.getElementById('slideAudio');
+      const audioPath = result.path || 'narration/' + file.name;
       const opt = document.createElement('option');
-      opt.value = result.path || 'narration/' + file.name;
+      opt.value = audioPath;
       opt.textContent = file.name;
       opt.selected = true;
       select.appendChild(opt);
+      // Update audio preview
+      const previewAudio = document.getElementById('audioPreview');
+      const previewRow = document.getElementById('audioPreviewRow');
+      if (previewAudio) {
+        previewAudio.src = '/courses/' + courseId + '/audio/' + audioPath;
+        previewRow.style.display = 'flex';
+      }
       showToast('上传成功', 'success');
     } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
     this.value = '';
+  });
+
+  // Content: sync audio preview on select change
+  document.getElementById('slideAudio')?.addEventListener('change', function() {
+    const previewAudio = document.getElementById('audioPreview');
+    const previewRow = document.getElementById('audioPreviewRow');
+    if (this.value) {
+      previewAudio.src = '/courses/' + courseId + '/audio/' + this.value;
+      previewRow.style.display = 'flex';
+    } else {
+      previewAudio.src = '';
+      previewRow.style.display = 'none';
+    }
   });
 
   // Video: upload
@@ -1146,6 +1361,19 @@ function collectSpotlights(view) {
       duration: parseFloat(inputs[2]?.value || 1.5),
     };
   }).filter(s => s.elementId);
+}
+
+function collectSpotlightZones(view) {
+  return Array.from(view.querySelectorAll('.hotspot-zone-row')).map(row => {
+    const inputs = row.querySelectorAll('input');
+    return {
+      elementId: inputs[0]?.value || '',
+      x: parseFloat(inputs[1]?.value || 0),
+      y: parseFloat(inputs[2]?.value || 0),
+      w: parseFloat(inputs[3]?.value || 0),
+      h: parseFloat(inputs[4]?.value || 0),
+    };
+  }).filter(z => z.elementId);
 }
 
 function collectVocab(view) {

@@ -28,6 +28,10 @@ VocabHandler.prototype = {
     if (!grid) return;
     grid.innerHTML = '';
 
+    // 副标题
+    var subtitleEl = document.getElementById('exerciseSubtitle');
+    if (subtitleEl) subtitleEl.textContent = 'Master Your New Words';
+
     var vocab = this._config.vocab || [];
     var self = this;
 

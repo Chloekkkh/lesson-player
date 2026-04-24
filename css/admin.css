@@ -520,3 +520,112 @@ body {
 .spotlight-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
 .spotlight-row .form-input { flex: 1; }
 .spotlight-row .form-input[type="number"] { width: 70px; }
+
+/* ── Hotspot Editor ─────────────────────────── */
+.hotspot-editor-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.hotspot-canvas-wrap {
+  position: relative;
+  width: 600px;
+  height: 337px;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#hotspotBgImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+
+#hotspotRects {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hz-rect {
+  position: absolute;
+  border: 2px solid #4fc3f7;
+  background: rgba(79,195,247,0.15);
+  border-radius: 3px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.hz-label {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 0.7rem;
+  color: #4fc3f7;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+#hotspotDrawOverlay {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  z-index: 10;
+}
+
+.hotspot-zone-list {
+  flex: 1;
+  min-width: 0;
+  max-height: 337px;
+  overflow-y: auto;
+}
+
+.hotspot-zone-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  border: 1px solid #eee;
+}
+
+.hotspot-zone-row .form-input { font-size: 0.82rem; padding: 4px 8px; }
+
+.zone-coords {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.zone-coords input {
+  width: 50px !important;
+  font-size: 0.78rem;
+  padding: 4px 6px;
+}
+
+.empty-hint {
+  font-size: 0.82rem;
+  color: #aaa;
+  padding: 10px 0;
+  text-align: center;
+}
+
+.hotspot-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}

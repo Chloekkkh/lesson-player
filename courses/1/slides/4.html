@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>1 - 生词 4</title>
+  <title>HSK1 Lesson1 - 练习 4</title>
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/exercise.css">
 </head>
 <body>
-<div class="exercise-card">
+
+  <div class="exercise-card">
     <div class="page-header">
-      <h2 id="exerciseTitle">📚 词汇学习</h2>
+      <h2 id="exerciseTitle">练习 4</h2>
       <div class="header-toggles">
         <label class="toggle-switch">
           <input type="checkbox" id="togglePinyin" checked>
@@ -24,23 +25,37 @@
         </label>
       </div>
     </div>
-    <div class="vocab-grid" id="vocabGrid"></div>
-    <button class="vocab-next-btn" id="nextBtn">next page</button>
+    <p id="exerciseSubtitle" class="exercise-subtitle"></p>
+    <div id="exerciseAreas">
+      <div id="choiceArea" style="display:none">
+        <p class="question-text" id="questionText">Loading...</p>
+        <div id="playAudioWrap" style="display:none;text-align:center;margin: 16px 0;">
+          <button class="play-audio-btn" id="playAudioBtn">▶</button>
+        </div>
+        <div class="options" id="optionsContainer"></div>
+      </div>
+      <div class="arrange-area" id="arrangeArea"></div>
+      <div class="match-area" id="matchArea"></div>
+      <div class="fill-area" id="fillArea"></div>
+      <div class="trace-area" id="traceArea"></div>
+    </div>
+    <div class="action-row">
+      <button class="nav-btn" id="prevBtn" aria-label="上一题">&#8592;</button>
+      <button class="submit-btn" id="submitBtn">Submit</button>
+      <button class="nav-btn" id="nextBtn" aria-label="下一题" disabled>&#8594;</button>
+    </div>
   </div>
+
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/exercise/multi-handler.js"></script>
   <script src="/js/exercise/exercise.js"></script>
-  <script src="/js/exercise/types/vocab.js"></script>
-  <script src="/js/spotlight.js"></script>
-  <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', container: document.body });
-    window.addEventListener('message', function(e) {
-      var msg = e.data;
-      if (!msg) return;
-      if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
-      if (msg.type === 'spotlightClear') Spotlight.clear();
-    });
-  </script>
+  <script src="/js/exercise/types/choice.js"></script>
+  <script src="/js/exercise/types/arrange.js"></script>
+  <script src="/js/exercise/types/match.js"></script>
+  <script src="/js/exercise/types/fill.js"></script>
+<script src="/js/exercise/types/trace.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 </body>
 </html>

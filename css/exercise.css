@@ -533,13 +533,15 @@ body {
 /* ── VOCAB GRID ──────────────────────────────────────────── */
 .vocab-grid {
   display: grid;
+  height: 100vh;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 .vocab-card {
   background: var(--green-soft);
   border-radius: 16px;
+  height: max-content;
   padding: 20px 16px;
   text-align: center;
   border: 2px solid transparent;
