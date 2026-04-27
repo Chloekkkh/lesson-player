@@ -191,18 +191,10 @@
   const ICONS = ['📖','💬','🏠','🍜','🚌','🛒','👨‍⚕️','🏥','📅','🎉','✈️','🎓','👔','💰','🎯'];
 
   async function getCourses() {
-    // Scan courses directory
-    const res = await fetch('courses/');
-    const html = await res.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const links = [...doc.querySelectorAll('a')]
-      .map(a => a.getAttribute('href'))
-      .filter(h => h && !h.endsWith('/') && !h.startsWith('.'));
-
-    // Deduplicate and filter
-    const ids = [...new Set(links)];
-    return ids;
+    const res = await fetch('/api/courses');
+    if (!res.ok) return [];
+    const courses = await res.json();
+    return courses.map(c => c.id);
   }
 
   async function loadCourse(id) {

@@ -7,6 +7,9 @@
  *   //   dimness: 0-1, background dimness (default: 0.7)
  *   //   borderWidth: border width in percent (default: 0.4)
  *   //   borderColor: border color (default: rgba(255,255,255,0.7))
+ *   //   borderStrokeWidth: top border stroke width (default: 1.2)
+ *   //   glow: enable glow effect (default: false)
+ *   //   glowColor: glow color (default: rgba(34,168,110,1))
  *   //   autoClearDelay: auto clear delay in ms (default: 0, no auto clear)
  *   //   container: container element to measure (default: document.body)
  *   //   selector: clickable elements selector (default: '[data-spotlight]')
@@ -26,6 +29,7 @@ const Spotlight = (function() {
   let svg = null;
   let maskRect = null;
   let borderRect = null;
+  let glowRect = null; // glow layer behind borderRect
   let options = {};
   let currentElementId = null; //当前高亮元素id
   let autoClearTimeout = null;
@@ -41,6 +45,9 @@ const Spotlight = (function() {
     dimness: 0.7,
     borderWidth: 0.4,
     borderColor: 'rgba(255,255,255,0.7)',
+    borderStrokeWidth: 1.2,
+    glow: false,
+    glowColor: 'rgba(34,168,110,1)',
     autoClearDelay: 0,
     container: null,
     selector: '[data-spotlight]',
@@ -142,7 +149,20 @@ const Spotlight = (function() {
     mask.appendChild(maskBg);
     mask.appendChild(maskRect);
     defs.appendChild(mask);
+
     svg.appendChild(defs);
+
+    // Glow layer: thick blurred rect behind borderRect
+    if (options.glow) {
+      glowRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      glowRect.setAttribute('fill', 'none');
+      glowRect.setAttribute('stroke', options.glowColor);
+      glowRect.setAttribute('stroke-width', '5');
+      glowRect.style.filter = 'blur(3px)';
+      glowRect.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+      glowRect.setAttribute('opacity', '0');
+      svg.appendChild(glowRect);
+    }
 
     // Dimmed background
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -159,7 +179,7 @@ const Spotlight = (function() {
     borderRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     borderRect.setAttribute('fill', 'none');
     borderRect.setAttribute('stroke', options.borderColor);
-    borderRect.setAttribute('stroke-width', '1.2');
+    borderRect.setAttribute('stroke-width', options.borderStrokeWidth.toString());
     borderRect.style.vectorEffect = 'non-scaling-stroke';
     borderRect.style.cssText = `
       transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
@@ -251,6 +271,15 @@ const Spotlight = (function() {
     borderRect.setAttribute('rx', '2');
     borderRect.setAttribute('opacity', '0');
 
+    if (glowRect) {
+      glowRect.setAttribute('x', (rect.x - 4).toString());
+      glowRect.setAttribute('y', (rect.y - 4).toString());
+      glowRect.setAttribute('width', (rect.w + 8).toString());
+      glowRect.setAttribute('height', (rect.h + 8).toString());
+      glowRect.setAttribute('rx', '2');
+      glowRect.setAttribute('opacity', '0');
+    }
+
     // Show overlay
     overlay.style.opacity = '1';
 
@@ -268,6 +297,15 @@ const Spotlight = (function() {
       borderRect.setAttribute('height', h.toString());
       borderRect.setAttribute('rx', '1');
       borderRect.setAttribute('opacity', '1');
+
+      if (glowRect) {
+        glowRect.setAttribute('x', x.toString());
+        glowRect.setAttribute('y', y.toString());
+        glowRect.setAttribute('width', w.toString());
+        glowRect.setAttribute('height', h.toString());
+        glowRect.setAttribute('rx', '1');
+        glowRect.setAttribute('opacity', '0.5');
+      }
     });
 
     // Auto clear if configured
@@ -297,6 +335,14 @@ const Spotlight = (function() {
         borderRect.setAttribute('width', '0');
         borderRect.setAttribute('height', '0');
         borderRect.setAttribute('opacity', '0');
+
+        if (glowRect) {
+          glowRect.setAttribute('x', '0');
+          glowRect.setAttribute('y', '0');
+          glowRect.setAttribute('width', '0');
+          glowRect.setAttribute('height', '0');
+          glowRect.setAttribute('opacity', '0');
+        }
       }
     }, 300);
 
@@ -313,6 +359,7 @@ const Spotlight = (function() {
     }
     overlay = null;
     svg = null;
+    glowRect = null;
     maskRect = null;
     borderRect = null;
   }

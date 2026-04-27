@@ -191,8 +191,8 @@ function buildIframes(courseId) {
     iframe.dataset.index = i;
     iframe.style.zIndex = i === 0 ? '2' : '1';  // z-index 用内联保留，opacity/pointerEvents 交给 CSS .active 类
 
-    // 设置 iframe 加载的页面路径
-    iframe.src = 'courses/' + courseId + '/slides/' + slide.index + '.html';
+    // 设置 iframe 加载的页面路径（video 类型延迟到切换时再加载）
+    iframe.src = slide.type === 'video' ? '' : 'courses/' + courseId + '/slides/' + slide.index + '.html';
 
     // 插入到 player 容器中（confirmOverlay 之前）
     player.insertBefore(iframe, confirmOverlay);
@@ -375,19 +375,28 @@ function loadSlide(index, isInit) {
     }
   }
 
-  // 向 iframe 发送当前页的题目数据
+  var slide = course.slides[index];
+
+  // 向 iframe 发送当前页的题目数据（video 类型先加载 iframe）
   if (nextFrame) {
-    sendSlideData(nextFrame, course.slides[index]);
+    if (slide.type === 'video' && !nextFrame.src) {
+      var iframeOnload = function() {
+        nextFrame.removeEventListener('load', iframeOnload);
+        sendSlideData(nextFrame, slide);
+      };
+      nextFrame.addEventListener('load', iframeOnload);
+      nextFrame.src = 'courses/' + course.id + '/slides/' + slide.index + '.html';
+    } else {
+      sendSlideData(nextFrame, slide);
+    }
   }
 
   // 重置进度条
   progressFill.style.width = '0%';
   progressTimeEl.textContent = formatTime(timerTotal / 1000) + ' / ' + formatTime(timerTotal / 1000);
 
-  var slide = course.slides[index];
-
-  // exercise / display / video 永远不显示遮罩，等过渡完成后再真正隐藏
-  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') {
+  // exercise / display / video / dialogue 永远不显示遮罩，等过渡完成后再真正隐藏
+  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') {
     pauseScreen.style.opacity = '0';
     pauseScreen.style.pointerEvents = 'none';
     setTimeout(function() { pauseScreen.style.display = 'none'; }, 600);
@@ -402,8 +411,8 @@ function loadSlide(index, isInit) {
     pauseScreen.style.display = 'none';
   }
 
-  // exercise / display / video 页面：让点击穿透到 iframe（选项/按钮可点）
-  clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') ? 'none' : 'auto';
+  // exercise / display / video / dialogue 页面：让点击穿透到 iframe（选项/按钮可点）
+  clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') ? 'none' : 'auto';
 
   // ═══ 练习题（exercise）═══
   if (slide.type === 'exercise') {
@@ -441,6 +450,20 @@ function loadSlide(index, isInit) {
     playing = false;
     statusIndicator.className = 'status-indicator paused';
     statusText.textContent = '播放视频中';
+    stopTimer();
+    isTransitioning = false;
+    if (pendingIndex !== null && pendingIndex !== current) {
+      var next = pendingIndex; pendingIndex = null; goToSlide(next);
+    } else { pendingIndex = null; }
+    return;
+  }
+
+  // ═══ 对话课（dialogue）═══
+  if (slide.type === 'dialogue') {
+    // 对话课由 iframe 自己管理音频，播完后发 displayComplete / rolePlayComplete
+    playing = false;
+    statusIndicator.className = 'status-indicator paused';
+    statusText.textContent = '对话学习中';
     stopTimer();
     isTransitioning = false;
     if (pendingIndex !== null && pendingIndex !== current) {
@@ -512,7 +535,8 @@ function sendSlideData(frame, slideData) {
     // 注入课程路径前缀，供 iframe 拼接音频完整路径
     var payload = Object.assign({}, slideData, {
       courseId: course.id,
-      audioBase: '/courses/' + course.id + '/audio/'
+      audioBase: '/courses/' + course.id + '/audio/',
+      imgBase: '/courses/' + course.id + '/'
     });
     frame.contentWindow.postMessage({ type: 'slideData', data: payload }, '*');
   } catch (e) {
@@ -898,11 +922,11 @@ pauseScreen.addEventListener('click', function() {
     }
   } else if (playing) {
     // 播放中：暂停
-    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') return;
+    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return;
     pauseAudio();
   } else {
     // 已暂停：恢复
-    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') return;
+    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return;
     resumeAudio();
   }
 });
@@ -914,7 +938,7 @@ clickInterceptor.addEventListener('click', function(e) {
   if (e.target === confirmBtn) return;
   if (!started) return; // 忽略
   var slide = course.slides[current];
-  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') return; // 练习/生词/视频页不响应暂停
+  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return; // 练习/生词/视频/对话页不响应暂停
   if (playing) pauseAudio(); else resumeAudio();
 });
 
@@ -1037,6 +1061,8 @@ document.addEventListener('keydown', function(e) {
  *     → 直接翻页
  *   - displayComplete：display 类型（vocab）学完翻页
  *     → 直接翻页
+ *   - rolePlayComplete：dialogue 角色扮演练习完成
+ *     → 直接翻页
  *   - exerciseNextQuestion：多题内部切换（更新状态即可）
  */
 window.addEventListener('message', function(e) {
@@ -1064,7 +1090,11 @@ window.addEventListener('message', function(e) {
     updateControlBarState();
 
   } else if (msg.action === 'displayComplete') {
-    // display 类型直接翻页
+    // display / dialogue 类型直接翻页
+    goToSlide(current + 1);
+
+  } else if (msg.action === 'rolePlayComplete') {
+    // 对话角色扮演练习完成后翻页
     goToSlide(current + 1);
 
   } else if (msg.action === 'exerciseDone') {

@@ -20,7 +20,7 @@
         {
           "elementId": "zone-2",
           "at": 16,
-          "duration": 2
+          "duration": 10
         },
         {
           "elementId": "zone-3",
@@ -195,9 +195,9 @@
         {
           "id": "w6",
           "hanzi": "我",
-          "pinyin": "wǒ",
-          "pos": "pron.",
-          "en": "I; me",
+          "pinyin": "wo",
+          "pos": "pron,",
+          "en": "I/me",
           "audio": ""
         }
       ],
@@ -304,6 +304,112 @@
         }
       ],
       "showPinyin": true
+    },
+    {
+      "index": 5,
+      "type": "content",
+      "title": "第 5 页",
+      "audio": "narration/1.mp3",
+      "subtitles": [],
+      "spotlights": [],
+      "spotlightZones": [
+        {
+          "elementId": "zone-1",
+          "x": 5.2,
+          "y": 22.8,
+          "w": 91.4,
+          "h": 31.2
+        }
+      ],
+      "backgroundImage": "pptimg/content1.PNG"
+    },
+    {
+      "index": 6,
+      "type": "dialogue",
+      "title": "💬 Dialogue",
+      "subtitle": "A teacher and a student meeting for the first time and exchanging greetings.",
+      "audio": "dialogue/d1.mp3",
+      "speakers": [
+        {
+          "id": "A",
+          "name": "老师",
+          "pinyin": "lǎo shī",
+          "avatar": "img/dialogue/dialogue_avator1.png"
+        },
+        {
+          "id": "B",
+          "name": "学生",
+          "pinyin": "xué shēng",
+          "avatar": "img/dialogue/dialogue_avator2.png"
+        }
+      ],
+      "image": "img/dialogue/bg.png",
+      "showText": true,
+      "showPinyin": true,
+      "showEnglish": false,
+      "hasRolePlay": true,
+      "lines": [
+        {
+          "speaker": "A",
+          "start": 0,
+          "end": 3.5,
+          "hanzi": "你好！我叫王明。",
+          "pinyin": "nǐ hǎo! wǒ jiào wáng míng.",
+          "en": "Hello! My name is Wang Ming.",
+          "vocab": [
+            {
+              "start": 7,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "speaker": "B",
+          "start": 3.5,
+          "end": 7,
+          "hanzi": "你好，王明！我叫李英。",
+          "pinyin": "nǐ hǎo, wáng míng! wǒ jiào lǐ yīng.",
+          "en": "Hello, Wang Ming! I'm Li Ying.",
+          "vocab": []
+        },
+        {
+          "speaker": "A",
+          "start": 7,
+          "end": 11,
+          "hanzi": "李英，你好吗？",
+          "pinyin": "lǐ yīng, nǐ hǎo ma?",
+          "en": "Li Ying, how are you?",
+          "vocab": []
+        },
+        {
+          "speaker": "B",
+          "start": 11,
+          "end": 15,
+          "hanzi": "我很好，谢谢！",
+          "pinyin": "wǒ hěn hǎo, xiè xie!",
+          "en": "I'm fine, thank you!",
+          "vocab": [
+            {
+              "start": 5,
+              "end": 7
+            }
+          ]
+        }
+      ],
+      "vocabList": [
+        {
+          "hanzi": "叫",
+          "pinyin": "jiào",
+          "pos": "v.",
+          "en": "be called as"
+        },
+        {
+          "hanzi": "谢谢",
+          "pinyin": "xiè xie",
+          "pos": "v.",
+          "en": "thank you"
+        }
+      ]
     }
   ]
 }

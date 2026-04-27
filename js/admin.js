@@ -617,12 +617,7 @@ function renderContentEditor(slide, courseId, audioFiles) {
       <button class="btn btn-secondary btn-sm" id="btnAddHotspot">+ 添加热区</button>
       <button class="btn btn-ghost btn-sm" id="btnPreviewSpotlight">▶ 预览 Spotlight</button>
       <input type="file" id="bgImgFileInput" accept="image/*" style="display:none">
-    </div>
-
-    <div class="section-title">幻灯片 HTML</div>
-    <textarea class="form-textarea" id="slideHtmlRaw" style="font-family:monospace;min-height:120px" placeholder="点击"加载 HTML"按钮加载..."></textarea>
-    <button class="btn btn-secondary btn-sm" id="btnLoadHtml">加载 HTML</button>
-    <button class="btn btn-secondary btn-sm" id="btnSaveHtml">保存 HTML</button>`;
+    </div>`;
 }
 
 /* ── Display Editor ─────────────────────────── */
@@ -1152,22 +1147,6 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     attachQuestionHandlers(card, courseId);
   });
 
-  // Content: load/save HTML
-  document.getElementById('btnLoadHtml')?.addEventListener('click', async () => {
-    try {
-      const data = await api.get('/api/courses/' + courseId + '/slides/' + idx + '/html');
-      document.getElementById('slideHtmlRaw').value = data.html || '';
-    } catch (e) { showToast(e.message, 'error'); }
-  });
-
-  document.getElementById('btnSaveHtml')?.addEventListener('click', async () => {
-    const html = document.getElementById('slideHtmlRaw')?.value || '';
-    try {
-      await api.put('/api/courses/' + courseId + '/slides/' + idx + '/html', { html });
-      showToast('HTML 已保存', 'success');
-    } catch (e) { showToast(e.message, 'error'); }
-  });
-
   // Content: audio upload
   document.getElementById('btnUploadAudio')?.addEventListener('click', () => {
     document.getElementById('audioFileInput')?.click();
@@ -1178,7 +1157,7 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     try {
       const result = await uploadFileChunked(file, 'narration', courseId);
       const select = document.getElementById('slideAudio');
-      const audioPath = result.path || 'narration/' + file.name;
+      const audioPath = result.path;
       const opt = document.createElement('option');
       opt.value = audioPath;
       opt.textContent = file.name;
@@ -1220,7 +1199,7 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       const result = await uploadFileChunked(file, 'video', courseId);
       const select = document.getElementById('slideVideo');
       const opt = document.createElement('option');
-      opt.value = result.path || 'video/' + file.name;
+      opt.value = result.path;
       opt.textContent = file.name;
       opt.selected = true;
       select.appendChild(opt);
@@ -1246,7 +1225,7 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     const ri = parseInt(this.dataset.targetRow || '0', 10);
     try {
       const result = await uploadFileChunked(file, 'vocab', courseId);
-      const path = result.path || 'vocab/' + file.name;
+      const path = result.path;
       // Update all vocab audio selects
       view.querySelectorAll('.v-audio').forEach(select => {
         const opt = document.createElement('option');
@@ -1332,7 +1311,7 @@ function attachQuestionHandlers(card, courseId) {
         const select = card.querySelector('.q-audio');
         if (select) {
           const opt = document.createElement('option');
-          opt.value = result.path || 'exercise/' + file.name;
+          opt.value = result.path;
           opt.textContent = file.name;
           opt.selected = true;
           select.appendChild(opt);

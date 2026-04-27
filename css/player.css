@@ -302,10 +302,9 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.15s, transform 0.1s;
-  color: var(--ink);
   flex-shrink: 0;
   padding: 0;
-  color: #607ee8;
+  color: var(--blue);
 }
 .ctrl-btn:hover {
   opacity: 0.6;
@@ -315,10 +314,14 @@
   opacity: 0.25;
   pointer-events: none;
 }
+.ctrl-btn svg {
+  width: 22px;
+  height: 22px;
+}
 
 .ctrl-play {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   background: transparent;
   border: none;
 }
@@ -328,10 +331,6 @@
   align-items: center;
   margin: 0 4px;
   position: relative;
-}
-.ctrl-vol-icon svg {
-  width: 18px;
-  height: 18px;
 }
 .vol-popup {
   position: absolute;

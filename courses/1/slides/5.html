@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HSK1 Lesson1 - 第1页</title>
+  <title>HSK1 Lesson1 - 第5页</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -18,9 +18,9 @@
       inset: 0;
       width: 1200px;
       height: 675px;
-      background-image: url('../pptimg/content1.PNG');
       background-size: cover;
       background-position: center;
+      background-color: #f5f5f5;
     }
     .hotspot {
       position: absolute;
@@ -34,7 +34,7 @@
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.3, borderWidth: 0.5, borderColor: 'rgba(34,168,110,1)', glow: false, glowColor: 'rgba(34,168,110,1)', borderStrokeWidth: 0.5, container: document.body });
+    Spotlight.init({ dimness: 0.3, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: false, glowColor: 'rgba(34,168,110,1)', container: document.body });
 
     function renderHotspots(zones) {
       var container = document.getElementById('hotspot-container');
@@ -51,26 +51,23 @@
 
     window.addEventListener('message', function(e) {
       var msg = e.data;
-      console.log('slide received msg:', msg);
       if (!msg) return;
 
-      // 收到 spotlightZones 时立即渲染热区
       if (msg.spotlightZones && !zonesRendered) {
         zonesRendered = true;
         renderHotspots(msg.spotlightZones);
       }
 
-      // if (msg.type === 'slideData') {
-      //   console.log('spotlightZones:', msg.data.spotlightZones);
-      //   if (msg.data.backgroundImage) {
-      //     var bg = document.querySelector('.slide-bg');
-      //     if (bg) bg.style.backgroundImage = 'url(/courses/' + msg.data.courseId + '/' + msg.data.backgroundImage + ')';
-      //   }
-      //   if (msg.data.spotlightZones && !zonesRendered) {
-      //     zonesRendered = true;
-      //     renderHotspots(msg.data.spotlightZones);
-      //   }
-      // }
+      if (msg.type === 'slideData') {
+        if (msg.data.backgroundImage) {
+          var bg = document.querySelector('.slide-bg');
+          if (bg) bg.style.backgroundImage = 'url(/courses/' + msg.data.courseId + '/' + msg.data.backgroundImage + ')';
+        }
+        if (msg.data.spotlightZones && !zonesRendered) {
+          zonesRendered = true;
+          renderHotspots(msg.data.spotlightZones);
+        }
+      }
       if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
       if (msg.type === 'spotlightClear') Spotlight.clear();
     });

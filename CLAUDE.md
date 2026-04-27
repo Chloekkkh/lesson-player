@@ -40,7 +40,7 @@ node tools/add-slide.js <course-id> --delete --index N
 
 ### 播放器（player.html + js/player.js）
 
-- **iframe 叠加**：所有 slide 同时预加载为 iframe，叠加在同一个 1200×675 容器中
+- **iframe 叠加**：所有 slide 预加载为 iframe，叠加在同一个 1200×675 容器中（video 类型延迟到切换时加载）
 - **交叉淡入淡出**：CSS `transition: opacity 0.6s ease` + `z-index` 分层（active=2, inactive=1）
 - **父→子通信**：`postMessage` 发送 `{ type: 'slideData' | 'spotlight' | 'spotlightClear' }`
 - **子→父通信**：slide 通过 `{ type: 'playerMessage', action: 'exerciseDone' }` 回报
@@ -125,7 +125,7 @@ node tools/add-slide.js <course-id> --delete --index N
 ## 关键设计决策
 
 1. **slide HTML 是完全独立的**：不管理音频、不处理切换逻辑，只负责展示。数据由 player 通过 postMessage 注入。
-2. **iframe 预加载**：`buildIframes` 时即设置所有 iframe 的 `src`，后续只用 CSS class 控制显隐。改变这个逻辑会破坏淡入淡出。
+2. **iframe 懒加载**：普通 slide 在 `buildIframes` 时设置 `src`；video 类型延迟到切换到该页时才设置 `src`。改变这个逻辑会破坏淡入淡出。
 3. **`playing` 全局标志**：所有计时器、轮询、音频恢复都必须检查 `if (!playing) return`。这是暂停/恢复机制的核心。
 4. **聚光灯 `elementId` 必须与 HTML 中 `id` 属性完全一致**，player 直接透传给 `Spotlight.spotlight(elementId)`。
 5. **工具脚本是 Node.js 但应用本身是纯静态**：无构建步骤，任何静态服务器都能部署。

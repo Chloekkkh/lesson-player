@@ -78,6 +78,8 @@ function buildSlideHTML(courseId, filename, imagePath) {
       dimness: 0.75,
       borderWidth: 0.5,
       borderColor: 'rgba(255,255,255,0.8)',
+      glow: true,
+      glowColor: 'rgba(34,168,110,1)',
       container: document.body,
     });
 

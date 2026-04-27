@@ -73,7 +73,7 @@ function contentTemplate(slideNum, courseTitle) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', container: document.body });
+    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
 
     function renderHotspots(zones) {
       var container = document.getElementById('hotspot-container');
@@ -136,7 +136,7 @@ function videoTemplate(slideNum, courseTitle) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, container: document.body });
+    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
 
     function postToParent(action) {
       try { parent.postMessage({ type: 'playerMessage', action: action }, '*'); } catch(e) {}
@@ -286,7 +286,7 @@ ${body}
   ${exerciseType === 'trace' ? '<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>' : ''}
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', container: document.body });
+    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
     window.addEventListener('message', function(e) {
       var msg = e.data;
       if (!msg) return;
@@ -294,6 +294,77 @@ ${body}
       if (msg.type === 'spotlightClear') Spotlight.clear();
     });
   </script>
+</body>
+</html>`;
+}
+
+/**
+ * 对话课 HTML 模板
+ */
+function dialogueTemplate(slideNum, courseTitle) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${courseTitle} - 情景对话 ${slideNum}</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/dialogue.css">
+</head>
+<body>
+  <div class="dlg-wrap">
+    <div class="dlg-left">
+      <div class="dlg-header">
+        <img class="dlg-speaker-img" id="avatarA">
+        <div class="dlg-title" id="dlgTitle"></div>
+        <img class="dlg-speaker-img" id="avatarB">
+      </div>
+      <div class="dlg-lines" id="dlgLines"></div>
+    </div>
+    <div class="dlg-right" id="dlgRight">
+      <img class="dlg-scene-img" id="dlgSceneImg">
+    </div>
+  </div>
+
+  <div class="dlg-toolbar">
+    <button class="dlg-btn-play" id="playBtn">🔊 播放录音</button>
+    <button class="dlg-btn-toggle" id="textToggle">隐藏文本</button>
+    <label><input type="checkbox" id="pinyinToggle" checked> 拼音</label>
+    <label><input type="checkbox" id="englishToggle" checked> 英文</label>
+    <button class="dlg-btn-practice" id="practiceBtn">开始练习</button>
+    <button class="dlg-btn-next" id="nextBtn">下一页 →</button>
+  </div>
+
+  <div class="rp-overlay" id="rpOverlay">
+    <div class="rp-panel">
+      <div class="rp-avatars">
+        <img class="rp-avatar" id="rpAvatarA">
+        <img class="rp-avatar B" id="rpAvatarB">
+      </div>
+      <div class="rp-status" id="rpStatus">请选择你要扮演的角色</div>
+      <div class="rp-role-btns" id="rpRoleBtns">
+        <button class="rp-role-btn" id="rpChooseA">扮演 A</button>
+        <button class="rp-role-btn B" id="rpChooseB">扮演 B</button>
+      </div>
+      <div class="rp-progress">第 <span id="rpCur">1</span> / <span id="rpTotal">1</span> 句</div>
+      <div class="rp-controls">
+        <button class="rp-btn rp-btn-hint" id="rpPlayHint">🔊 听提示音</button>
+        <button class="rp-btn rp-btn-answer" id="rpPlayAnswer">🔊 听正确答案</button>
+        <button class="rp-btn rp-btn-next" id="rpNextLine">下一句 →</button>
+      </div>
+      <button class="rp-exit" id="rpExit">退出练习</button>
+    </div>
+  </div>
+
+  <div class="dlg-vocab-popup" id="vocabPopup">
+    <div class="vp-hanzi" id="vpHanzi"></div>
+    <div class="vp-pinyin" id="vpPinyin"></div>
+    <div class="vp-pos" id="vpPos"></div>
+    <div class="vp-en" id="vpEn"></div>
+  </div>
+
+  <script defer src="/js/dialogue.js"></script>
 </body>
 </html>`;
 }
@@ -357,6 +428,23 @@ function buildSlideEntry(slideType, exerciseType, slideNum) {
   } else if (slideType === 'video') {
     entry.video = 'video/demo.mp4';
     entry.title = '视频学习';
+  } else if (slideType === 'dialogue') {
+    entry.title = '情景对话';
+    entry.audio = 'dialogue/1.mp3';
+    entry.speakers = [
+      { id: 'A', name: '角色A', avatar: 'avatars/A.png' },
+      { id: 'B', name: '角色B', avatar: 'avatars/B.png' }
+    ];
+    entry.showText = true;
+    entry.showPinyin = true;
+    entry.showEnglish = false;
+    entry.hasRolePlay = true;
+    entry.image = '';
+    entry.lines = [
+      { speaker: 'A', start: 0, end: 3, hanzi: '你好！', pinyin: 'nǐ hǎo', en: 'Hello', vocab: [] },
+      { speaker: 'B', start: 3, end: 6, hanzi: '你好！', pinyin: 'nǐ hǎo', en: 'Hello', vocab: [] }
+    ];
+    entry.vocabList = [];
   }
 
   return entry;
@@ -443,8 +531,8 @@ function main() {
   }
 
   // ── Insert / Add mode ─────────────────────────────────────
-  if (!['content', 'exercise', 'display', 'video'].includes(slideType)) {
-    console.error('错误: --type 必须是 content / exercise / display / video');
+  if (!['content', 'exercise', 'display', 'video', 'dialogue'].includes(slideType)) {
+    console.error('错误: --type 必须是 content / exercise / display / video / dialogue');
     process.exit(1);
   }
 
@@ -486,11 +574,12 @@ function main() {
   course.slides.sort((a, b) => a.index - b.index);
 
   // Write slide HTML
-  const slideHtml = slideType === 'exercise'
-    ? exerciseTemplate(slideNum, exerciseType, course.title || courseId)
-    : slideType === 'video'
-    ? videoTemplate(slideNum, course.title || courseId)
-    : contentTemplate(slideNum, course.title || courseId);
+  const htmlMap = {
+    exercise: exerciseTemplate(slideNum, exerciseType, course.title || courseId),
+    video:    videoTemplate(slideNum, course.title || courseId),
+    dialogue: dialogueTemplate(slideNum, course.title || courseId),
+  };
+  const slideHtml = htmlMap[slideType] || contentTemplate(slideNum, course.title || courseId);
 
   fs.writeFileSync(path.join(slidesDir, `${slideNum}.html`), slideHtml, 'utf8');
 

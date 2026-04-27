@@ -161,8 +161,6 @@ http://localhost:3000/admin.html
 | PATCH | `/api/courses/:id/slides/:index` | 更新幻灯片配置 |
 | DELETE | `/api/courses/:id/slides/:index` | 删除幻灯片 |
 | POST | `/api/courses/:id/slides/:index/regenerate` | 重新生成 HTML |
-| GET | `/api/courses/:id/slides/:index/html` | 读取 HTML 源码 |
-| PUT | `/api/courses/:id/slides/:index/html` | 保存 HTML 源码 |
 | POST | `/api/courses/:id/audio-files` | 上传音频/图片（分块） |
 | GET | `/api/courses/:id/audio-files` | 音频文件列表 |
 
