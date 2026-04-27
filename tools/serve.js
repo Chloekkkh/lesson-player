@@ -14,7 +14,7 @@ const { handleApi } = require('./author-api.js');
 
 const ROOT   = path.resolve(__dirname, '..');
 const PORT   = parseInt(process.argv.find(a => a.startsWith('--port='))?.split('=')[1] || '3000');
-const HOST   = 'localhost';
+const HOST   = '0.0.0.0';
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
