@@ -74,14 +74,7 @@ function buildSlideHTML(courseId, filename, imagePath) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({
-      dimness: 0.75,
-      borderWidth: 0.5,
-      borderColor: 'rgba(255,255,255,0.8)',
-      glow: true,
-      glowColor: 'rgba(34,168,110,1)',
-      container: document.body,
-    });
+    Spotlight.init({ dimness: 0.75, container: document.body });
 
     window.addEventListener('message', function(e) {
       var msg = e.data;

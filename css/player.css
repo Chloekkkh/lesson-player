@@ -132,9 +132,7 @@
   position: absolute;
   inset: 0;
   z-index: 9;  /* 最高层 */
-  background: rgba(200, 220, 255, 0.2);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(200, 220, 255, 0);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -401,8 +399,8 @@
   bottom: 20px;
   right: 20px;
   z-index: 10;
-  display: flex;
-  align-items: flex-start;
+  /* display: flex;
+  align-items: flex-start; */
   gap: 10px;
   cursor: grab;
 }
@@ -412,8 +410,10 @@
 .assistant.dragging { cursor: grabbing; }
 
 .assistant-avatar {
+  position: relative;
   width: 60px;
   height: 60px;
+  right: 0px;
   border-radius: 50%;
   background: var(--blue);
   color: #fff;
@@ -424,7 +424,6 @@
   box-shadow: 0 4px 12px rgba(74, 130, 239, 0.4);
   flex-shrink: 0;
   border: 3px solid #fff;
-  order: 2; /* 头像在右侧 */
   transition: opacity 0.2s, transform 0.2s;
   cursor: pointer;
 }
@@ -434,6 +433,8 @@
 }
 
 .assistant-bubble {
+  position: absolute;
+  right: 70px;
   background: #fff;
   border-radius: 16px 16px 4px 16px;
   padding: 10px 16px;
@@ -441,13 +442,12 @@
   width: 280px;
   display: flex;
   align-items: end;
-  border: 1.5px solid var(--line);
+  /* border: 1.5px solid var(--line); */
   order: 1; /* 气泡在左侧 */
 }
 
 .assistant-subtitle {
-  font-size: 0.95rem;
+  font-size: 1.0rem;
   color: var(--ink);
-  line-height: 1.4;
   white-space: pre-wrap;
 }

@@ -40,7 +40,7 @@ function contentTemplate(slideNum, courseTitle) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
+    Spotlight.init({ dimness: 0.75, container: document.body });
 
     function renderHotspots(zones) {
       var container = document.getElementById('hotspot-container');
@@ -102,7 +102,7 @@ function videoTemplate(slideNum, courseTitle) {
   </div>
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
+    Spotlight.init({ dimness: 0.75, container: document.body });
     function postToParent(action) {
       try { parent.postMessage({ type: 'playerMessage', action: action }, '*'); } catch(e) {}
     }
@@ -248,7 +248,6 @@ function dialogueTemplate(slideNum, courseTitle) {
             <div class="flip-hint">Tap to show text</div>
           </div>
           <div class="dlg-flip-back">
-            <div class="flip-back-header">📖 对话文本</div>
             <div class="dlg-text-list" id="dlgTextList"></div>
           </div>
         </div>

@@ -161,7 +161,6 @@ body {
 /* ── RIGHT: FLIP CARD ────────────────────────────────────── */
 .dlg-flip-card {
   flex: 0 0 500px;
-  perspective: 1200px;
   cursor: pointer;
   min-height: 0;
 }
@@ -224,18 +223,9 @@ body {
   box-shadow: 0 8px 32px rgba(34, 168, 110, 0.12);
   transform: rotateY(180deg);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow: hidden;
 }
-
-/* .flip-back-header {
-  padding: 14px 18px 10px;
-  border-bottom: 1px solid #e8ecf0;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--green);
-  flex-shrink: 0;
-} */
 
 .dlg-text-list {
   flex: 1;
@@ -244,32 +234,51 @@ body {
 }
 
 .dlg-text-item {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-.dlg-text-speaker {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--green);
+.dlg-text-avatar {
+  flex: 0 0 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.dlg-line-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--green);
+}
+
+.dlg-text-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .dlg-text-hanzi {
-  font-size: 17px;
+  font-size: 20px;
   color: var(--ink);
   font-weight: 500;
   line-height: 1.5;
 }
 
 .dlg-text-pinyin {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--body);
 }
 
 .dlg-text-en {
-  font-size: 13px;
+  font-size: 15px;
   color: var(--body);
   font-style: italic;
 }

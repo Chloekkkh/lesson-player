@@ -73,7 +73,7 @@ function contentTemplate(slideNum, courseTitle) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
+    Spotlight.init({ dimness: 0.75, container: document.body });
 
     function renderHotspots(zones) {
       var container = document.getElementById('hotspot-container');
@@ -136,7 +136,7 @@ function videoTemplate(slideNum, courseTitle) {
 
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
+    Spotlight.init({ dimness: 0.75, container: document.body });
 
     function postToParent(action) {
       try { parent.postMessage({ type: 'playerMessage', action: action }, '*'); } catch(e) {}
@@ -286,7 +286,7 @@ ${body}
   ${exerciseType === 'trace' ? '<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>' : ''}
   <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, borderWidth: 0.5, borderColor: 'rgba(255,255,255,0.8)', glow: true, glowColor: 'rgba(34,168,110,1)', container: document.body });
+    Spotlight.init({ dimness: 0.75, container: document.body });
     window.addEventListener('message', function(e) {
       var msg = e.data;
       if (!msg) return;

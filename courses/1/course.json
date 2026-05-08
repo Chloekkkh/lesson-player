@@ -20,12 +20,12 @@
         {
           "elementId": "zone-2",
           "at": 16,
-          "duration": 10
+          "duration": 5
         },
         {
           "elementId": "zone-3",
           "at": 26,
-          "duration": 2
+          "duration": 5
         }
       ],
       "spotlightZones": [
@@ -53,7 +53,7 @@
       ],
       "subtitles": [
         {
-          "at": 1,
+          "at": 0.1,
           "text": "We’ve already learned how to use “多少” to ask about quantity,"
         },
         {
@@ -97,7 +97,7 @@
       "audio": "narration/2.mp3",
       "subtitles": [
         {
-          "at": 1,
+          "at": 0.1,
           "text": "There’s one more thing to remember. "
         },
         {
@@ -227,10 +227,6 @@
             {
               "id": "C",
               "text": "选项 C"
-            },
-            {
-              "id": "D",
-              "text": "选项 D"
             }
           ],
           "answer": "A"
@@ -262,44 +258,53 @@
         },
         {
           "id": "q3",
-          "type": "arrange",
-          "words": [
-            "词语1",
-            "词语2"
-          ],
-          "answer": [
-            "词语1",
-            "词语2"
-          ],
-          "pinyinMap": {}
-        },
-        {
-          "id": "q4",
-          "type": "match",
-          "pairs": [
-            {
-              "left": "左",
-              "right": "右"
-            }
-          ],
-          "pinyinMap": {}
-        },
-        {
-          "id": "q5",
           "type": "fill",
           "question": "请填空 _____",
           "answer": "1"
         },
         {
-          "id": "q6",
+          "id": "q4",
           "type": "trace",
-          "char": "谢",
-          "pinyin": "xiè",
-          "en": "thanks",
+          "char": "三",
+          "pinyin": "sān",
+          "en": "three",
           "stars": {
             "1": 0.3,
             "2": 0.6,
             "3": 0.85
+          }
+        },
+        {
+          "id": "q5",
+          "type": "match",
+          "pairs": [
+            {
+              "left": "请问",
+              "right": "May I ask"
+            },
+            {
+              "left": "你",
+              "right": "you"
+            },
+            {
+              "left": "叫",
+              "right": "call"
+            },
+            {
+              "left": "什么",
+              "right": "what"
+            },
+            {
+              "left": "名字",
+              "right": "name"
+            }
+          ],
+          "pinyinMap": {
+            "请问": "qǐng wèn",
+            "你": "nǐ",
+            "叫": "jiào",
+            "什么": "shén me",
+            "名字": "míng zì"
           }
         }
       ],
@@ -408,6 +413,71 @@
           "pinyin": "xiè xie",
           "pos": "v.",
           "en": "thank you"
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "type": "exercise",
+      "title": "练习题",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "match",
+          "leftType": "text",
+          "rightType": "image",
+          "pairs": [
+            {
+              "left": "我会做一些中国菜。",
+              "right": "pptimg/content1.PNG"
+            },
+            {
+              "left": "今天妈妈休息，她做面条儿。",
+              "right": "pptimg/content2.PNG"
+            },
+            {
+              "left": "星期四我很忙，我不做饭。",
+              "right": "img/dialogue/bg.png"
+            },
+            {
+              "left": "我很想妈妈做的饺子。",
+              "right": "img/dialogue/dialogue_avator1.png"
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "type": "fill",
+          "question": "今天8月15日，（    ）二。",
+          "options": [
+            "月",
+            "星期",
+            "休息",
+            "号",
+            "今天"
+          ],
+          "answer": "月"
+        },
+        {
+          "id": "q3",
+          "type": "match3",
+          "pairs": [
+            {
+              "audio": "narration/1.mp3",
+              "image": "pptimg/content1.PNG",
+              "text": "星期一"
+            },
+            {
+              "audio": "narration/2.mp3",
+              "image": "pptimg/content2.PNG",
+              "text": "星期三"
+            },
+            {
+              "audio": "dialogue/d1.mp3",
+              "image": "img/dialogue/bg.png",
+              "text": "星期二"
+            }
+          ]
         }
       ]
     }

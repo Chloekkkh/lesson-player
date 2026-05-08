@@ -353,6 +353,25 @@ body {
 .fill-input.correct  { border-color: var(--green); background: rgba(58, 138, 51, 0.08); }
 .fill-input.wrong    { border-color: var(--red);   background: rgba(224, 85, 85, 0.08); }
 
+/* 选词填空词卡 */
+.fill-options-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 16px; }
+.fill-opt-card {
+  padding: 10px 20px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 1.1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.fill-opt-card:hover   { border-color: var(--blue); background: rgba(74,130,239,0.06); transform: scale(1.05); }
+.fill-opt-card.selected { border-color: var(--blue); background: rgba(74,130,239,0.12); color: var(--blue); }
+.fill-opt-card.opt-correct { border-color: var(--green); background: rgba(58,138,51,0.12); color: var(--green); pointer-events: none; }
+.fill-opt-card.opt-wrong   { border-color: var(--red);   background: rgba(224,85,85,0.08);  color: var(--red);   pointer-events: none; }
+.fill-opt-card.opt-reveal  { border-color: var(--green); background: rgba(58,138,51,0.08); color: var(--green); animation: blink 0.4s 3; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 /* ── MATCHING ──────────────────────────────────────────────── */
 .match-area {
   position: relative;
@@ -380,31 +399,15 @@ body {
 .match-btn.paired        { border-color: var(--green); background: rgba(58,138,51,0.12); color: var(--green); pointer-events: none; }
 .match-pinyin { display: block; font-size: 0.8rem; color: var(--body); margin-bottom: 2px; }
 .match-text { display: block; font-size: 1.1rem; }
-.match-reshuffle-btn {
-  display: block;
-  margin: 16px auto 0;
-  padding: 8px 24px;
-  border: none;
-  border-radius: 50px;
-  background: var(--green);
-  font-size: 0.9rem;
-  color: #fff;
-  cursor: pointer;
-}
-.match-reshuffle-btn:hover { background: var(--green-deep); }
-.match-pinyin-toggle {
-  display: inline-block;
-  margin: 12px 8px 0;
-  padding: 8px 20px;
-  border: 2px solid var(--line);
-  border-radius: 50px;
-  background: #fff;
-  font-size: 0.9rem;
-  color: var(--body);
-  cursor: pointer;
-}
-.match-pinyin-toggle:hover { border-color: var(--green); color: var(--green); }
-.match-pinyin-toggle.active { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+
+/* 音频卡片 */
+.match-btn-audio { min-width: 120px; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.match-audio-icon { font-size: 1.4rem; color: var(--blue); display: block; }
+.match-btn-audio.audio-playing .match-audio-icon { color: var(--green); animation: pulse 0.8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* 图片按钮 */
+.match-btn-img { padding: 8px; min-width: 90px; min-height: 90px; }
 
 /* ── ACTION ROW (nav + submit on same line) ───────────────── */
 .action-row {
@@ -736,21 +739,6 @@ body {
 /* arrange 拼音两行布局（与 match.js 一致） */
 .arrange-pinyin { display: block; font-size: 0.8rem; color: var(--body); margin-bottom: 2px; }
 .arrange-text   { display: block; font-size: 1.1rem; }
-
-/* arrange 拼音开关按钮 */
-.arrange-pinyin-toggle {
-  display: inline-block;
-  margin: 12px 8px 0;
-  padding: 8px 20px;
-  border: 2px solid var(--line);
-  border-radius: 50px;
-  background: #fff;
-  font-size: 0.9rem;
-  color: var(--body);
-  cursor: pointer;
-}
-.arrange-pinyin-toggle:hover { border-color: var(--green); color: var(--green); }
-.arrange-pinyin-toggle.active { border-color: var(--green); color: var(--green); background: var(--green-soft); }
 
 /* ── SHAKE ───────────────────────────────────────────────── */
 .shake {

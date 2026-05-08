@@ -1,6 +1,11 @@
 /* ============================================================
    match.js — 连线配对题
    中英文卡片点击配对，Canvas 画线
+
+   支持三种模式（通过 config.leftType / config.rightType 区分）：
+   - text / text   ：传统文本连线（默认）
+   - audio / image ：听音配图片（点击音频播放，选中后再点图片配对）
+   - text  / image ：文本配图片
    ============================================================ */
 
 'use strict';
@@ -15,13 +20,17 @@ MatchHandler.prototype = {
   _pairs:          [],
   _leftBtns:       [],
   _rightBtns:      [],
-  _matchedLeft:    {},    // leftIdx → true
-  _matchedRight:   {},    // rightIdx → true
-  _leftSelected:   null,
+  _matchedLeft:    {},    // pairIdx → true
+  _matchedRight:   {},    // pairIdx → true
+  _leftSelected:   null,   // pairIdx of currently selected left item
   _lines:          [],    // [{leftIdx, rightIdx}, ...]
   _canvas:         null,
   _ctx:            null,
   _pinyinMap:      {},
+  _leftType:       'text',
+  _rightType:      'text',
+  _audioBase:      '',
+  _playingAudio:   null,
 
   /* ── init ─────────────────────────────────────────────── */
   init: function(config, callbacks) {
@@ -32,13 +41,20 @@ MatchHandler.prototype = {
     this._matchedRight = {};
     this._leftSelected = null;
     this._lines = [];
-    this._resizeHandler = null;  // Bug 3: track resize listener for cleanup
+    this._resizeHandler = null;
+    this._playingAudio = null;
+
+    // leftType / rightType：支持 questions[0] 或顶层
+    var q0 = config.questions && config.questions[0];
+    this._leftType  = (q0 && q0.leftType)  || config.leftType  || 'text';
+    this._rightType = (q0 && q0.rightType) || config.rightType || 'text';
+    this._audioBase = (q0 && q0.audioBase) || config.audioBase || '';
 
     // pinyin 映射（支持顶层 config 或 questions[0] 两种来源）
     if (config.pinyinMap) {
       this._pinyinMap = config.pinyinMap;
-    } else if (config.questions && config.questions[0] && config.questions[0].pinyinMap) {
-      this._pinyinMap = config.questions[0].pinyinMap;
+    } else if (q0 && q0.pinyinMap) {
+      this._pinyinMap = q0.pinyinMap;
     }
 
     this._render();
@@ -61,30 +77,47 @@ MatchHandler.prototype = {
     canvasWrap.appendChild(canvas);
     this._canvas = canvas;
 
-    // 列容器
+    // 列容器：横向排列两列，每列内部纵向堆叠
     var colsWrap = document.createElement('div');
-    colsWrap.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction: column;gap:48px;justify-content:center;';
+    colsWrap.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction:row;gap:80px;justify-content:center;align-items:center;';
 
     var leftCol = document.createElement('div');
     leftCol.className = 'match-col';
+    leftCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
 
     var rightCol = document.createElement('div');
     rightCol.className = 'match-col';
+    rightCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
 
     var self = this;
 
-    // 左列
-    this._pairs.forEach(function(pair, i) {
-      var btn = self._makeBtn(pair.left, 'left', i, self._config.showPinyin && self._pinyinMap[pair.left]);
-      leftCol.appendChild(btn);
-      self._leftBtns[i] = btn;
-    });
+    // 左列渲染
+    if (this._leftType === 'audio') {
+      // 听音模式：音频卡片，点击播放 + 选中
+      this._pairs.forEach(function(pair, i) {
+        var btn = self._makeAudioBtn(pair, 'left', i);
+        leftCol.appendChild(btn);
+        self._leftBtns[i] = btn;
+      });
+    } else {
+      // 文本模式：复用原有逻辑
+      this._pairs.forEach(function(pair, i) {
+        var btn = self._makeTextBtn(pair.left, 'left', i, self._config.showPinyin && self._pinyinMap[pair.left]);
+        leftCol.appendChild(btn);
+        self._leftBtns[i] = btn;
+      });
+    }
 
-    // 右列（乱序）
+    // 右列渲染（乱序）
     var shuffled = this._shuffle(this._pairs.map(function(_, i) { return i; }));
     shuffled.forEach(function(pairIdx) {
       var pair = self._pairs[pairIdx];
-      var btn = self._makeBtn(pair.right, 'right', pairIdx, false);
+      var btn;
+      if (self._rightType === 'image') {
+        btn = self._makeImageBtn(pair.right, 'right', pairIdx);
+      } else {
+        btn = self._makeTextBtn(pair.right, 'right', pairIdx, false);
+      }
       rightCol.appendChild(btn);
       self._rightBtns[pairIdx] = btn;
     });
@@ -96,30 +129,10 @@ MatchHandler.prototype = {
     area.appendChild(colsWrap);
     area.appendChild(canvasWrap);
 
-    // 洗牌重玩按钮
-    var reshuffleBtn = document.createElement('button');
-    reshuffleBtn.className = 'match-reshuffle-btn';
-    reshuffleBtn.textContent = 'Shuffle';
-    reshuffleBtn.addEventListener('click', function() { self._reshuffle(); });
-    area.appendChild(reshuffleBtn);
-
-    // 拼音开关按钮
-    var pinyinToggle = document.createElement('button');
-    pinyinToggle.className = 'match-pinyin-toggle' + (this._config.showPinyin ? ' active' : '');
-    pinyinToggle.textContent = '拼音';
-    var self2 = this;
-    pinyinToggle.addEventListener('click', function() {
-      self2._config.showPinyin = !self2._config.showPinyin;
-      pinyinToggle.classList.toggle('active', self2._config.showPinyin);
-      self2._refreshButtons();
-    });
-    area.appendChild(pinyinToggle);
-
     // 隐藏 submitBtn（match 无需提交）
     var submitBtn = document.getElementById('submitBtn');
     if (submitBtn) submitBtn.style.display = 'none';
 
-    // Bug 3: remove stale resize listener before adding new one
     if (this._resizeHandler) {
       window.removeEventListener('resize', this._resizeHandler);
     }
@@ -127,11 +140,12 @@ MatchHandler.prototype = {
     window.addEventListener('resize', this._resizeHandler);
   },
 
-  _makeBtn: function(text, side, idx, pinyinText) {
+  /* ── 文本按钮 ─────────────────────────────────────────── */
+  _makeTextBtn: function(text, side, pairIdx, pinyinText) {
     var btn = document.createElement('button');
     btn.className = 'match-btn';
     btn.dataset.side = side;
-    btn.dataset.idx = idx;
+    btn.dataset.pairIdx = pairIdx;
     if (pinyinText) {
       btn.innerHTML = '<span class="match-pinyin">' + pinyinText + '</span>' +
                       '<span class="match-text">' + text + '</span>';
@@ -140,10 +154,68 @@ MatchHandler.prototype = {
     }
     var self = this;
     btn.addEventListener('click', function() {
-      if (side === 'left') self._onLeftClick(idx, btn);
-      else                self._onRightClick(idx, btn);
+      if (side === 'left') self._onLeftClick(pairIdx, btn);
+      else                self._onRightClick(pairIdx, btn);
     });
     return btn;
+  },
+
+  /* ── 图片按钮 ─────────────────────────────────────────── */
+  _makeImageBtn: function(src, side, pairIdx) {
+    var btn = document.createElement('button');
+    btn.className = 'match-btn match-btn-img';
+    btn.dataset.side = side;
+    btn.dataset.pairIdx = pairIdx;
+    var img = document.createElement('img');
+    img.src = src;
+    img.style.cssText = 'max-width:80px;max-height:80px;border-radius:8px;pointer-events:none;';
+    btn.appendChild(img);
+    var self = this;
+    btn.addEventListener('click', function() {
+      if (side === 'left') self._onLeftClick(pairIdx, btn);
+      else                self._onRightClick(pairIdx, btn);
+    });
+    return btn;
+  },
+
+  /* ── 音频卡片按钮 ─────────────────────────────────────── */
+  _makeAudioBtn: function(pair, side, pairIdx) {
+    var btn = document.createElement('button');
+    btn.className = 'match-btn match-btn-audio';
+    btn.dataset.side = side;
+    btn.dataset.pairIdx = pairIdx;
+
+    // pair.left = 音频路径，pair.text = 显示的听力文本（可选）
+    var displayText = pair.text || pair.left;
+    btn.innerHTML = '<span class="match-audio-icon">&#9658;</span>' +
+                    '<span class="match-text">' + displayText + '</span>';
+
+    var self = this;
+    btn.addEventListener('click', function() { self._onAudioClick(pairIdx, btn, pair.left); });
+    return btn;
+  },
+
+  /* ── 音频点击 ─────────────────────────────────────────── */
+  _onAudioClick: function(pairIdx, btn, audioPath) {
+    if (this._matchedLeft[pairIdx]) return; // 已配对
+    if (this._playingAudio) {
+      this._playingAudio.pause();
+      this._playingAudio = null;
+    }
+    if (audioPath) {
+      var audio = new Audio(this._audioBase + audioPath);
+      audio.addEventListener('ended', function() { btn.classList.remove('audio-playing'); });
+      btn.classList.add('audio-playing');
+      audio.play();
+      this._playingAudio = audio;
+    }
+    // 选中该音频卡片
+    if (this._leftSelected !== null) {
+      this._leftBtns[this._leftSelected].style.borderColor = '';
+    }
+    this._leftSelected = pairIdx;
+    btn.style.borderColor = 'var(--blue)';
+    this._redrawLines();
   },
 
   /* ── Canvas 初始化 ────────────────────────────────────── */
@@ -163,38 +235,35 @@ MatchHandler.prototype = {
     this._redrawLines();
   },
 
-  /* ── 左列点击 ─────────────────────────────────────────── */
-  _onLeftClick: function(leftIdx, btn) {
-    if (this._matchedLeft[leftIdx]) return; // 已配对
-    if (this._leftSelected === leftIdx) {
-      // 再次点击：取消选中
+  /* ── 左列点击（文本模式）────────────────────────────── */
+  _onLeftClick: function(pairIdx, btn) {
+    if (this._matchedLeft[pairIdx]) return; // 已配对
+    if (this._leftSelected === pairIdx) {
       this._leftSelected = null;
       btn.style.borderColor = '';
     } else {
-      // 选中
       if (this._leftSelected !== null) {
         this._leftBtns[this._leftSelected].style.borderColor = '';
       }
-      this._leftSelected = leftIdx;
+      this._leftSelected = pairIdx;
       btn.style.borderColor = 'var(--blue)';
     }
     this._redrawLines();
   },
 
   /* ── 右列点击 ─────────────────────────────────────────── */
-  _onRightClick: function(rightIdx) {
+  _onRightClick: function(pairIdx) {
     if (this._leftSelected === null) return; // 没选左词
-    if (this._matchedRight[rightIdx]) return; // 右词已配对
+    if (this._matchedRight[pairIdx]) return; // 右词已配对
 
-    var leftIdx = this._leftSelected;
+    var leftPairIdx = this._leftSelected;
 
-    // 校验是否匹配
-    var isCorrect = (this._pairs[leftIdx].right === this._pairs[rightIdx].right);
+    // 校验是否同属一组（pairIdx 相同 = 配对正确）
+    var isCorrect = (leftPairIdx === pairIdx);
 
     if (!isCorrect) {
-      // 错误配对：左右按钮抖动+变红，清除选中，不记录连线
-      var leftBtn = this._leftBtns[leftIdx];
-      var rightBtn = this._rightBtns[rightIdx];
+      var leftBtn  = this._leftBtns[leftPairIdx];
+      var rightBtn = this._rightBtns[pairIdx];
       leftBtn.style.borderColor = 'var(--red)';
       rightBtn.style.borderColor = 'var(--red)';
       leftBtn.classList.add('shake');
@@ -212,24 +281,21 @@ MatchHandler.prototype = {
     }
 
     // 配对
-    this._matchedLeft[leftIdx]   = rightIdx;
-    this._matchedRight[rightIdx] = leftIdx;
-    this._lines.push({ leftIdx: leftIdx, rightIdx: rightIdx });
+    this._matchedLeft[leftPairIdx]   = pairIdx;
+    this._matchedRight[pairIdx] = leftPairIdx;
+    this._lines.push({ leftIdx: leftPairIdx, rightIdx: pairIdx });
 
-    // 样式更新
-    this._leftBtns[leftIdx].style.borderColor   = 'var(--green)';
-    this._rightBtns[rightIdx].style.borderColor = 'var(--green)';
-    this._leftBtns[leftIdx].classList.add('paired');
-    this._rightBtns[rightIdx].classList.add('paired');
+    this._leftBtns[leftPairIdx].style.borderColor   = 'var(--green)';
+    this._rightBtns[pairIdx].style.borderColor = 'var(--green)';
+    this._leftBtns[leftPairIdx].classList.add('paired');
+    this._rightBtns[pairIdx].classList.add('paired');
 
     Sound.play('correct');
 
-    // 清除选中
-    this._leftBtns[leftIdx].style.borderColor = '';
+    this._leftBtns[leftPairIdx].style.borderColor = '';
     this._leftSelected = null;
     this._redrawLines();
 
-    // 检查全部完成
     if (Object.keys(this._matchedLeft).length === this._pairs.length) {
       this._callbacks.onDone({ correct: true });
       this._callbacks.onComplete({ correct: true });
@@ -239,7 +305,7 @@ MatchHandler.prototype = {
   /* ── 刷新按钮拼音显示 ─────────────────────────────── */
   _refreshButtons: function() {
     var self = this;
-    // 左列按钮
+    if (this._leftType === 'audio') return; // 音频按钮不需要刷新
     this._pairs.forEach(function(pair, i) {
       var btn = self._leftBtns[i];
       if (!btn) return;
@@ -251,7 +317,6 @@ MatchHandler.prototype = {
         btn.innerHTML = '<span class="match-text">' + pair.left + '</span>';
       }
     });
-    // 右列按钮（英文无拼音，不变）
   },
 
   /* ── 重玩（洗牌） ─────────────────────────────────────── */
@@ -263,21 +328,21 @@ MatchHandler.prototype = {
 
     var area = document.getElementById('matchArea');
     if (area) {
-      var colsWrap = area.querySelector('div[style*="relative"]');
+      var colsWrap = area.querySelector('div[style*="flex-direction:row"]');
       if (colsWrap) {
         var leftCol  = colsWrap.querySelectorAll('.match-col')[0];
         var rightCol = colsWrap.querySelectorAll('.match-col')[1];
         var self = this;
 
-        // 左侧打乱
-        if (leftCol) {
+        // 左侧打乱（仅文本模式，音频模式不打乱）
+        if (leftCol && self._leftType !== 'audio') {
           var shuffledLeft = this._shuffle(this._pairs.map(function(_, i) { return i; }));
           leftCol.innerHTML = '';
           self._leftBtns = {};
           shuffledLeft.forEach(function(pairIdx) {
             var pair = self._pairs[pairIdx];
             var pinyinText = self._config.showPinyin && self._pinyinMap[pair.left];
-            var btn = self._makeBtn(pair.left, 'left', pairIdx, pinyinText);
+            var btn = self._makeTextBtn(pair.left, 'left', pairIdx, pinyinText);
             leftCol.appendChild(btn);
             self._leftBtns[pairIdx] = btn;
           });
@@ -290,7 +355,12 @@ MatchHandler.prototype = {
           self._rightBtns = {};
           shuffledRight.forEach(function(pairIdx) {
             var pair = self._pairs[pairIdx];
-            var btn = self._makeBtn(pair.right, 'right', pairIdx, false);
+            var btn;
+            if (self._rightType === 'image') {
+              btn = self._makeImageBtn(pair.right, 'right', pairIdx);
+            } else {
+              btn = self._makeTextBtn(pair.right, 'right', pairIdx, false);
+            }
             rightCol.appendChild(btn);
             self._rightBtns[pairIdx] = btn;
           });

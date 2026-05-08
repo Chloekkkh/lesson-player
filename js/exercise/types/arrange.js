@@ -113,20 +113,6 @@ ArrangeHandler.prototype = {
       submitBtn.style.display = '';
       submitBtn.onclick = function() { self._submit(); };
     }
-
-    // 拼音开关按钮
-    var ctrlDiv = document.getElementById('arrangeControls');
-    if (ctrlDiv) {
-      var pinyinToggle = document.createElement('button');
-      pinyinToggle.className = 'arrange-pinyin-toggle' + (this._config.showPinyin ? ' active' : '');
-      pinyinToggle.textContent = '拼音';
-      pinyinToggle.addEventListener('click', function() {
-        self._config.showPinyin = !self._config.showPinyin;
-        pinyinToggle.classList.toggle('active', self._config.showPinyin);
-        self._updateDisplay();
-      });
-      ctrlDiv.appendChild(pinyinToggle);
-    }
   },
 
   /* ── 将词从词池移入答题区 ─────────────────────────────── */

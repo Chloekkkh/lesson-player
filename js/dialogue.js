@@ -68,27 +68,26 @@ function init(data) {
   data.lines.forEach(function(line, i) {
     var speaker = speakerNameMap[line.speaker] || {};
     var wrapped = wrapVocab(line.hanzi, line.vocab);
+    var avatar = speaker.avatar
+      ? '<img class="dlg-line-avatar" src="' + data.imgBase + speaker.avatar + '">'
+      : '';
     var html = '<div class="dlg-text-item" data-i="' + i + '">' +
-      '<div class="dlg-text-speaker">' + (speaker.name || line.speaker) + '</div>' +
+      '<div class="dlg-text-avatar">' + avatar + '</div>' +
+      '<div class="dlg-text-content">' +
       '<div class="dlg-text-hanzi">' + wrapped + '</div>' +
       '<div class="dlg-text-pinyin">' + line.pinyin + '</div>' +
       '<div class="dlg-text-en">' + line.en + '</div>' +
+      '</div>' +
       '</div>';
     textList.insertAdjacentHTML('beforeend', html);
   });
 
   applyVisibility();
 
-  // ── 翻转卡片点击 ──────────────────────────────────
-  flipCard.addEventListener('click', function() {
-    flipCard.classList.toggle('flipped');
-    var isFlipped = flipCard.classList.contains('flipped');
-    document.getElementById('textToggle').textContent = isFlipped ? 'Hide Text' : 'Show Text';
-  });
-
 // ── 事件绑定 ──────────────────────────────────────
   // 播放按钮
-  document.getElementById('playBtn').onclick = function() {
+  var playBtn = document.getElementById('playBtn');
+  if (playBtn) playBtn.onclick = function() {
     if (audio.paused) {
       audio.play();
     } else {
@@ -97,32 +96,40 @@ function init(data) {
   };
 
   audio.addEventListener('play', function() {
-    document.getElementById('playIcon').textContent = '⏸';
-    document.getElementById('playBtn').classList.add('playing');
+    var icon = document.getElementById('playIcon');
+    var btn = document.getElementById('playBtn');
+    if (icon) icon.textContent = '⏸';
+    if (btn) btn.classList.add('playing');
   });
   audio.addEventListener('pause', function() {
-    document.getElementById('playIcon').textContent = '▶';
-    document.getElementById('playBtn').classList.remove('playing');
+    var icon = document.getElementById('playIcon');
+    var btn = document.getElementById('playBtn');
+    if (icon) icon.textContent = '▶';
+    if (btn) btn.classList.remove('playing');
   });
 
   audio.addEventListener('timeupdate', function() {
     if (!audio.duration) return;
     var pct = (audio.currentTime / audio.duration) * 100;
-    document.getElementById('audioProgressFill').style.width = pct + '%';
-    document.getElementById('audioCurTime').textContent = fmtTime(audio.currentTime);
+    var fill = document.getElementById('audioProgressFill');
+    var cur = document.getElementById('audioCurTime');
+    if (fill) fill.style.width = pct + '%';
+    if (cur) cur.textContent = fmtTime(audio.currentTime);
   });
   audio.addEventListener('loadedmetadata', function() {
-    document.getElementById('audioDur').textContent = fmtTime(audio.duration);
+    var dur = document.getElementById('audioDur');
+    if (dur) dur.textContent = fmtTime(audio.duration);
   });
 
-  document.querySelector('.audio-progress-bar').addEventListener('click', function(e) {
-    var bar = e.currentTarget;
-    var rect = bar.getBoundingClientRect();
+  var progressBar = document.querySelector('.audio-progress-bar');
+  if (progressBar) progressBar.addEventListener('click', function(e) {
+    var rect = progressBar.getBoundingClientRect();
     var ratio = (e.clientX - rect.left) / rect.width;
     audio.currentTime = ratio * audio.duration;
   });
 
-  document.getElementById('textToggle').onclick = function() {
+  var textToggle = document.getElementById('textToggle');
+  if (textToggle) textToggle.onclick = function() {
     var isFlipped = flipCard.classList.contains('flipped');
     if (isFlipped) {
       flipCard.classList.remove('flipped');
@@ -133,18 +140,16 @@ function init(data) {
     }
   };
 
-  document.getElementById('pinyinToggle').onchange = function() {
+  var pinyinToggle = document.getElementById('pinyinToggle');
+  if (pinyinToggle) pinyinToggle.onchange = function() {
     showPinyin = this.checked;
     applyVisibility();
   };
 
-  document.getElementById('englishToggle').onchange = function() {
+  var englishToggle = document.getElementById('englishToggle');
+  if (englishToggle) englishToggle.onchange = function() {
     showEnglish = this.checked;
     applyVisibility();
-  };
-
-  document.getElementById('nextBtn').onclick = function() {
-    parent.postMessage({ type: 'playerMessage', action: 'displayComplete' }, '*');
   };
 
   // 词汇点击弹层（背面文本中）
@@ -155,20 +160,28 @@ function init(data) {
     var v = vocabMap[word];
     if (!v) return;
     var popup = document.getElementById('vocabPopup');
-    document.getElementById('vpHanzi').textContent = v.hanzi;
-    document.getElementById('vpPinyin').textContent = v.pinyin;
-    document.getElementById('vpPos').textContent = v.pos || '';
-    document.getElementById('vpEn').textContent = v.en;
+    var vpHanzi = document.getElementById('vpHanzi');
+    var vpPinyin = document.getElementById('vpPinyin');
+    var vpPos = document.getElementById('vpPos');
+    var vpEn = document.getElementById('vpEn');
+    if (vpHanzi) vpHanzi.textContent = v.hanzi;
+    if (vpPinyin) vpPinyin.textContent = v.pinyin;
+    if (vpPos) vpPos.textContent = v.pos || '';
+    if (vpEn) vpEn.textContent = v.en;
     var rect = hl.getBoundingClientRect();
-    popup.style.left = rect.left + 'px';
-    popup.style.top = (rect.bottom + 8) + 'px';
-    popup.classList.add('show');
+    if (popup) {
+      popup.style.left = rect.left + 'px';
+      popup.style.top = (rect.bottom + 8) + 'px';
+      popup.classList.add('show');
+    }
     e.stopPropagation();
   });
 
-  document.getElementById('vocabPopup').onclick = function() { this.classList.remove('show'); };
+  var vocabPopup = document.getElementById('vocabPopup');
+  if (vocabPopup) vocabPopup.onclick = function() { this.classList.remove('show'); };
   document.addEventListener('click', function() {
-    document.getElementById('vocabPopup').classList.remove('show');
+    var pop = document.getElementById('vocabPopup');
+    if (pop) pop.classList.remove('show');
   });
 
   // 音频结束 → 自动翻页
@@ -177,41 +190,59 @@ function init(data) {
   };
 
   // ── 角色扮演 ──────────────────────────────────────
-  document.getElementById('practiceBtn').onclick = function() {
+  var practiceBtn = document.getElementById('practiceBtn');
+  if (practiceBtn) practiceBtn.onclick = function() {
     if (data.hasRolePlay === false) return;
-    document.getElementById('rpAvatarA').src = data.imgBase + data.speakers[0].avatar;
-    document.getElementById('rpAvatarB').src = data.imgBase + data.speakers[1].avatar;
-    document.getElementById('rpTotal').textContent = data.lines.length;
-    document.getElementById('rpCur').textContent = '1';
-    document.getElementById('rpStatus').textContent = 'Choose your role';
-    document.getElementById('rpRoleBtns').style.display = 'flex';
-    document.getElementById('rpPlayAnswer').style.display = 'none';
-    document.getElementById('rpNextLine').style.display = 'none';
+    var rpAvatarA = document.getElementById('rpAvatarA');
+    var rpAvatarB = document.getElementById('rpAvatarB');
+    var rpTotal = document.getElementById('rpTotal');
+    var rpCur = document.getElementById('rpCur');
+    var rpStatus = document.getElementById('rpStatus');
+    var rpRoleBtns = document.getElementById('rpRoleBtns');
+    var rpPlayAnswer = document.getElementById('rpPlayAnswer');
+    var rpNextLine = document.getElementById('rpNextLine');
+    var rpOverlay = document.getElementById('rpOverlay');
+    if (rpAvatarA) rpAvatarA.src = data.imgBase + data.speakers[0].avatar;
+    if (rpAvatarB) rpAvatarB.src = data.imgBase + data.speakers[1].avatar;
+    if (rpTotal) rpTotal.textContent = data.lines.length;
+    if (rpCur) rpCur.textContent = '1';
+    if (rpStatus) rpStatus.textContent = 'Choose your role';
+    if (rpRoleBtns) rpRoleBtns.style.display = 'flex';
+    if (rpPlayAnswer) rpPlayAnswer.style.display = 'none';
+    if (rpNextLine) rpNextLine.style.display = 'none';
     rpIndex = 0;
     myRole = null;
-    document.getElementById('rpOverlay').classList.add('show');
+    if (rpOverlay) rpOverlay.classList.add('show');
   };
 
-  document.getElementById('rpChooseA').onclick = function() { chooseRole('A', data); };
-  document.getElementById('rpChooseB').onclick = function() { chooseRole('B', data); };
+  var rpChooseA = document.getElementById('rpChooseA');
+  var rpChooseB = document.getElementById('rpChooseB');
+  if (rpChooseA) rpChooseA.onclick = function() { chooseRole('A', data); };
+  if (rpChooseB) rpChooseB.onclick = function() { chooseRole('B', data); };
 
-  document.getElementById('rpPlayHint').onclick = function() {
+  var rpPlayHint = document.getElementById('rpPlayHint');
+  if (rpPlayHint) rpPlayHint.onclick = function() {
     audio.currentTime = data.lines[rpIndex].start;
     audio.play();
   };
-  document.getElementById('rpPlayAnswer').onclick = function() {
+  var rpPlayAnswer2 = document.getElementById('rpPlayAnswer');
+  if (rpPlayAnswer2) rpPlayAnswer2.onclick = function() {
     audio.currentTime = data.lines[rpIndex].start;
     audio.play();
   };
-  document.getElementById('rpNextLine').onclick = function() {
+  var rpNextLine2 = document.getElementById('rpNextLine');
+  if (rpNextLine2) rpNextLine2.onclick = function() {
     if (rpIndex < data.lines.length - 1) { rpIndex++; showRpLine(data); }
     else {
-      document.getElementById('rpOverlay').classList.remove('show');
+      var overlay = document.getElementById('rpOverlay');
+      if (overlay) overlay.classList.remove('show');
       parent.postMessage({ type: 'playerMessage', action: 'rolePlayComplete' }, '*');
     }
   };
-  document.getElementById('rpExit').onclick = function() {
-    document.getElementById('rpOverlay').classList.remove('show');
+  var rpExit = document.getElementById('rpExit');
+  if (rpExit) rpExit.onclick = function() {
+    var overlay = document.getElementById('rpOverlay');
+    if (overlay) overlay.classList.remove('show');
     audio.pause();
   };
 }

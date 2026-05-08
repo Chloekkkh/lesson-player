@@ -5,11 +5,6 @@
  *   Spotlight.init(options);
  *   // Options:
  *   //   dimness: 0-1, background dimness (default: 0.7)
- *   //   borderWidth: border width in percent (default: 0.4)
- *   //   borderColor: border color (default: rgba(255,255,255,0.7))
- *   //   borderStrokeWidth: top border stroke width (default: 1.2)
- *   //   glow: enable glow effect (default: false)
- *   //   glowColor: glow color (default: rgba(34,168,110,1))
  *   //   autoClearDelay: auto clear delay in ms (default: 0, no auto clear)
  *   //   container: container element to measure (default: document.body)
  *   //   selector: clickable elements selector (default: '[data-spotlight]')
@@ -28,8 +23,6 @@ const Spotlight = (function() {
   let overlay = null;
   let svg = null;
   let maskRect = null;
-  let borderRect = null;
-  let glowRect = null; // glow layer behind borderRect
   let options = {};
   let currentElementId = null; //当前高亮元素id
   let autoClearTimeout = null;
@@ -43,11 +36,6 @@ const Spotlight = (function() {
 
   const defaults = {
     dimness: 0.7,
-    borderWidth: 0.4,
-    borderColor: 'rgba(255,255,255,0.7)',
-    borderStrokeWidth: 1.2,
-    glow: false,
-    glowColor: 'rgba(34,168,110,1)',
     autoClearDelay: 0,
     container: null,
     selector: '[data-spotlight]',
@@ -152,18 +140,6 @@ const Spotlight = (function() {
 
     svg.appendChild(defs);
 
-    // Glow layer: thick blurred rect behind borderRect
-    if (options.glow) {
-      glowRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      glowRect.setAttribute('fill', 'none');
-      glowRect.setAttribute('stroke', options.glowColor);
-      glowRect.setAttribute('stroke-width', '5');
-      glowRect.style.filter = 'blur(3px)';
-      glowRect.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-      glowRect.setAttribute('opacity', '0');
-      svg.appendChild(glowRect);
-    }
-
     // Dimmed background
     const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     bg.setAttribute('width', '100');
@@ -174,18 +150,6 @@ const Spotlight = (function() {
     // No blur - sharp edges
 
     svg.appendChild(bg);
-
-    // Border rect (animated)
-    borderRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    borderRect.setAttribute('fill', 'none');
-    borderRect.setAttribute('stroke', options.borderColor);
-    borderRect.setAttribute('stroke-width', options.borderStrokeWidth.toString());
-    borderRect.style.vectorEffect = 'non-scaling-stroke';
-    borderRect.style.cssText = `
-      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-    `;
-
-    svg.appendChild(borderRect);
     overlay.appendChild(svg);
 
     // Add to container (ensure it's positioned)
@@ -248,67 +212,37 @@ const Spotlight = (function() {
       autoClearTimeout = null;
     }
 
-    currentElementId = elementId;
-
-    // Apply with animation (start from larger, settle to target)
-    const borderW = options.borderWidth;
-    const x = rect.x - borderW;
-    const y = rect.y - borderW * 1.5;
-    const w = rect.w + borderW * 2;
-    const h = rect.h + borderW * 3;
-
-    // Initial state (larger)
-    maskRect.setAttribute('x', (rect.x - 8).toString());
-    maskRect.setAttribute('y', (rect.y - 8).toString());
-    maskRect.setAttribute('width', (rect.w + 16).toString());
-    maskRect.setAttribute('height', (rect.h + 16).toString());
-    maskRect.setAttribute('rx', '4');
-
-    borderRect.setAttribute('x', (rect.x - 4).toString());
-    borderRect.setAttribute('y', (rect.y - 4).toString());
-    borderRect.setAttribute('width', (rect.w + 8).toString());
-    borderRect.setAttribute('height', (rect.h + 8).toString());
-    borderRect.setAttribute('rx', '2');
-    borderRect.setAttribute('opacity', '0');
-
-    if (glowRect) {
-      glowRect.setAttribute('x', (rect.x - 4).toString());
-      glowRect.setAttribute('y', (rect.y - 4).toString());
-      glowRect.setAttribute('width', (rect.w + 8).toString());
-      glowRect.setAttribute('height', (rect.h + 8).toString());
-      glowRect.setAttribute('rx', '2');
-      glowRect.setAttribute('opacity', '0');
+    // Cancel any pending RAF from previous spotlight call
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
     }
 
-    // Show overlay
+    const prevElementId = currentElementId;
+    currentElementId = elementId;
+
     overlay.style.opacity = '1';
 
-    // Animate to target (use requestAnimationFrame for smooth transition)
+    // Step 1 (RAF): 清除 transition，立刻设成大框（瞬间完成，无插值）
     rafId = requestAnimationFrame(function() {
-      maskRect.setAttribute('x', x.toString());
-      maskRect.setAttribute('y', y.toString());
-      maskRect.setAttribute('width', w.toString());
-      maskRect.setAttribute('height', h.toString());
-      maskRect.setAttribute('rx', '1');
+      maskRect.style.transition = 'none';
+      maskRect.setAttribute('x', (rect.x - 8).toString());
+      maskRect.setAttribute('y', (rect.y - 8).toString());
+      maskRect.setAttribute('width', (rect.w + 16).toString());
+      maskRect.setAttribute('height', (rect.h + 16).toString());
+      maskRect.setAttribute('rx', '4');
 
-      borderRect.setAttribute('x', x.toString());
-      borderRect.setAttribute('y', y.toString());
-      borderRect.setAttribute('width', w.toString());
-      borderRect.setAttribute('height', h.toString());
-      borderRect.setAttribute('rx', '1');
-      borderRect.setAttribute('opacity', '1');
-
-      if (glowRect) {
-        glowRect.setAttribute('x', x.toString());
-        glowRect.setAttribute('y', y.toString());
-        glowRect.setAttribute('width', w.toString());
-        glowRect.setAttribute('height', h.toString());
-        glowRect.setAttribute('rx', '1');
-        glowRect.setAttribute('opacity', '0.5');
-      }
+      // Step 2 (下一 RAF): 开启 transition，设成精确目标，CSS 自动从大框插值到小框
+      rafId = requestAnimationFrame(function() {
+        maskRect.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+        maskRect.setAttribute('x', rect.x.toString());
+        maskRect.setAttribute('y', rect.y.toString());
+        maskRect.setAttribute('width', rect.w.toString());
+        maskRect.setAttribute('height', rect.h.toString());
+        maskRect.setAttribute('rx', '1');
+      });
     });
 
-    // Auto clear if configured
     if (options.autoClearDelay > 0) {
       autoClearTimeout = setTimeout(clear, options.autoClearDelay);
     }
@@ -329,20 +263,6 @@ const Spotlight = (function() {
         maskRect.setAttribute('y', '0');
         maskRect.setAttribute('width', '0');
         maskRect.setAttribute('height', '0');
-
-        borderRect.setAttribute('x', '0');
-        borderRect.setAttribute('y', '0');
-        borderRect.setAttribute('width', '0');
-        borderRect.setAttribute('height', '0');
-        borderRect.setAttribute('opacity', '0');
-
-        if (glowRect) {
-          glowRect.setAttribute('x', '0');
-          glowRect.setAttribute('y', '0');
-          glowRect.setAttribute('width', '0');
-          glowRect.setAttribute('height', '0');
-          glowRect.setAttribute('opacity', '0');
-        }
       }
     }, 300);
 
@@ -359,9 +279,7 @@ const Spotlight = (function() {
     }
     overlay = null;
     svg = null;
-    glowRect = null;
     maskRect = null;
-    borderRect = null;
   }
 
   return {

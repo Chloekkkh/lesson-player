@@ -1080,14 +1080,8 @@ window.addEventListener('message', function(e) {
     updateControlBarState();
 
   } else if (msg.action === 'exerciseAllComplete') {
-    // 多题型全部完成：显示确认按钮，等学生点确认翻页
-    confirmOverlay.classList.remove('visible');
-    confirmOverlay.style.pointerEvents = '';
-    exerciseReady = true;
-    statusIndicator.className = 'status-indicator waiting';
-    statusText.textContent = '完成！请确认答案';
-    playing = false;
-    updateControlBarState();
+    // 多题型全部完成：点 Continue 直接翻页
+    goToSlide(current + 1);
 
   } else if (msg.action === 'displayComplete') {
     // display / dialogue 类型直接翻页

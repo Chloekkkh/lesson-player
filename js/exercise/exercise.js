@@ -151,38 +151,20 @@ var Exercise = {
     var subtitleEl = document.getElementById('exerciseSubtitle');
     if (subtitleEl) subtitleEl.textContent = label.subtitle;
 
-    // ── 多题型检测 ─────────────────────────────────────
+    // 所有练习题统一走 MultiQuestionHandler
     if (config.questions && config.questions.length > 0) {
-      var types = config.questions.map(function(q) {
-        return q.type || 'choice';
+      this._handler = new MultiQuestionHandler();
+      this._handler.init(config, {
+        onDone:        function(data) { self._onDone(data); },
+        onAllComplete: function(data) { self._onAllComplete(data); },
+        onNextQuestion: function(data) { self._onNextQuestion(data); },
+        onError:       function(msg)  { self._onError(msg); }
       });
-      var isMulti = types.some(function(t, i) { return t !== types[0]; });
-      if (isMulti) {
-        this._handler = new MultiQuestionHandler();
-        this._handler.init(config, {
-          onDone:        function(data) { self._onDone(data); },
-          onAllComplete: function(data) { self._onAllComplete(data); },
-          onNextQuestion: function(data) { self._onNextQuestion(data); },
-          onError:       function(msg)  { self._onError(msg); }
-        });
-        return;
-      }
-    }
-
-    var exerciseType = config.type || 'choice';
-
-    if (!TypeHandlers[exerciseType]) {
-      console.warn('[exercise] Unknown exerciseType:', exerciseType);
       return;
     }
 
-    this._handler = new TypeHandlers[exerciseType]();
-    this._handler.init(config, {
-      onDone:        function(data) { self._onDone(data); },
-      onComplete:    function(data) { self._onComplete(data); },
-      onNextQuestion: function(data) { self._onNextQuestion(data); },
-      onError:       function(msg)  { self._onError(msg); }
-    });
+    // display 类型（无 questions）
+    this._initDisplay(config);
   },
 
   /* ── display 类型 ────────────────────────────────────── */

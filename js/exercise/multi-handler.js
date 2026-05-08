@@ -89,7 +89,7 @@ MultiQuestionHandler.prototype = {
   /* ── 初始化第 N 题 ─────────────────────────────────────── */
   _initQuestion: function(idx) {
     var question = this._config.questions[idx];
-    if (!question) return;
+    if (!question) { return; }
 
     var self = this;
 
@@ -103,6 +103,8 @@ MultiQuestionHandler.prototype = {
       if (el) {
         el.innerHTML = '';
         el.style.minHeight = '0';
+        // fillArea uses display:none in CSS, must reset so handler can show it
+        if (id === 'fillArea') el.style.display = '';
       }
     });
 
@@ -135,7 +137,8 @@ MultiQuestionHandler.prototype = {
     var expandIds = {
       arrange: ['arrangeArea'],
       match:   ['matchArea'],
-      trace:   ['traceArea']
+      trace:   ['traceArea'],
+      fill:    ['fillArea']
     };
     (expandIds[type] || []).forEach(function(id) {
       var el = document.getElementById(id);
@@ -228,6 +231,7 @@ MultiQuestionHandler.prototype = {
     if (this._completed >= this._total) {
       this._renderStats();
       Celebration.show('full');
+      this._callbacks.onAllComplete({ correct: true });
     }
   },
 
@@ -299,6 +303,23 @@ MultiQuestionHandler.prototype = {
     this._results = [];
     this._questionDone = [];
     Progress.setProgress(0, this._total);
+
+    // 移除统计结果页
+    var statsWrap = document.getElementById('exercise-stats-wrap');
+    if (statsWrap) statsWrap.remove();
+
+    // 移除开始页
+    var startWrap = document.getElementById('exercise-start-wrap');
+    if (startWrap) startWrap.remove();
+
+    // 恢复被隐藏的 exercise 内容元素
+    var card = document.querySelector('.exercise-card');
+    if (card) {
+      Array.prototype.slice.call(card.children).forEach(function(el) {
+        el.style.display = '';
+      });
+    }
+
     this._initQuestion(0);
   },
 
