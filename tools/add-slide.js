@@ -224,9 +224,24 @@ function exerciseTemplate(slideNum, exerciseType, courseTitle) {
 
   const displayBody = `
     <div class="exercise-card">
-      <h2>生词学习</h2>
+      <div class="page-header">
+        <h2 id="exerciseTitle">📚 词汇学习 New Words</h2>
+        <div class="header-toggles">
+          <label class="toggle-switch">
+            <input type="checkbox" id="togglePinyin" checked>
+            <span class="toggle-slider"></span>
+            <span>拼音</span>
+          </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="toggleEnglish" checked>
+            <span class="toggle-slider"></span>
+            <span>英文</span>
+          </label>
+        </div>
+      </div>
+      <p id="exerciseSubtitle" class="exercise-subtitle"></p>
       <div class="vocab-grid" id="vocabGrid"></div>
-      <button class="submit-btn" id="nextBtn">下一页 →</button>
+      <button class="vocab-next-btn" id="nextBtn">next page</button>
     </div>`;
 
   const legacyBody = `
@@ -260,11 +275,14 @@ function exerciseTemplate(slideNum, exerciseType, courseTitle) {
     arrange:  '/js/exercise/types/arrange.js',
     match:    '/js/exercise/types/match.js',
     trace:    '/js/exercise/types/trace.js',
-    display:  '/js/exercise/types/vocab.js',
+    display:  null,
     fill:     '/js/exercise/types/fill.js',
   };
 
   const typeModule = typeModules[exerciseType] || '';
+
+  // display 类型使用独立的 display.js
+  const isDisplay = exerciseType === 'display';
 
   return `<!doctype html>
 <html lang="zh-CN">
@@ -280,9 +298,8 @@ ${body}
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
-  <script src="/js/exercise/exercise.js"></script>
-  <script src="/js/exercise/multi-handler.js"></script>
-  ${typeModule ? '<script src="' + typeModule + '"></script>' : ''}
+  ${isDisplay ? '<script src="/js/display.js"></script>' :
+                '<script src="/js/exercise/exercise.js"></script>\n  <script src="/js/exercise/multi-handler.js"></script>\n  ' + (typeModule ? '<script src="' + typeModule + '"></script>' : '')}
   ${exerciseType === 'trace' ? '<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>' : ''}
   <script src="/js/spotlight.js"></script>
   <script>

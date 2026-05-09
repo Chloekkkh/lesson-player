@@ -31,6 +31,7 @@ MatchHandler.prototype = {
   _rightType:      'text',
   _audioBase:      '',
   _playingAudio:   null,
+  _direction:      'vertical',  // 'vertical' = 上下排列（默认）, 'horizontal' = 左右排列
 
   /* ── init ─────────────────────────────────────────────── */
   init: function(config, callbacks) {
@@ -49,6 +50,7 @@ MatchHandler.prototype = {
     this._leftType  = (q0 && q0.leftType)  || config.leftType  || 'text';
     this._rightType = (q0 && q0.rightType) || config.rightType || 'text';
     this._audioBase = (q0 && q0.audioBase) || config.audioBase || '';
+    this._direction = (q0 && q0.direction) || config.direction || 'vertical';
 
     // pinyin 映射（支持顶层 config 或 questions[0] 两种来源）
     if (config.pinyinMap) {
@@ -77,17 +79,31 @@ MatchHandler.prototype = {
     canvasWrap.appendChild(canvas);
     this._canvas = canvas;
 
-    // 列容器：横向排列两列，每列内部纵向堆叠
+    // 列容器：根据 direction 决定方向
     var colsWrap = document.createElement('div');
-    colsWrap.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction:row;gap:80px;justify-content:center;align-items:center;';
+    if (this._direction === 'horizontal') {
+      // 左右并排（横向）
+      colsWrap.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction:row;gap:80px;justify-content:center;align-items:center;';
+    } else {
+      // 上下堆叠（纵向）
+      colsWrap.style.cssText = 'position:relative;z-index:2;display:flex;flex-direction:column;gap:48px;justify-content:center;';
+    }
 
     var leftCol = document.createElement('div');
     leftCol.className = 'match-col';
-    leftCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
+    if (this._direction === 'horizontal') {
+      leftCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
+    } else {
+      leftCol.style.cssText = 'display:flex;flex-direction:row;gap:12px;min-width:160px;justify-content:center;';
+    }
 
     var rightCol = document.createElement('div');
     rightCol.className = 'match-col';
-    rightCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
+    if (this._direction === 'horizontal') {
+      rightCol.style.cssText = 'display:flex;flex-direction:column;gap:16px;align-items:center;';
+    } else {
+      rightCol.style.cssText = 'display:flex;flex-direction:row;gap:12px;min-width:160px;justify-content:center;';
+    }
 
     var self = this;
 
@@ -328,7 +344,8 @@ MatchHandler.prototype = {
 
     var area = document.getElementById('matchArea');
     if (area) {
-      var colsWrap = area.querySelector('div[style*="flex-direction:row"]');
+      // 找到列容器（有 z-index:2 的那个 div）
+      var colsWrap = area.querySelector('div[style*="z-index:2"]');
       if (colsWrap) {
         var leftCol  = colsWrap.querySelectorAll('.match-col')[0];
         var rightCol = colsWrap.querySelectorAll('.match-col')[1];
@@ -375,7 +392,7 @@ MatchHandler.prototype = {
     this._redrawLines();
   },
 
-  /* ── 画线 ─────────────────────────────────────────────── */
+  /* ── 画线（根据 direction 动态计算控制点）─────────────── */
   _redrawLines: function() {
     var ctx = this._ctx;
     if (!ctx) return;
@@ -392,17 +409,33 @@ MatchHandler.prototype = {
       var rRect = rightBtn.getBoundingClientRect();
       var cRect = canvas.getBoundingClientRect();
 
-      var x1 = lRect.left  + lRect.width / 2 - cRect.left;
-      var y1 = lRect.bottom - cRect.top;
-      var x2 = rRect.left  + rRect.width / 2 - cRect.left;
-      var y2 = rRect.top    - cRect.top;
+      var isH = self._direction === 'horizontal';
+      var x1, y1, x2, y2, cp1x, cp1y, cp2x, cp2y;
+
+      if (isH) {
+        // 横向：左按钮右边缘 → 右按钮左边缘，S 曲线水平延伸
+        x1 = lRect.right - cRect.left;
+        y1 = lRect.top + lRect.height / 2 - cRect.top;
+        x2 = rRect.left - cRect.left;
+        y2 = rRect.top + rRect.height / 2 - cRect.top;
+        cp1x = x1 + 40;  cp1y = y1;
+        cp2x = x2 - 40;  cp2y = y2;
+      } else {
+        // 纵向：左按钮底部 → 右按钮顶部，S 曲线垂直延伸
+        x1 = lRect.left + lRect.width / 2 - cRect.left;
+        y1 = lRect.bottom - cRect.top;
+        x2 = rRect.left + rRect.width / 2 - cRect.left;
+        y2 = rRect.top - cRect.top;
+        cp1x = x1;  cp1y = y1 + 30;
+        cp2x = x2;  cp2y = y2 - 30;
+      }
 
       ctx.beginPath();
       ctx.strokeStyle = '#4CAF50';
       ctx.lineWidth = 2.5;
       ctx.lineCap = 'round';
       ctx.moveTo(x1, y1);
-      ctx.bezierCurveTo(x1, y1 + 30, x2, y2 - 30, x2, y2);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x2, y2);
       ctx.stroke();
     });
 
@@ -412,14 +445,22 @@ MatchHandler.prototype = {
       if (leftBtn) {
         var lRect = leftBtn.getBoundingClientRect();
         var cRect = canvas.getBoundingClientRect();
-        var x1 = lRect.left + lRect.width / 2 - cRect.left;
-        var y1 = lRect.bottom - cRect.top;
+        var x1, y1, x2, y2;
+        if (this._direction === 'horizontal') {
+          x1 = lRect.right - cRect.left;
+          y1 = lRect.top + lRect.height / 2 - cRect.top;
+          x2 = x1 + 20;  y2 = y1;
+        } else {
+          x1 = lRect.left + lRect.width / 2 - cRect.left;
+          y1 = lRect.bottom - cRect.top;
+          x2 = x1;  y2 = y1 + 20;
+        }
         ctx.beginPath();
         ctx.strokeStyle = 'rgba(74,130,239,0.5)';
         ctx.lineWidth = 2;
         ctx.setLineDash([6, 4]);
         ctx.moveTo(x1, y1);
-        ctx.lineTo(x1, y1 + 20);
+        ctx.lineTo(x2, y2);
         ctx.stroke();
         ctx.setLineDash([]);
       }

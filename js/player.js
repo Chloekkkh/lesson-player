@@ -128,7 +128,7 @@ function init() {
       playerContainer.classList.add('visible');
 
       // 构建页面元素
-      buildDots();       // 生成圆点导航
+      // buildDots();       // 生成圆点导航（已禁用）
       buildIframes(courseId); // 创建所有幻灯片 iframe
       applyTransformAll();     // 等比缩放适配窗口
 
@@ -152,22 +152,7 @@ function init() {
  * 每个圆点对应一页幻灯片，点击可跳转到对应页
  */
 function buildDots() {
-  courseTitleEl.textContent = course.title || '';
-  courseDescEl.textContent  = course.description || '';
-  dotsEl.innerHTML = ''; // 清空现有圆点
-
-  // 为每一页创建一个圆点按钮
-  course.slides.forEach(function(slide, i) {
-    var btn = document.createElement('button');
-    btn.className = 'dot' + (i === 0 ? ' active' : ''); // 第一页圆点高亮
-    btn.setAttribute('aria-label', '第' + (i + 1) + '页');
-    btn.dataset.index = i;
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation(); // 阻止冒泡到 player 的点击事件
-      goToSlide(i);        // 跳转到指定页
-    });
-    dotsEl.appendChild(btn);
-  });
+  // 圆点导航已禁用
 }
 
 /**
@@ -331,10 +316,10 @@ function loadSlide(index, isInit) {
     nextFrame.style.zIndex = '2'; // 升到上层
   }
 
-  // 更新圆点高亮状态
-  dotsEl.querySelectorAll('.dot').forEach(function(dot, i) {
-    dot.classList.toggle('active', i === index);
-  });
+  // 更新圆点高亮状态（已禁用）
+  // dotsEl.querySelectorAll('.dot').forEach(function(dot, i) {
+  //   dot.classList.toggle('active', i === index);
+  // });
 
   // 更新状态
   current       = index;

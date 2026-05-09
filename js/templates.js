@@ -342,8 +342,7 @@ function displayTemplate(slideNum, courseTitle) {
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
-  <script src="/js/exercise/exercise.js"></script>
-    <script src="/js/exercise/types/vocab.js"></script>
+  <script src="/js/display.js"></script>
 </body>
 </html>`;
 }

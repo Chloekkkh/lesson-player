@@ -43,12 +43,6 @@ var Exercise = {
     this._config = config;
     var self = this;
 
-    // display 类型走独立流程
-    if (config.type === 'display') {
-      this._initDisplay(config);
-      return;
-    }
-
     // ── 统一 Start 页面 ────────────────────────────────
     this._renderStartPage(config);
   },
@@ -161,20 +155,6 @@ var Exercise = {
         onError:       function(msg)  { self._onError(msg); }
       });
       return;
-    }
-
-    // display 类型（无 questions）
-    this._initDisplay(config);
-  },
-
-  /* ── display 类型 ────────────────────────────────────── */
-  _initDisplay: function(config) {
-    var self = this;
-    if (TypeHandlers.display) {
-      this._handler = new TypeHandlers.display();
-      this._handler.init(config, {
-        onComplete: function() { postToParent('displayComplete', {}); }
-      });
     }
   },
 
