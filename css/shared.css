@@ -10,8 +10,10 @@
   --line:      #d7deea;
   --ink:       #2a3446;
   --body:      #4d586f;
-  --green:     #3a8a33;
-  --red:       #e05555;
+  --green:      #22a86e;
+  --green-deep:  #1b8a5a;
+  --green-soft:  rgba(34, 168, 110, 0.12);
+  --red:        #e05555;
   --orange:    #f39a32;
   --shadow:    0 28px 60px rgba(32, 55, 102, 0.08);
   --radius:    26px;

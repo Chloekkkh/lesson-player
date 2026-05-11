@@ -1,77 +1,93 @@
 /* ============================================================
    dialogue.js — 情景对话页面逻辑
-   被 dialogue 类型 slide HTML 引用（defer 加载）
+   课文精读 + 实战练习 + 结束反馈
    ============================================================ */
 
-var audio = new Audio();
+var audio = new Audio();          // 课文精读音频
+var rpAudio = new Audio();         // 角色扮演音频
 var showPinyin = true, showEnglish = true;
 var vocabMap = {};
-var myRole = null, rpIndex = 0;
+var speakerMap = {};               // id → speaker obj
 
+// 录音相关
+var mediaRecorder = null;
+var audioChunks = [];
+var recordedBlob = null;
+var isRecording = false;
+
+// 状态机
+// INTRO | PRACTICE_SELECT | PRACTICE_PLAYING | PRACTICE_RESULT
+var state = 'INTRO';
+var myRole = null;                 // 'A' | 'B'
+var rpIndex = 0;                   // 当前句子索引
+var isTextFocused = false;          // 课文/场景互斥切换状态
+var totalLines = 0;
+
+// ── 入口 ────────────────────────────────────────────────
 window.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'slideData') init(e.data.data);
 });
 
 function init(data) {
-  // 防止重复初始化，先清空动态内容并重置翻转状态
-  var speakersEl = document.getElementById('dlgSpeakers');
-  var textList = document.getElementById('dlgTextList');
-  var flipCard = document.getElementById('dlgFlipCard');
-  if (speakersEl) speakersEl.innerHTML = '';
-  if (textList) textList.innerHTML = '';
-  if (flipCard) flipCard.classList.remove('flipped');
-
-  // 标题 + 副标题
-  var titleEl = document.getElementById('exerciseTitle');
-  if (titleEl) titleEl.textContent = data.title || '情景对话';
-  var subEl = document.getElementById('exerciseSubtitle');
-  if (subEl) subEl.textContent = data.subtitle || '';
-
+  // 重置所有状态
+  state = 'INTRO';
+  myRole = null;
+  rpIndex = 0;
   showPinyin = data.showPinyin !== false;
   showEnglish = data.showEnglish !== false;
-  document.getElementById('pinyinToggle').checked = showPinyin;
-  document.getElementById('englishToggle').checked = showEnglish;
-
-  // 音频
-  audio.src = data.audioBase + data.audio;
 
   // 词汇表
-  if (data.vocabList) {
-    data.vocabList.forEach(function(v) { vocabMap[v.hanzi] = v; });
+  vocabMap = {};
+  if (data.vocabList) data.vocabList.forEach(function(v) { vocabMap[v.hanzi] = v; });
+
+  // 说话人映射
+  speakerMap = {};
+  if (data.speakers) data.speakers.forEach(function(s) { speakerMap[s.id] = s; });
+
+  totalLines = data.lines ? data.lines.length : 0;
+
+  // ── 渲染左侧控制面板 ──────────────────────────────────
+  var themeEl = document.getElementById('ctrlTheme');
+  if (themeEl) themeEl.textContent = data.title || '情景对话';
+
+  document.getElementById('pinyinToggle').checked = showPinyin;
+  document.getElementById('englishToggle').checked = showEnglish;
+  document.getElementById('rpPinyinToggle').checked = showPinyin;
+  document.getElementById('rpEnglishToggle').checked = showEnglish;
+
+  // ── 渲染场景图 ────────────────────────────────────────
+  var sceneImg = document.getElementById('sceneImg');
+  if (sceneImg) {
+    if (data.sceneImage) {
+      sceneImg.src = data.imgBase + data.sceneImage;
+      sceneImg.style.display = 'block';
+    } else {
+      sceneImg.style.display = 'none';
+    }
   }
 
-  // ── 左侧：说话人卡片 ────────────────────────────────
-  var speakersEl = document.getElementById('dlgSpeakers');
-  var speakerNameMap = {};
+  // ── 渲染说话人头像行 ──────────────────────────────────
+  var speakersRow = document.getElementById('speakersRow');
+  if (speakersRow) speakersRow.innerHTML = '';
   data.speakers.forEach(function(s) {
-    speakerNameMap[s.id] = s;
-    var pinyin = s.pinyin || '';
-    var html = '<div class="speaker-card" data-id="' + s.id + '">' +
-      '<img class="speaker-avatar" src="' + data.imgBase + s.avatar + '">' +
-      '<div class="speaker-name">' + s.name + '</div>' +
-      '<div class="speaker-pinyin">' + pinyin + '</div>' +
+    var html = '<div class="speaker-badge" id="spk-' + s.id + '">' +
+      '<img class="spk-avatar" src="' + data.imgBase + s.avatar + '">' +
+      '<div class="spk-name">' + s.name + '</div>' +
+      '<div class="spk-pinyin">' + (s.pinyin || '') + '</div>' +
       '</div>';
-    speakersEl.insertAdjacentHTML('beforeend', html);
+    speakersRow.insertAdjacentHTML('beforeend', html);
   });
 
-  // ── 右侧：翻转卡片正面（图片）──────────────────────
-  var flipCard = document.getElementById('dlgFlipCard');
-  var flipImg = document.getElementById('flipSceneImg');
-  if (data.image) {
-    flipImg.src = data.imgBase + data.image;
-  } else {
-    flipCard.style.display = 'none';
-  }
-
-  // ── 右侧：翻转卡片背面（文本）──────────────────────
+  // ── 渲染课文文本行 ────────────────────────────────────
   var textList = document.getElementById('dlgTextList');
+  if (textList) textList.innerHTML = '';
   data.lines.forEach(function(line, i) {
-    var speaker = speakerNameMap[line.speaker] || {};
+    var spk = speakerMap[line.speaker] || {};
     var wrapped = wrapVocab(line.hanzi, line.vocab);
-    var avatar = speaker.avatar
-      ? '<img class="dlg-line-avatar" src="' + data.imgBase + speaker.avatar + '">'
+    var avatar = spk.avatar
+      ? '<img class="dlg-line-avatar" src="' + data.imgBase + spk.avatar + '">'
       : '';
-    var html = '<div class="dlg-text-item" data-i="' + i + '">' +
+    var html = '<div class="dlg-text-item" id="dlg-line-' + i + '">' +
       '<div class="dlg-text-avatar">' + avatar + '</div>' +
       '<div class="dlg-text-content">' +
       '<div class="dlg-text-hanzi">' + wrapped + '</div>' +
@@ -84,28 +100,44 @@ function init(data) {
 
   applyVisibility();
 
-// ── 事件绑定 ──────────────────────────────────────
-  // 播放按钮
+// 默认锁定课文 — 听完音频后才解锁
+  document.getElementById('textSection').classList.add('locked');
+  var enterBtn = document.getElementById('enterPracticeBtn');
+  if (enterBtn) enterBtn.disabled = true;
+  var textLabel = document.getElementById('textToggleLabel');
+  if (textLabel) textLabel.textContent = '显示课文内容';
+
+  // ── 音频设置 ──────────────────────────────────────────
+  audio.src = data.audioBase + data.audio;
+  audio.playbackRate = 1.0;
+
+  // 如果有逐句音频则设置
+  if (data.rolePlay && data.rolePlay.dialogueAudio) {
+    rpAudio.src = data.audioBase + data.rolePlay.dialogueAudio;
+  }
+
+  // ── 事件绑定 ──────────────────────────────────────────
+  bindAudioEvents(data);
+  bindToggles(data);
+  bindToolbar(data);
+  bindPracticeEvents(data);
+}
+
+/* ── 音频事件 ────────────────────────────────────────────── */
+function bindAudioEvents(data) {
   var playBtn = document.getElementById('playBtn');
   if (playBtn) playBtn.onclick = function() {
-    if (audio.paused) {
-      audio.play();
-    } else {
-      audio.pause();
-    }
+    if (audio.paused) { audio.play(); }
+    else { audio.pause(); }
   };
 
   audio.addEventListener('play', function() {
-    var icon = document.getElementById('playIcon');
-    var btn = document.getElementById('playBtn');
-    if (icon) icon.textContent = '⏸';
-    if (btn) btn.classList.add('playing');
+    document.getElementById('playIcon').textContent = '⏸';
+    playBtn.classList.add('playing');
   });
   audio.addEventListener('pause', function() {
-    var icon = document.getElementById('playIcon');
-    var btn = document.getElementById('playBtn');
-    if (icon) icon.textContent = '▶';
-    if (btn) btn.classList.remove('playing');
+    document.getElementById('playIcon').textContent = '▶';
+    playBtn.classList.remove('playing');
   });
 
   audio.addEventListener('timeupdate', function() {
@@ -115,162 +147,502 @@ function init(data) {
     var cur = document.getElementById('audioCurTime');
     if (fill) fill.style.width = pct + '%';
     if (cur) cur.textContent = fmtTime(audio.currentTime);
+
+    // 同步高亮句子
+    highlightLineForTime(audio.currentTime, data.lines);
   });
+
   audio.addEventListener('loadedmetadata', function() {
     var dur = document.getElementById('audioDur');
     if (dur) dur.textContent = fmtTime(audio.duration);
   });
 
-  var progressBar = document.querySelector('.audio-progress-bar');
-  if (progressBar) progressBar.addEventListener('click', function(e) {
-    var rect = progressBar.getBoundingClientRect();
-    var ratio = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = ratio * audio.duration;
+  audio.addEventListener('ended', function() {
+    // 解锁课文和练习按钮，解锁后自动显示课文内容（互斥切换）
+    var textSection = document.getElementById('textSection');
+    if (textSection) textSection.classList.remove('locked');
+    var sceneCard = document.getElementById('sceneCard');
+    if (sceneCard) sceneCard.classList.add('focus-mode');
+    isTextFocused = true;
+    var enterBtn = document.getElementById('enterPracticeBtn');
+    if (enterBtn) enterBtn.disabled = false;
+    var textLabel = document.getElementById('textToggleLabel');
+    if (textLabel) textLabel.textContent = '隐藏课文内容';
+    parent.postMessage({ type: 'playerMessage', action: 'displayComplete' }, '*');
   });
 
-  var textToggle = document.getElementById('textToggle');
-  if (textToggle) textToggle.onclick = function() {
-    var isFlipped = flipCard.classList.contains('flipped');
-    if (isFlipped) {
-      flipCard.classList.remove('flipped');
-      this.textContent = 'Show Text';
-    } else {
-      flipCard.classList.add('flipped');
-      this.textContent = 'Hide Text';
-    }
-  };
+  // 进度条点击跳转
+  var progressBar = document.querySelector('.ctrl-progress-bar');
+  if (progressBar) {
+    progressBar.onclick = function(e) {
+      var rect = progressBar.getBoundingClientRect();
+      var ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      audio.currentTime = ratio * audio.duration;
+    };
+  }
 
+  // 语速滑动条
+  var speedSlider = document.getElementById('speedSlider');
+  var speedCurrent = document.getElementById('speedCurrent');
+  if (speedSlider) {
+    speedSlider.oninput = function() {
+      var speed = parseFloat(this.value);
+      audio.playbackRate = speed;
+      if (speedCurrent) speedCurrent.textContent = speed.toFixed(1) + 'x';
+    };
+  }
+}
+
+/* ── 同步高亮 ────────────────────────────────────────────── */
+function highlightLineForTime(time, lines) {
+  // 清除所有高亮
+  document.querySelectorAll('.dlg-text-item').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  document.querySelectorAll('.speaker-badge').forEach(function(el) {
+    el.classList.remove('active');
+  });
+
+  // 找到当前时间对应的句子
+  var activeIdx = -1;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (time >= line.start && time < line.end) {
+      activeIdx = i;
+      break;
+    }
+  }
+
+  if (activeIdx >= 0) {
+    var line = lines[activeIdx];
+    var itemEl = document.getElementById('dlg-line-' + activeIdx);
+    var spkEl = document.getElementById('spk-' + line.speaker);
+    if (itemEl) itemEl.classList.add('active');
+    if (spkEl) spkEl.classList.add('active');
+  }
+}
+
+/* ── 开关控件 ────────────────────────────────────────────── */
+function bindToggles(data) {
   var pinyinToggle = document.getElementById('pinyinToggle');
   if (pinyinToggle) pinyinToggle.onchange = function() {
     showPinyin = this.checked;
     applyVisibility();
+    // 同步到练习浮层
+    var rpPy = document.getElementById('rpPinyinToggle');
+    if (rpPy) rpPy.checked = showPinyin;
+    applyRpVisibility();
   };
 
   var englishToggle = document.getElementById('englishToggle');
   if (englishToggle) englishToggle.onchange = function() {
     showEnglish = this.checked;
     applyVisibility();
+    var rpEn = document.getElementById('rpEnglishToggle');
+    if (rpEn) rpEn.checked = showEnglish;
+    applyRpVisibility();
   };
 
-  // 词汇点击弹层（背面文本中）
-  textList.addEventListener('click', function(e) {
-    var hl = e.target.closest('.dlg-vocab-hl');
-    if (!hl) return;
-    var word = hl.dataset.word;
-    var v = vocabMap[word];
-    if (!v) return;
-    var popup = document.getElementById('vocabPopup');
-    var vpHanzi = document.getElementById('vpHanzi');
-    var vpPinyin = document.getElementById('vpPinyin');
-    var vpPos = document.getElementById('vpPos');
-    var vpEn = document.getElementById('vpEn');
-    if (vpHanzi) vpHanzi.textContent = v.hanzi;
-    if (vpPinyin) vpPinyin.textContent = v.pinyin;
-    if (vpPos) vpPos.textContent = v.pos || '';
-    if (vpEn) vpEn.textContent = v.en;
-    var rect = hl.getBoundingClientRect();
-    if (popup) {
-      popup.style.left = rect.left + 'px';
-      popup.style.top = (rect.bottom + 8) + 'px';
-      popup.classList.add('show');
-    }
-    e.stopPropagation();
-  });
-
-  var vocabPopup = document.getElementById('vocabPopup');
-  if (vocabPopup) vocabPopup.onclick = function() { this.classList.remove('show'); };
-  document.addEventListener('click', function() {
-    var pop = document.getElementById('vocabPopup');
-    if (pop) pop.classList.remove('show');
-  });
-
-  // 音频结束 → 自动翻页
-  audio.onended = function() {
-    parent.postMessage({ type: 'playerMessage', action: 'displayComplete' }, '*');
+  var rpPinyinToggle = document.getElementById('rpPinyinToggle');
+  if (rpPinyinToggle) rpPinyinToggle.onchange = function() {
+    showPinyin = this.checked;
+    applyVisibility();
+    var py = document.getElementById('pinyinToggle');
+    if (py) py.checked = showPinyin;
+    applyRpVisibility();
   };
 
-  // ── 角色扮演 ──────────────────────────────────────
-  var practiceBtn = document.getElementById('practiceBtn');
-  if (practiceBtn) practiceBtn.onclick = function() {
+  var rpEnglishToggle = document.getElementById('rpEnglishToggle');
+  if (rpEnglishToggle) rpEnglishToggle.onchange = function() {
+    showEnglish = this.checked;
+    applyVisibility();
+    var en = document.getElementById('englishToggle');
+    if (en) en.checked = showEnglish;
+    applyRpVisibility();
+  };
+}
+
+function applyVisibility() {
+  document.querySelectorAll('.dlg-text-pinyin').forEach(function(el) {
+    el.classList.toggle('hidden', !showPinyin);
+  });
+  document.querySelectorAll('.dlg-text-en').forEach(function(el) {
+    el.classList.toggle('hidden', !showEnglish);
+  });
+}
+
+function applyRpVisibility() {
+  var container = document.getElementById('chatContainer');
+  if (!container) return;
+  container.classList.toggle('pinyin-hidden', !showPinyin);
+  container.classList.toggle('english-hidden', !showEnglish);
+}
+
+/* ── 工具栏事件 ─────────────────────────────────────────── */
+function bindToolbar(data) {
+  // 显示/隐藏课文 → 专注模式（仅在课文解锁后可用）
+  var textToggle = document.getElementById('textToggle');
+  var textLabel = document.getElementById('textToggleLabel');
+  var sceneCard = document.getElementById('sceneCard');
+
+  if (textToggle) textToggle.onclick = function() {
+    // 锁定状态下不可切换
+    var textSection = document.getElementById('textSection');
+    if (textSection && textSection.classList.contains('locked')) return;
+    isTextFocused = !isTextFocused;
+    sceneCard.classList.toggle('focus-mode', isTextFocused);
+    if (textLabel) textLabel.textContent = isTextFocused ? '显示课文内容' : '隐藏课文内容';
+  };
+
+  // 进入对话练习
+  var enterBtn = document.getElementById('enterPracticeBtn');
+  if (enterBtn) enterBtn.onclick = function() {
     if (data.hasRolePlay === false) return;
-    var rpAvatarA = document.getElementById('rpAvatarA');
-    var rpAvatarB = document.getElementById('rpAvatarB');
-    var rpTotal = document.getElementById('rpTotal');
-    var rpCur = document.getElementById('rpCur');
-    var rpStatus = document.getElementById('rpStatus');
-    var rpRoleBtns = document.getElementById('rpRoleBtns');
-    var rpPlayAnswer = document.getElementById('rpPlayAnswer');
-    var rpNextLine = document.getElementById('rpNextLine');
-    var rpOverlay = document.getElementById('rpOverlay');
-    if (rpAvatarA) rpAvatarA.src = data.imgBase + data.speakers[0].avatar;
-    if (rpAvatarB) rpAvatarB.src = data.imgBase + data.speakers[1].avatar;
-    if (rpTotal) rpTotal.textContent = data.lines.length;
-    if (rpCur) rpCur.textContent = '1';
-    if (rpStatus) rpStatus.textContent = 'Choose your role';
-    if (rpRoleBtns) rpRoleBtns.style.display = 'flex';
-    if (rpPlayAnswer) rpPlayAnswer.style.display = 'none';
-    if (rpNextLine) rpNextLine.style.display = 'none';
-    rpIndex = 0;
-    myRole = null;
-    if (rpOverlay) rpOverlay.classList.add('show');
+    switchToPractice(data);
   };
 
-  var rpChooseA = document.getElementById('rpChooseA');
-  var rpChooseB = document.getElementById('rpChooseB');
-  if (rpChooseA) rpChooseA.onclick = function() { chooseRole('A', data); };
-  if (rpChooseB) rpChooseB.onclick = function() { chooseRole('B', data); };
+  // 词汇点击弹层
+  var textList = document.getElementById('dlgTextList');
+  if (textList) {
+    textList.onclick = function(e) {
+      var hl = e.target.closest('.dlg-vocab-hl');
+      if (!hl) return;
+      var word = hl.dataset.word;
+      var v = vocabMap[word];
+      if (!v) return;
+      showVocabPopup(hl, v);
+      e.stopPropagation();
+    };
+  }
 
-  var rpPlayHint = document.getElementById('rpPlayHint');
-  if (rpPlayHint) rpPlayHint.onclick = function() {
-    audio.currentTime = data.lines[rpIndex].start;
-    audio.play();
+  document.getElementById('vocabPopup').onclick = function() { this.classList.remove('show'); };
+  document.addEventListener('click', function() {
+    document.getElementById('vocabPopup').classList.remove('show');
+  });
+}
+
+function showVocabPopup(hl, v) {
+  var popup = document.getElementById('vocabPopup');
+  document.getElementById('vpHanzi').textContent = v.hanzi;
+  document.getElementById('vpPinyin').textContent = v.pinyin;
+  document.getElementById('vpPos').textContent = v.pos || '';
+  document.getElementById('vpEn').textContent = v.en;
+  var rect = hl.getBoundingClientRect();
+  popup.style.left = rect.left + 'px';
+  popup.style.top = (rect.bottom + 8) + 'px';
+  popup.classList.add('show');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   实战练习 — 角色扮演
+   ═══════════════════════════════════════════════════════════ */
+
+function switchToPractice(data) {
+  state = 'PRACTICE_SELECT';
+  var overlay = document.getElementById('rpOverlay');
+  overlay.classList.add('show');
+
+  // 暂停精读音频
+  audio.pause();
+
+  // 设置角色选项
+  document.getElementById('rpChooseAvatarA').src = data.imgBase + data.speakers[0].avatar;
+  document.getElementById('rpChooseAvatarB').src = data.imgBase + data.speakers[1].avatar;
+  document.getElementById('rpChooseNameA').textContent = data.speakers[0].name;
+  document.getElementById('rpChooseNameB').textContent = data.speakers[1].name;
+  document.getElementById('rpTotal').textContent = totalLines;
+
+  // 显示角色选择阶段
+  showPracticeStage('select');
+  clearChat();
+}
+
+function showPracticeStage(stage) {
+  // stage: 'select' | 'playing' | 'result'
+  document.getElementById('rpRoleSelect').style.display = stage === 'select' ? 'block' : 'none';
+  document.getElementById('rpPracticeControls').style.display = stage === 'playing' ? 'flex' : 'none';
+  document.getElementById('rpResultOverlay').style.display = stage === 'result' ? 'flex' : 'none';
+}
+
+function clearChat() {
+  document.getElementById('chatContainer').innerHTML = '';
+}
+
+function bindPracticeEvents(data) {
+  // 返回精读
+  document.getElementById('rpBackBtn').onclick = function() {
+    rpAudio.pause();
+    clearRecordingState();
+    document.getElementById('rpOverlay').classList.remove('show');
+    state = 'INTRO';
   };
-  var rpPlayAnswer2 = document.getElementById('rpPlayAnswer');
-  if (rpPlayAnswer2) rpPlayAnswer2.onclick = function() {
-    audio.currentTime = data.lines[rpIndex].start;
-    audio.play();
+
+  // 放弃练习
+  document.getElementById('rpGiveupBtn').onclick = function() {
+    rpAudio.pause();
+    clearRecordingState();
+    document.getElementById('rpOverlay').classList.remove('show');
+    state = 'INTRO';
   };
-  var rpNextLine2 = document.getElementById('rpNextLine');
-  if (rpNextLine2) rpNextLine2.onclick = function() {
-    if (rpIndex < data.lines.length - 1) { rpIndex++; showRpLine(data); }
-    else {
-      var overlay = document.getElementById('rpOverlay');
-      if (overlay) overlay.classList.remove('show');
-      parent.postMessage({ type: 'playerMessage', action: 'rolePlayComplete' }, '*');
+
+  // 选择角色 A / B
+  document.getElementById('rpChooseA').onclick = function() { chooseRole('A', data); };
+  document.getElementById('rpChooseB').onclick = function() { chooseRole('B', data); };
+
+  // 录音按钮：按住录音，松开停止
+  var recordBtn = document.getElementById('recordBtn');
+  if (recordBtn) {
+    recordBtn.onmousedown = function() { startRecording(); };
+    recordBtn.onmouseup = function() { stopRecording(); };
+    recordBtn.onmouseleave = function() { if (isRecording) stopRecording(); };
+    // 移动端 touch
+    recordBtn.ontouchstart = function(e) { e.preventDefault(); startRecording(); };
+    recordBtn.ontouchend = function(e) { e.preventDefault(); stopRecording(); };
+  }
+
+  // 回放录音
+  var playRecBtn = document.getElementById('playRecBtn');
+  if (playRecBtn) playRecBtn.onclick = function() {
+    if (recordedBlob) {
+      new Audio(URL.createObjectURL(recordedBlob)).play();
     }
   };
-  var rpExit = document.getElementById('rpExit');
-  if (rpExit) rpExit.onclick = function() {
-    var overlay = document.getElementById('rpOverlay');
-    if (overlay) overlay.classList.remove('show');
-    audio.pause();
+
+  // 我读完了
+  document.getElementById('rpActionDone').onclick = function() {
+    onUserReadDone(data);
+  };
+
+  // 再次练习
+  document.getElementById('rpAgainBtn').onclick = function() {
+    resetPractice(data);
+  };
+
+  // 完成成果
+  document.getElementById('rpDoneBtn').onclick = function() {
+    clearRecordingState();
+    document.getElementById('rpOverlay').classList.remove('show');
+    parent.postMessage({ type: 'playerMessage', action: 'rolePlayComplete' }, '*');
   };
 }
 
-function chooseRole(role, data) {
-  myRole = role;
+function chooseRole(roleId, data) {
+  myRole = roleId;
   rpIndex = 0;
-  showRpLine(data);
+
+  // 更新左侧面板显示我的角色
+  var spk = speakerMap[roleId];
+  document.getElementById('rpMyAvatar').src = data.imgBase + spk.avatar;
+  document.getElementById('rpMyName').textContent = spk.name;
+
+  state = 'PRACTICE_PLAYING';
+  showPracticeStage('playing');
+  applyRpVisibility();
+  playRpLine(data);
 }
 
-function showRpLine(data) {
+function playRpLine(data) {
   var line = data.lines[rpIndex];
   var isMy = line.speaker === myRole;
-  var isLast = rpIndex === data.lines.length - 1;
+
+  // 更新进度
   document.getElementById('rpCur').textContent = rpIndex + 1;
+  var pct = ((rpIndex) / totalLines) * 100;
+  document.getElementById('rpProgressFill').style.width = pct + '%';
 
-  var prompt = isMy ? 'Your turn, say:' : 'Wait for partner...';
-  document.getElementById('rpStatus').innerHTML =
-    '<div class="rp-status-prompt">' + prompt + '</div>' +
-    '<div class="rp-current-hanzi">' + line.hanzi + '</div>' +
-    '<div class="rp-current-pinyin">' + line.pinyin + '</div>';
+  // 添加气泡
+  addChatBubble(line, isMy, data);
 
-  document.getElementById('rpPlayAnswer').style.display =
-    (!isMy && !isLast) ? 'inline-block' : 'none';
-  document.getElementById('rpNextLine').style.display =
-    (isMy || isLast) ? 'inline-block' : 'none';
+  if (isMy) {
+    // 轮到用户：显示录音 UI
+    showRecordUI(line);
+  } else {
+    // 对方：自动播放音频，波纹效果
+    var bubble = document.getElementById('bubble-' + rpIndex);
+    if (bubble) bubble.classList.add('speaking');
+    playLineAudio(line, data, function() {
+      if (bubble) bubble.classList.remove('speaking');
+      // 音频播完，自动进入下一句
+      if (rpIndex < totalLines - 1) {
+        rpIndex++;
+        playRpLine(data);
+      } else {
+        onAllLinesComplete(data);
+      }
+    });
+  }
 }
 
+function addChatBubble(line, isMy, data) {
+  var container = document.getElementById('chatContainer');
+  var spk = speakerMap[line.speaker];
+  var side = (line.speaker === myRole) ? 'right' : 'left';
+
+  var bubble = document.createElement('div');
+  bubble.className = 'chat-bubble ' + side;
+  bubble.id = 'bubble-' + rpIndex;
+  bubble.dataset.side = side;
+
+  var avatarHtml = '<img class="bubble-avatar" src="' + data.imgBase + spk.avatar + '">';
+  var textHtml =
+    '<div class="bubble-body">' +
+      '<div class="bubble-hanzi">' + line.hanzi + '</div>' +
+      '<div class="bubble-pinyin">' + line.pinyin + '</div>' +
+      '<div class="bubble-en">' + line.en + '</div>' +
+    '</div>';
+
+  if (side === 'left') {
+    bubble.innerHTML = avatarHtml + textHtml;
+  } else {
+    // 头像在右边：avatar 在 DOM 中放前面，row-reverse 使其在视觉上居右
+    bubble.innerHTML = avatarHtml + textHtml;
+    // 当前用户需要读的气泡加高亮边框
+    if (isMy) bubble.classList.add('current');
+  }
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function playLineAudio(line, data, onEnd) {
+  // 如果有逐句音频文件，播放对应段落；否则用主音频seek
+  if (rpAudio.src) {
+    rpAudio.currentTime = line.start;
+    rpAudio.play();
+    var checkEnd = setInterval(function() {
+      if (rpAudio.currentTime >= line.end - 0.05) {
+        clearInterval(checkEnd);
+        rpAudio.pause();
+        if (onEnd) onEnd();
+      }
+    }, 100);
+  } else {
+    // 用主音频 seek 到 line.start 播放
+    audio.currentTime = line.start;
+    audio.play();
+    var checkEnd = setInterval(function() {
+      if (audio.currentTime >= line.end - 0.05) {
+        clearInterval(checkEnd);
+        audio.pause();
+        if (onEnd) onEnd();
+      }
+    }, 100);
+  }
+}
+
+function onUserReadDone(data) {
+  // 用户点击"我读完了" → 进入下一句
+  rpAudio.pause();
+  audio.pause();
+
+  if (rpIndex < totalLines - 1) {
+    rpIndex++;
+    playRpLine(data);
+  } else {
+    onAllLinesComplete(data);
+  }
+}
+
+function onAllLinesComplete(data) {
+  state = 'PRACTICE_RESULT';
+  document.getElementById('rpProgressFill').style.width = '100%';
+  showPracticeStage('result');
+}
+
+function resetPractice(data) {
+  rpAudio.pause();
+  audio.pause();
+  rpIndex = 0;
+  state = 'PRACTICE_PLAYING';
+  clearChat();
+  clearRecordingState();
+  showPracticeStage('playing');
+  document.getElementById('rpProgressFill').style.width = '0%';
+  playRpLine(data);
+}
+
+function clearRecordingState() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+  }
+  mediaRecorder = null;
+  audioChunks = [];
+  recordedBlob = null;
+  isRecording = false;
+}
+
+function showRecordUI(line) {
+  // 显示录音提示和区域，隐藏"我读完了"
+  var hint = document.getElementById('rpRecordHint');
+  var area = document.getElementById('rpRecordArea');
+  var doneBtn = document.getElementById('rpActionDone');
+  if (hint) {
+    hint.style.display = 'block';
+    var hanziSpan = document.getElementById('rpRecordHanzi');
+    if (hanziSpan) hanziSpan.textContent = line.hanzi;
+  }
+  if (area) area.style.display = 'flex';
+  if (doneBtn) {
+    doneBtn.style.display = 'none';
+    doneBtn.disabled = true;
+  }
+
+  // 重置录音状态（每句话独立），隐藏回放按钮
+  audioChunks = [];
+  recordedBlob = null;
+  isRecording = false;
+  var playRecBtn = document.getElementById('playRecBtn');
+  if (playRecBtn) playRecBtn.style.display = 'none';
+}
+
+function startRecording() {
+  // 防止重复点击
+  if (isRecording) return;
+
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = function(e) {
+      audioChunks.push(e.data);
+    };
+    mediaRecorder.onstop = function() {
+      recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      // 显示回放按钮，启用完成按钮
+      var playRecBtn = document.getElementById('playRecBtn');
+      var doneBtn = document.getElementById('rpActionDone');
+      if (playRecBtn) playRecBtn.style.display = 'inline-block';
+      if (doneBtn) {
+        doneBtn.style.display = 'inline-block';
+        doneBtn.disabled = false;
+      }
+      // 停止所有 track
+      stream.getTracks().forEach(function(t) { t.stop(); });
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    var recBtn = document.getElementById('recordBtn');
+    if (recBtn) recBtn.classList.add('recording');
+  }).catch(function(err) {
+    console.warn('录音权限被拒绝:', err);
+    // 即使没权限，也让用户点"我读完了"
+    var doneBtn = document.getElementById('rpActionDone');
+    if (doneBtn) {
+      doneBtn.style.display = 'inline-block';
+      doneBtn.disabled = false;
+    }
+  });
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    isRecording = false;
+    mediaRecorder.stop();
+    var recBtn = document.getElementById('recordBtn');
+    if (recBtn) recBtn.classList.remove('recording');
+  }
+}
+
+/* ── 词汇高亮 ────────────────────────────────────────────── */
 function wrapVocab(hanzi, vocabArr) {
   if (!vocabArr || !vocabArr.length) return hanzi;
   var result = '', last = 0;
@@ -283,18 +655,10 @@ function wrapVocab(hanzi, vocabArr) {
   return result + hanzi.slice(last);
 }
 
+/* ── 工具函数 ────────────────────────────────────────────── */
 function fmtTime(sec) {
-  sec = Math.floor(sec);
+  sec = Math.floor(sec || 0);
   var m = Math.floor(sec / 60);
   var s = sec % 60;
   return m + ':' + (s < 10 ? '0' : '') + s;
-}
-
-function applyVisibility() {
-  document.querySelectorAll('.dlg-text-pinyin').forEach(function(el) {
-    el.classList.toggle('hidden', !showPinyin);
-  });
-  document.querySelectorAll('.dlg-text-en').forEach(function(el) {
-    el.classList.toggle('hidden', !showEnglish);
-  });
 }

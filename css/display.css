@@ -1,113 +1,248 @@
 /* ============================================================
-   display.css — 生词与例句双栏页面样式
-   被 display 类型 slide HTML 引用
+   display.css — 每页一个生词 + 多个例句（左右分栏）
    ============================================================ */
 
 /* ── CSS VARIABLES ─────────────────────────────────────── */
 :root {
-  --green:       #22a86e;
-  --green-deep:  #1b8a5a;
-  --green-soft:  rgba(34, 168, 110, 0.10);
-  --green-light: #e8f7f0;
+  --green:      #22a86e;
+  --green-soft: rgba(34, 168, 110, 0.12);
+  --green-deep: #1b8a5a;
+  --blue:       #4a82ef;
+  --ink:        #1e293b;
+  --body:       #64748b;
+  --card-bg:    #ffffff;
+  --example-bg: #f5f7fa;
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.06);
+  --shadow-hover: 0 12px 32px rgba(0,0,0,0.14);
+  --radius-card: 20px;
+  --radius-item: 16px;
 }
 
-/* ── DISPLAY CARD (container) ───────────────────────────── */
+/* ── DISPLAY CARD ──────────────────────────────────────── */
 .display-card {
-  background: #fff;
-  border-radius: 24px;
-  padding: 45px 40px 28px;
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 40px 36px 28px;
   width: 100%;
   height: 100%;
-  box-shadow: 0 12px 48px rgba(34, 168, 110, 0.10);
-  text-align: center;
+  box-shadow: 0 8px 40px rgba(34, 168, 110, 0.10);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
-  gap: 0;
 }
 
-/* ── DISPLAY LAYOUT (生词+例句) ────────────────────────── */
+/* ── DISPLAY LAYOUT ────────────────────────────────────── */
 .display-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 38% 1fr;
+  place-content: center;
+  grid-template-areas: "vocab examples";
+  gap: 40px;
   flex: 1;
   min-height: 0;
-  padding: 0 16px;
-  align-items: start;
+  padding: 8px 40px 0;
+  align-items: stretch;
 }
-.display-vocab-col,
+
+/* 左栏：生词卡 — 撑满高度，内容垂直居中 */
+.display-vocab-col {
+  grid-area: vocab;
+  height: 100%;
+  align-items: center;
+  min-height: 0;
+}
+
+/* 右栏：例句列表 */
 .display-example-col {
+  grid-area: examples;
+  height: 100%;
+  overflow-y: auto;
+}
+
+div#exampleCol {
+  height: 100%;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
 }
 
-/* 左栏生词项：居中卡片（与 vocab 词卡一致） */
+/* ── SINGLE VOCAB CARD — 占据整左栏 ───────────────────── */
 .display-item {
-  background: var(--green-soft);
-  border-radius: 16px;
-  height: max-content;
-  padding: 20px 16px;
-  text-align: center;
-  border: 2px solid transparent;
-  transition: border-color 0.2s, transform 0.15s;
+  background: var(--card-bg);
+  border-radius: var(--radius-item);
+  border: 1.5px solid #e8ecf0;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
   cursor: default;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
-.display-item:hover { border-color: var(--green); transform: translateY(-2px); }
 
-/* 左栏生词内部结构 */
-.vocab-main { flex: 1; min-width: 0; }
-.vocab-hanzi { font-size: 2.5rem; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
-.vocab-meta { display: flex; gap: 8px; font-size: 0.85rem; color: var(--blue); flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
-.vocab-pinyin { font-size: 1.2rem; color: var(--body); margin-bottom: 4px; }
-.vocab-pos { font-size: 1.1rem; color: var(--green); margin-bottom: 4px; }
-.vocab-en { font-size: 1rem; color: var(--body); }
-
-.item-controls { display: flex; gap: 8px; flex-shrink: 0; justify-content: center; margin-top: 8px; }
-.ctrl-btn-sm {
-  width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
-  font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
-  transition: transform 0.15s, background 0.15s;
+.display-item:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--green);
 }
-.ctrl-btn-sm:hover { transform: scale(1.1); }
-.ctrl-btn-sm[title="播放音频"] { background: var(--blue, #4a82ef); color: #fff; }
-.ctrl-btn-sm.rec-btn { background: var(--red, #e55); color: #fff; }
-.ctrl-btn-sm.rec-btn.recording { animation: rec-blink 1s infinite; }
-.ctrl-btn-sm:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-@keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-/* 右栏例句项：纵向居中卡片 */
-.example-item {
+/* 顶部书脊条 */
+.vocab-spine {
+  height: 5px;
+  background: linear-gradient(90deg, var(--green-deep), var(--green));
+  flex-shrink: 0;
+}
+
+/* 主体内容 — 垂直居中 */
+.vocab-body {
+  flex: 1;
+  padding: 28px 20px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 16px 14px;
-  background: var(--green-light, #e8f7f0);
-  border-radius: 12px;
-  border: 2px solid transparent;
-  transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+  justify-content: center;
+  gap: 8px;
 }
-.example-item:hover {
-  border-color: var(--green);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(34, 168, 110, 0.15);
-}
-.example-hanzi {
-  font-size: 1.5rem; font-weight: 700; color: var(--ink); text-align: center;
-}
-.example-pinyin { font-size: 1rem; color: var(--green); text-align: center; }
-.example-en { font-size: 0.9rem; color: var(--body); opacity: 0.75; text-align: center; }
 
-/* ── DISPLAY NEXT BUTTON ─────────────────────────────── */
+/* 汉字 — 超大居中 */
+.vocab-hanzi {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: var(--ink);
+  line-height: 1.05;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+/* 拼音 */
+.vocab-pinyin {
+  font-size: 1.3rem;
+  color: var(--green);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* 词性胶囊 */
+.vocab-pos {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green);
+  padding: 3px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* 英文 */
+.vocab-en {
+  font-size: 1rem;
+  color: var(--body);
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* 控制按钮 */
+.item-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 12px 20px 16px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.ctrl-btn-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, background 0.15s;
+}
+.ctrl-btn-sm:hover { transform: scale(1.12); }
+.ctrl-btn-sm[title="播放音频"] { background: var(--blue); color: #fff; }
+.ctrl-btn-sm.rec-btn { background: var(--green); color: #fff; }
+.ctrl-btn-sm.rec-btn.recording { animation: rec-blink 1s infinite; }
+.ctrl-btn-sm:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+@keyframes rec-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ── EXAMPLE CARDS — 右栏例句列表 ─────────────────────── */
+.example-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 16px 18px 14px;
+  background: var(--example-bg);
+  border-radius: var(--radius-item);
+  border: 1.5px solid transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  margin: 2px 0;
+}
+
+.example-item:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.10));
+  border-color: rgba(34, 168, 110, 0.3);
+}
+
+.example-hanzi {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.example-pinyin {
+  font-size: 1rem;
+  color: var(--green);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.example-en {
+  font-size: 0.88rem;
+  color: var(--body);
+  line-height: 1.5;
+  opacity: 0.8;
+}
+
+/* 例句控制按钮行 */
+.example-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── NEXT BUTTON ────────────────────────────────────── */
 .vocab-next-row {
   display: flex;
   justify-content: center;
-  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.vocab-next-btn {
+  padding: 12px 40px;
+  border-radius: 50px;
+  border: none;
+  background: var(--green);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(34, 168, 110, 0.35);
+}
+.vocab-next-btn:hover {
+  background: var(--green-deep);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34, 168, 110, 0.45);
 }

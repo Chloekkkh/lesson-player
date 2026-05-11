@@ -220,87 +220,165 @@ function dialogueTemplate(slideNum, courseTitle) {
   <link rel="stylesheet" href="/css/dialogue.css">
 </head>
 <body>
-  <div class="dlg-card">
-    <div class="page-header">
-      <h2 id="exerciseTitle">Dialogue</h2>
-      <div class="header-toggles">
-        <label class="toggle-switch">
-          <input type="checkbox" id="pinyinToggle" checked>
-          <span class="toggle-slider"></span>
-          <span>拼音</span>
-        </label>
-        <label class="toggle-switch">
-          <input type="checkbox" id="englishToggle" checked>
-          <span class="toggle-slider"></span>
-          <span>英文</span>
-        </label>
-      </div>
-    </div>
-    <p id="exerciseSubtitle" class="exercise-subtitle"></p>
+<div class="dlg-card">
 
-    <div class="dlg-content-row">
-      <div class="dlg-speakers" id="dlgSpeakers"></div>
+  <!-- ── 主视图：课文精读 ─────────────────────────────── -->
+  <div class="dlg-main-view" id="dlgMainView">
 
-      <div class="dlg-flip-card" id="dlgFlipCard">
-        <div class="dlg-flip-inner">
-          <div class="dlg-flip-front">
-            <img class="flip-scene-img" id="flipSceneImg">
-            <div class="flip-hint">Tap to show text</div>
-          </div>
-          <div class="dlg-flip-back">
-            <div class="dlg-text-list" id="dlgTextList"></div>
+    <!-- 左侧控制面板 -->
+    <div class="dlg-left-panel">
+      <!-- 卡片1：课程信息+音频控制 -->
+      <div class="ctrl-card">
+        <div class="ctrl-theme" id="ctrlTheme">情景对话</div>
+        <div class="ctrl-audio-player">
+          <button class="ctrl-play-btn" id="playBtn">
+            <span id="playIcon">▶</span>
+          </button>
+          <div class="ctrl-audio-body">
+            <div class="ctrl-progress-bar">
+              <div class="ctrl-progress-fill" id="audioProgressFill"></div>
+            </div>
+            <div class="ctrl-audio-time">
+              <span id="audioCurTime">0:00</span> / <span id="audioDur">0:00</span>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-<div class="dlg-toolbar">
-      <div class="audio-player">
-        <button class="audio-play-btn" id="playBtn">
-          <span id="playIcon">▶</span>
+        <div class="speed-slider-wrap">
+          <span class="speed-label">0.8x</span>
+          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
+          <span class="speed-label">1.4x</span>
+          <span class="speed-current" id="speedCurrent">1.0x</span>
+        </div>
+        <button class="ctrl-text-toggle" id="textToggle">
+          <span id="textToggleLabel">显示课文内容</span>
         </button>
-        <div class="audio-progress-wrap">
-          <div class="audio-progress-bar">
-            <div class="audio-progress-fill" id="audioProgressFill"></div>
+      </div>
+
+      <!-- 卡片2：工具栏 -->
+      <div class="tool-card">
+        <div class="lang-toggles">
+          <label class="toggle-switch">
+            <input type="checkbox" id="pinyinToggle" checked>
+            <span class="toggle-slider"></span>
+            <span>拼音</span>
+          </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="englishToggle" checked>
+            <span class="toggle-slider"></span>
+            <span>英文</span>
+          </label>
+        </div>
+        <button class="enter-practice-btn" id="enterPracticeBtn">
+          进入对话练习 →
+        </button>
+      </div>
+    </div>
+
+    <!-- 右侧内容面板：场景模拟+课文精读整合卡片 -->
+    <div class="dlg-right-panel" id="dlgRightPanel">
+      <div class="scene-card" id="sceneCard">
+        <!-- 场景顶部：图片+头像，始终显示 -->
+        <div class="scene-top">
+          <div class="scene-section">
+            <img class="scene-img" id="sceneImg" alt="场景">
           </div>
-          <div class="audio-time">
-            <span id="audioCurTime">0:00</span> / <span id="audioDur">0:00</span>
+          <div class="speakers-row" id="speakersRow"></div>
+        </div>
+        <!-- 课文文本：解锁后显示，可通过"显示/隐藏课文内容"切换 -->
+        <div class="text-section" id="textSection">
+          <div class="dlg-text-list" id="dlgTextList"></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /dlg-main-view -->
+
+  <!-- ── 角色扮演浮层 ─────────────────────────────────── -->
+  <div class="rp-overlay" id="rpOverlay">
+
+    <!-- 左上角返回按钮 -->
+    <button class="rp-back-btn" id="rpBackBtn">← 返回精读</button>
+
+    <div class="rp-layout">
+
+      <!-- 左侧面板 -->
+      <div class="rp-left-panel">
+        <div class="rp-my-role" id="rpMyRole">
+          <img class="rp-my-avatar" id="rpMyAvatar" src="">
+          <div class="rp-my-name" id="rpMyName"></div>
+        </div>
+        <div class="rp-progress-bar-wrap">
+          <div class="rp-progress-label">第 <span id="rpCur">1</span> 句 / 共 <span id="rpTotal">1</span> 句</div>
+          <div class="rp-progress-track">
+            <div class="rp-progress-fill" id="rpProgressFill"></div>
+          </div>
+        </div>
+        <div class="rp-lang-toggles">
+          <label class="toggle-switch">
+            <input type="checkbox" id="rpPinyinToggle" checked>
+            <span class="toggle-slider"></span>
+            <span>拼音</span>
+          </label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="rpEnglishToggle" checked>
+            <span class="toggle-slider"></span>
+            <span>英文</span>
+          </label>
+        </div>
+        <button class="rp-giveup-btn" id="rpGiveupBtn">放弃当前练习</button>
+      </div>
+
+      <!-- 右侧对话区 -->
+      <div class="rp-right-panel">
+        <div class="chat-container" id="chatContainer"></div>
+        <div class="rp-action-bar" id="rpActionBar">
+          <!-- 角色选择阶段 -->
+          <div class="rp-role-select" id="rpRoleSelect">
+            <p class="rp-role-prompt">请选择你要扮演的角色：</p>
+            <div class="rp-role-options">
+              <button class="rp-role-opt" id="rpChooseA">
+                <img class="rp-opt-avatar" id="rpChooseAvatarA" src="">
+                <span id="rpChooseNameA"></span>
+              </button>
+              <button class="rp-role-opt" id="rpChooseB">
+                <img class="rp-opt-avatar" id="rpChooseAvatarB" src="">
+                <span id="rpChooseNameB"></span>
+              </button>
+            </div>
+          </div>
+          <!-- 练习进行中 -->
+          <div class="rp-practice-controls" id="rpPracticeControls" style="display:none">
+            <div class="record-hint" id="rpRecordHint" style="display:none">
+              轮到你了：<span class="record-hanzi" id="rpRecordHanzi"></span>
+            </div>
+            <div class="record-area" id="rpRecordArea" style="display:none">
+              <button class="record-btn" id="recordBtn">
+                <span class="record-icon">🎙</span>
+              </button>
+              <button class="play-rec-btn" id="playRecBtn" style="display:none">🔊 回放录音</button>
+            </div>
+            <button class="rp-action-done" id="rpActionDone" disabled>我读完了 ✓</button>
+          </div>
+          <!-- 结束反馈 -->
+          <div class="rp-result-overlay" id="rpResultOverlay" style="display:none">
+            <div class="rp-result-icon">✓</div>
+            <div class="rp-result-title">练习完成！</div>
+            <div class="rp-result-btns">
+              <button class="rp-result-btn rp-result-again" id="rpAgainBtn">再次练习</button>
+              <button class="rp-result-btn rp-result-done" id="rpDoneBtn">完成成果</button>
+            </div>
           </div>
         </div>
       </div>
-      <button class="dlg-btn-toggle" id="textToggle">Hide Text</button>
-      <button class="dlg-btn-practice" id="practiceBtn">Role Play</button>
-      <button class="dlg-btn-next" id="nextBtn">下一页 →</button>
-    </div>
 
-  <!-- 角色扮演浮层 -->
-  <div class="rp-overlay" id="rpOverlay">
-    <div class="rp-panel">
-      <div class="rp-avatars">
-        <img class="rp-avatar" id="rpAvatarA">
-        <img class="rp-avatar B" id="rpAvatarB">
-      </div>
-      <div class="rp-status" id="rpStatus">Choose your role</div>
-      <div class="rp-role-btns" id="rpRoleBtns">
-        <button class="rp-role-btn" id="rpChooseA">Play A</button>
-        <button class="rp-role-btn B" id="rpChooseB">Play B</button>
-      </div>
-      <div class="rp-progress">Line <span id="rpCur">1</span> / <span id="rpTotal">1</span></div>
-      <div class="rp-controls">
-        <button class="rp-btn rp-btn-hint" id="rpPlayHint">🔊 Hint</button>
-        <button class="rp-btn rp-btn-answer" id="rpPlayAnswer">🔊 Answer</button>
-        <button class="rp-btn rp-btn-next" id="rpNextLine">Next →</button>
-      </div>
-      <button class="rp-exit" id="rpExit">Exit</button>
-    </div>
-  </div>
+    </div><!-- /rp-layout -->
+  </div><!-- /rp-overlay -->
 
   <!-- 词汇浮层 -->
   <div class="dlg-vocab-popup" id="vocabPopup">
     <div class="vp-hanzi" id="vpHanzi"></div>
     <div class="vp-pinyin" id="vpPinyin"></div>
     <div class="vp-pos"   id="vpPos"></div>
-    <div class="vp-en"    id="vpEn"></div>
+    <div class="vp-en"   id="vpEn"></div>
   </div>
 
   <script defer src="/js/dialogue.js"></script>

@@ -174,89 +174,109 @@
       "hasRecording": true
     },
     {
-      "index": 4,
-      "type": "vocab",
-      "title": "生词学习",
-      "vocab": [
-        {
-          "id": "w1",
-          "hanzi": "w",
-          "pinyin": "w",
-          "pos": "w",
-          "en": "w",
-          "audio": "w"
-        }
-      ],
-      "showPinyin": true,
-      "showEnglish": true,
-      "hasRecording": true
-    },
-    {
       "index": 5,
-      "type": "exercise",
-      "title": "练习",
-      "questions": [
-        {
-          "id": "q1",
-          "type": "read",
-          "question": "",
-          "audio": "",
-          "options": [
-            {
-              "id": "A",
-              "text": "选项 A"
-            },
-            {
-              "id": "B",
-              "text": "选项 B"
-            },
-            {
-              "id": "C",
-              "text": "选项 C"
-            },
-            {
-              "id": "D",
-              "text": "选项 D"
-            }
-          ],
-          "answer": "A"
-        }
-      ],
-      "showPinyin": true
-    },
-    {
-      "index": 6,
       "type": "display",
       "title": "生词与例句",
       "vocab": [
         {
           "id": "w1",
-          "hanzi": "q",
-          "pinyin": "q",
-          "pos": "q",
-          "en": "q",
+          "hanzi": "请问",
+          "pinyin": "qǐng wèn",
+          "pos": "verb",
+          "en": "excuse me",
           "image": "",
-          "audio": ""
+          "audio": "vocab/qingwen.wav"
         }
       ],
       "examples": [
         {
           "id": "e1",
-          "hanzi": "qq q q q q q q",
-          "pinyin": "qq q q q q q q q q",
-          "en": "q q q q q q q q",
+          "hanzi": "请问，你叫什么名字？",
+          "pinyin": "qǐng wèn, nǐ jiào shén me míng zi?",
+          "en": "Excuse me, what is your name?",
           "audio": ""
         },
         {
           "id": "e2",
-          "hanzi": "q q q q q q q",
-          "pinyin": "q q q q q q q",
-          "en": "q q q q q q q q q q",
+          "hanzi": "请问，图书馆在哪儿？",
+          "pinyin": "qǐng wèn, tú shū guǎn zài nǎr?",
+          "en": "Excuse me, where is the library?",
+          "audio": ""
+        },
+        {
+          "id": "e3",
+          "hanzi": "请问，这个多少钱？",
+          "pinyin": "qǐng wèn, zhè ge duō shǎo qián?",
+          "en": "Excuse me, how much is this?",
           "audio": ""
         }
       ],
       "showPinyin": true,
       "showEnglish": true
+    },
+    {
+      "index": 6,
+      "type": "dialogue",
+      "title": "第 1 课",
+      "subtitle": "情景对话",
+      "audio": "dialogue/d1.mp3",
+      "sceneImage": "img/dialogue/bg.png",
+      "speakers": [
+        {
+          "id": "A",
+          "name": "老师",
+          "pinyin": "lǎo shī",
+          "avatar": "img/dialogue/dialogue_avator1.png"
+        },
+        {
+          "id": "B",
+          "name": "学生",
+          "pinyin": "xué shēng",
+          "avatar": "img/dialogue/dialogue_avator1.png"
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true,
+      "hasRolePlay": true,
+      "lines": [
+        {
+          "speaker": "A",
+          "start": 0,
+          "end": 3,
+          "hanzi": "你好！",
+          "pinyin": "nǐ hǎo",
+          "en": "Hello!",
+          "vocab": []
+        },
+        {
+          "speaker": "B",
+          "start": 3,
+          "end": 6,
+          "hanzi": "你好！请问，你叫什么名字？",
+          "pinyin": "nǐ hǎo, qǐng wèn, nǐ jiào shén me míng zi",
+          "en": "Hello, what's your name?",
+          "vocab": []
+        },
+        {
+          "speaker": "A",
+          "start": 6,
+          "end": 10,
+          "hanzi": "我叫小明。你呢？",
+          "pinyin": "wǒ jiào xiǎo míng. nǐ ne",
+          "en": "I'm Xiaoming. And you?",
+          "vocab": ["我", "你呢"]
+        },
+        {
+          "speaker": "B",
+          "start": 10,
+          "end": 14,
+          "hanzi": "我叫小红。很高兴认识你！",
+          "pinyin": "wǒ jiào xiǎo hóng. hěn gāo xìng rèn shi nǐ",
+          "en": "I'm Xiaohong. Nice to meet you!",
+          "vocab": []
+        }
+      ],
+      "vocabList": []
     }
   ]
 }
