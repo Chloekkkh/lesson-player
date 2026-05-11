@@ -304,6 +304,14 @@
   padding: 0;
   color: var(--blue);
 }
+.page-counter {
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+  font-family: inherit;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
 .ctrl-btn:hover {
   opacity: 0.6;
 }
@@ -435,6 +443,8 @@
 .assistant-bubble {
   position: absolute;
   right: 70px;
+  bottom: 0px;
+  top: auto;
   background: #fff;
   border-radius: 16px 16px 4px 16px;
   padding: 10px 16px;

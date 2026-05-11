@@ -68,6 +68,7 @@ var loadingCourseName = $('loadingCourseName'); // 加载时显示的课程名
 var btnPrev      = $('btnPrev');
 var btnPlayPause = $('btnPlayPause');
 var btnNext      = $('btnNext');
+var pageCounter  = $('pageCounter');
 var btnVolume    = $('btnVolume');
 var volumeSliderPop = $('volumeSliderPop');
 var volPopup     = $('volPopup');
@@ -326,6 +327,7 @@ function loadSlide(index, isInit) {
   exerciseReady = false; // 重置练习作答状态
   confirmOverlay.classList.remove('visible'); // 隐藏确认按钮
   confirmOverlay.style.pointerEvents = ''; // 重置暂停时设的 none
+  pageCounter.textContent = (index + 1) + ' / ' + course.slides.length;
 
   // 重置聚光灯状态
   spotlightList = [];
@@ -349,16 +351,12 @@ function loadSlide(index, isInit) {
   // 重置伴学助手字幕状态
   assistantSubtitles = (course.slides[index] && course.slides[index].subtitles) ? course.slides[index].subtitles : [];
   assistantSubtitleIndex = 0;
+  window.hasSubtitles = assistantSubtitles && assistantSubtitles.length > 0;
+  window.subtitleShown = false; // 清除已显示标记，切换页面时重置
   var subEl = document.getElementById('assistantSubtitle');
   if (subEl) subEl.textContent = '';
   var assistantEl = document.getElementById('assistant-bubble');
-  if (assistantEl) {
-    if (assistantSubtitles && assistantSubtitles.length > 0 && playing) {
-      assistantEl.classList.remove('hidden');
-    } else {
-      assistantEl.classList.add('hidden');
-    }
-  }
+  if (assistantEl) assistantEl.classList.add('hidden');
 
   var slide = course.slides[index];
 
@@ -381,7 +379,7 @@ function loadSlide(index, isInit) {
   progressTimeEl.textContent = formatTime(timerTotal / 1000) + ' / ' + formatTime(timerTotal / 1000);
 
   // exercise / display / video / dialogue 永远不显示遮罩，等过渡完成后再真正隐藏
-  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') {
+  if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') {
     pauseScreen.style.opacity = '0';
     pauseScreen.style.pointerEvents = 'none';
     setTimeout(function() { pauseScreen.style.display = 'none'; }, 600);
@@ -397,7 +395,7 @@ function loadSlide(index, isInit) {
   }
 
   // exercise / display / video / dialogue 页面：让点击穿透到 iframe（选项/按钮可点）
-  clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') ? 'none' : 'auto';
+  clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') ? 'none' : 'auto';
 
   // ═══ 练习题（exercise）═══
   if (slide.type === 'exercise') {
@@ -578,6 +576,7 @@ function checkSpotlightsWithClear(currentTime) {
  */
 function checkAssistantSubtitles(currentTime) {
   if (!assistantSubtitles || assistantSubtitles.length === 0) return;
+  if (window.subtitleOn === false) return;
   while (assistantSubtitleIndex < assistantSubtitles.length &&
          assistantSubtitles[assistantSubtitleIndex].at <= currentTime) {
     var sub = assistantSubtitles[assistantSubtitleIndex];
@@ -585,7 +584,10 @@ function checkAssistantSubtitles(currentTime) {
     if (subEl) {
       subEl.textContent = sub.text;
       var assistantEl = document.getElementById('assistant-bubble');
-      if (assistantEl) assistantEl.classList.remove('hidden');
+      if (assistantEl) {
+        assistantEl.classList.remove('hidden');
+        window.subtitleShown = true;
+      }
     }
     if (frames[current]) {
       try {
@@ -789,6 +791,12 @@ function formatTime(secs) {
  */
 function replayAudio() {
   if (!playing) return;
+  // 重置聚光灯和字幕索引
+  spotlightIndex = 0;
+  assistantSubtitleIndex = 0;
+  window.subtitleShown = false;
+  var subEl = document.getElementById('assistantSubtitle');
+  if (subEl) subEl.textContent = '';
   audioEl.currentTime = 0;
   audioEl.play();
 }
@@ -907,11 +915,11 @@ pauseScreen.addEventListener('click', function() {
     }
   } else if (playing) {
     // 播放中：暂停
-    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return;
+    if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'video' || slide.type === 'dialogue') return;
     pauseAudio();
   } else {
     // 已暂停：恢复
-    if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return;
+    if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'video' || slide.type === 'dialogue') return;
     resumeAudio();
   }
 });
@@ -923,7 +931,7 @@ clickInterceptor.addEventListener('click', function(e) {
   if (e.target === confirmBtn) return;
   if (!started) return; // 忽略
   var slide = course.slides[current];
-  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') return; // 练习/生词/视频/对话页不响应暂停
+  if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'video' || slide.type === 'dialogue') return; // 练习/生词/视频/对话页不响应暂停
   if (playing) pauseAudio(); else resumeAudio();
 });
 
@@ -958,7 +966,7 @@ function resumeAudio() {
   var slide = course.slides[current];
 
   // exercise / display / video 类型不支持暂停/恢复
-  if (slide.type === 'exercise' || slide.type === 'display' || slide.type === 'video') {
+  if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'video') {
     pauseScreen.style.display = 'none';
     return;
   }

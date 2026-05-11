@@ -208,7 +208,7 @@ function handleApi(req, res, urlPath) {
       let data;
       try { data = JSON.parse(body); } catch (e) { return error(res, 'Invalid JSON'); }
       const { type, index } = data;
-      if (!['content', 'exercise', 'display', 'video'].includes(type))
+      if (!['content', 'exercise', 'vocab', 'display', 'video', 'dialogue'].includes(type))
         return error(res, 'Invalid slide type');
 
       const course = readCourseJson(courseDir);
@@ -231,7 +231,9 @@ function handleApi(req, res, urlPath) {
       let html;
       if (type === 'exercise') html = templates.exerciseTemplate(targetIndex, course.title || courseId);
       else if (type === 'video') html = templates.videoTemplate(targetIndex, course.title || courseId);
+      else if (type === 'vocab') html = templates.vocabTemplate(targetIndex, course.title || courseId);
       else if (type === 'display') html = templates.displayTemplate(targetIndex, course.title || courseId);
+      else if (type === 'dialogue') html = templates.dialogueTemplate(targetIndex, course.title || courseId);
       else html = templates.contentTemplate(targetIndex, course.title || courseId);
       fs.writeFileSync(path.join(slidesDir, `${targetIndex}.html`), html, 'utf8');
 
@@ -299,7 +301,9 @@ function handleApi(req, res, urlPath) {
       let html;
       if (slide.type === 'exercise') html = templates.exerciseTemplate(slideIndex, course.title || courseId);
       else if (slide.type === 'video') html = templates.videoTemplate(slideIndex, course.title || courseId);
+      else if (slide.type === 'vocab') html = templates.vocabTemplate(slideIndex, course.title || courseId);
       else if (slide.type === 'display') html = templates.displayTemplate(slideIndex, course.title || courseId);
+      else if (slide.type === 'dialogue') html = templates.dialogueTemplate(slideIndex, course.title || courseId);
       else html = templates.contentTemplate(slideIndex, course.title || courseId);
       fs.writeFileSync(path.join(slidesDir, `${slideIndex}.html`), html, 'utf8');
       return json(res, { ok: true });

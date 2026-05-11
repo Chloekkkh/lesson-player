@@ -1,7 +1,20 @@
 /* ============================================================
-   vocab.js — 生词展示（display 类型）
-   此文件已弃用，请使用 /js/display.js
+   vocab.js — 生词展示页面（vocab 类型）
+   独立入口，不再依赖 exercise.js
    ============================================================ */
+
+'use strict';
+
+/* ── postToParent ─────────────────────────────────────── */
+function postToParent(action, payload) {
+  try { parent.postMessage({ type: 'playerMessage', action: action, data: payload }, '*'); } catch (e) {}
+}
+
+/* ── Sound / Progress / Celebration 初始化 ──────────── */
+Sound.init('/audio/system/');
+
+/* ── VocabHandler ──────────────────────────────────────── */
+function VocabHandler() {}
 
 VocabHandler.prototype = {
   _config:    null,
@@ -31,7 +44,7 @@ VocabHandler.prototype = {
 
     vocab.forEach(function(w) {
       var card = document.createElement('div');
-      card.className = 'vocab-card';
+      card.className = 'vocab-item';
       card.dataset.id = w.id;
 
       // 汉字
@@ -212,3 +225,13 @@ VocabHandler.prototype = {
     audio.onended = function() { btn.innerHTML = '&#127908;'; };
   }
 };
+
+/* ── postMessage 入口 ───────────────────────────────── */
+window.addEventListener('message', function(e) {
+  if (e.data && e.data.type === 'slideData') {
+    var handler = new VocabHandler();
+    handler.init(e.data.data, {
+      onComplete: function() { postToParent('displayComplete', {}); }
+    });
+  }
+});

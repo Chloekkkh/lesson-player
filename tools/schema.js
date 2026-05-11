@@ -19,7 +19,7 @@ module.exports = {
   // ── slide 公共字段 ─────────────────────────────────────
   slideCommon: {
     index: { type: 'number', required: true, desc: '幻灯片编号（从 1 开始）' },
-    type:  { type: 'enum',   required: true, values: ['content', 'exercise', 'display', 'video'], desc: '页面类型' },
+    type:  { type: 'enum',   required: true, values: ['content', 'exercise', 'vocab', 'display', 'video', 'dialogue'], desc: '页面类型' },
     title:  { type: 'string', required: false, desc: '页面标题（可选）' },
     audio:  { type: 'string', required: false, desc: '音频文件名，如 1.mp3' },
   },
