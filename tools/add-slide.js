@@ -281,7 +281,8 @@ function exerciseTemplate(slideNum, exerciseType, courseTitle) {
 
   const typeModule = typeModules[exerciseType] || '';
 
-  // display 类型使用独立的 display.js
+  // vocab / display 类型使用独立的 JS 文件
+  const isVocab = exerciseType === 'vocab';
   const isDisplay = exerciseType === 'display';
 
   return `<!doctype html>
@@ -298,7 +299,8 @@ ${body}
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
-  ${isDisplay ? '<script src="/js/display.js"></script>' :
+  ${isVocab ? '<script src="/js/vocab.js"></script>' :
+                isDisplay ? '<script src="/js/display.js"></script>' :
                 '<script src="/js/exercise/exercise.js"></script>\n  <script src="/js/exercise/multi-handler.js"></script>\n  ' + (typeModule ? '<script src="' + typeModule + '"></script>' : '')}
   ${exerciseType === 'trace' ? '<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>' : ''}
   <script src="/js/spotlight.js"></script>
@@ -386,13 +388,111 @@ function dialogueTemplate(slideNum, courseTitle) {
 </html>`;
 }
 
+/**
+ * 生词页 HTML 模板
+ */
+function vocabTemplate(slideNum, courseTitle) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${courseTitle} - 生词 ${slideNum}</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/vocab.css">
+</head>
+<body>
+  <div class="exercise-card">
+    <div class="page-header">
+      <h2 id="exerciseTitle">📚 词汇学习 New Words</h2>
+      <div class="header-toggles">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togglePinyin" checked>
+          <span class="toggle-slider"></span>
+          <span>拼音</span>
+        </label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEnglish" checked>
+          <span class="toggle-slider"></span>
+          <span>英文</span>
+        </label>
+      </div>
+    </div>
+    <p id="exerciseSubtitle" class="exercise-subtitle">Master Your New Words</p>
+    <div class="vocab-grid" id="vocabGrid"></div>
+    <div class="vocab-nav-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
+    </div>
+  </div>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/vocab.js"></script>
+</body>
+</html>`;
+}
+
+/**
+ * 生词与例句页 HTML 模板
+ */
+function displayTemplate(slideNum, courseTitle) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${courseTitle} - 生词与例句 ${slideNum}</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/display.css">
+</head>
+<body>
+  <div class="exercise-card">
+    <div class="page-header">
+      <h2 id="exerciseTitle">生词与例句</h2>
+      <div class="header-toggles">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togglePinyin" checked>
+          <span class="toggle-slider"></span>
+          <span>拼音</span>
+        </label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEnglish" checked>
+          <span class="toggle-slider"></span>
+          <span>英文</span>
+        </label>
+      </div>
+    </div>
+    <div class="display-layout">
+      <div class="display-vocab-col">
+        <div class="display-col-title">生词 New Words</div>
+        <div id="vocabCol"></div>
+      </div>
+      <div class="display-example-col">
+        <div class="display-col-title">例句 Examples</div>
+        <div id="exampleCol"></div>
+      </div>
+    </div>
+    <div class="vocab-next-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
+    </div>
+  </div>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/display.js"></script>
+</body>
+</html>`;
+}
+
 // ── buildSlideEntry — 根据类型生成 course.json 条目 ─────────
 
 function buildSlideEntry(slideType, exerciseType, slideNum) {
   var entry = {
     index: slideNum,
     type:  slideType,
-    title: slideType === 'display' ? '生词学习' : (slideType === 'exercise' ? '练习 ' + slideNum : '第 ' + slideNum + ' 页')
+    title: slideType === 'vocab' ? '生词学习' : (slideType === 'display' ? '生词与例句' : (slideType === 'exercise' ? '练习 ' + slideNum : '第 ' + slideNum + ' 页'))
   };
 
   if (slideType === 'exercise') {
@@ -434,7 +534,7 @@ function buildSlideEntry(slideType, exerciseType, slideNum) {
       entry.options = [{ id: 'A', text: '选项 A' }, { id: 'B', text: '选项 B' }];
       entry.answer = 'A';
     }
-  } else if (slideType === 'display') {
+  } else if (slideType === 'vocab') {
     entry.vocab = [
       { id: 'w1', hanzi: '谢谢', pinyin: 'xiè xie', pos: 'verb', en: 'thank you', audio: 'w1.wav' },
       { id: 'w2', hanzi: '你好', pinyin: 'nǐ hǎo',   pos: 'verb', en: 'hello',     audio: 'w2.wav' }
@@ -442,6 +542,15 @@ function buildSlideEntry(slideType, exerciseType, slideNum) {
     entry.showPinyin = true;
     entry.showEnglish = true;
     entry.hasRecording = true;
+  } else if (slideType === 'display') {
+    entry.vocab = [
+      { id: 'w1', hanzi: '请问', pinyin: 'qǐng wèn', pos: 'v.', en: 'excuse me', audio: '', image: '' }
+    ];
+    entry.examples = [
+      { id: 'e1', hanzi: '请问，去图书馆怎么走？', pinyin: 'qǐng wèn, qù tú shū guǎn zěn me zǒu?', en: 'Excuse me, how do I get to the library?', audio: '' }
+    ];
+    entry.showPinyin = true;
+    entry.showEnglish = true;
   } else if (slideType === 'video') {
     entry.video = 'video/demo.mp4';
     entry.title = '视频学习';
@@ -548,8 +657,8 @@ function main() {
   }
 
   // ── Insert / Add mode ─────────────────────────────────────
-  if (!['content', 'exercise', 'display', 'video', 'dialogue'].includes(slideType)) {
-    console.error('错误: --type 必须是 content / exercise / display / video / dialogue');
+  if (!['content', 'exercise', 'vocab', 'display', 'video', 'dialogue'].includes(slideType)) {
+    console.error('错误: --type 必须是 content / exercise / vocab / display / video / dialogue');
     process.exit(1);
   }
 
@@ -595,6 +704,8 @@ function main() {
     exercise: exerciseTemplate(slideNum, exerciseType, course.title || courseId),
     video:    videoTemplate(slideNum, course.title || courseId),
     dialogue: dialogueTemplate(slideNum, course.title || courseId),
+    vocab:    vocabTemplate(slideNum, course.title || courseId),
+    display:  displayTemplate(slideNum, course.title || courseId),
   };
   const slideHtml = htmlMap[slideType] || contentTemplate(slideNum, course.title || courseId);
 

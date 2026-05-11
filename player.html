@@ -83,6 +83,7 @@
     <button class="ctrl-btn" id="btnNext" title="下一页 (→)">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
     </button>
+    <span class="page-counter" id="pageCounter">1 / 1</span>
     <div class="ctrl-vol">
       <div class="vol-popup" id="volPopup">
         <input type="range" class="vol-slider-pop" id="volumeSliderPop" min="0" max="100" value="80">
@@ -122,7 +123,7 @@
   var assistant = document.getElementById('assistant');
   var avatar    = assistant.querySelector('.assistant-avatar');
   var bubble    = document.getElementById('assistant-bubble');
-  var subtitleOn = true;
+  window.subtitleOn = true;
   var isDragging = false, dragStarted = false, startMX, startMY, startLeft, startTop;
 
   function clamp(v, min, max) { return Math.max(min, Math.min(v, max)); }
@@ -130,7 +131,7 @@
   assistant.addEventListener('mousedown', function(e) {
     var onAvatar = e.target.closest('.assistant-avatar');
     if (onAvatar) {
-      // 记录起始位置，区分点击和拖拽
+      e.preventDefault();
       startMX = e.clientX;
       startMY = e.clientY;
       isDragging = true;
@@ -190,8 +191,16 @@
       // 是一次点击（未超过阈值）
       if (e.target.closest('.assistant-avatar')) {
         subtitleOn = !subtitleOn;
+        window.subtitleOn = subtitleOn;
         avatar.classList.toggle('muted', !subtitleOn);
-        bubble.classList.toggle('hidden', !subtitleOn);
+        if (subtitleOn) {
+          // 只有字幕曾经显示过才显示气泡
+          if (window.subtitleShown) {
+            bubble.classList.remove('hidden');
+          }
+        } else {
+          bubble.classList.add('hidden');
+        }
       }
     }
     isDragging = false;

@@ -312,7 +312,7 @@ async function courseView(courseId) {
     let slideListHtml = '';
     (course.slides || []).forEach(s => {
       const typeClass = 'type-' + (s.type || 'content');
-      const typeIcon = { content: '📄', exercise: '✏️', display: '📖', video: '🎬' }[s.type] || '📄';
+      const typeIcon = { content: '📄', exercise: '✏️', vocab: '📖', display: '📋', video: '🎬', dialogue: '💬' }[s.type] || '📄';
       const meta = buildSlideMeta(s);
       slideListHtml += `
         <div class="slide-item ${typeClass}" data-index="${s.index}">
@@ -440,7 +440,7 @@ async function courseView(courseId) {
 
 function buildSlideMeta(slide) {
   if (slide.type === 'exercise') return (slide.questions || []).length + ' 题';
-  if (slide.type === 'display') return (slide.vocab || []).length + ' 词汇';
+  if (slide.type === 'vocab') return (slide.vocab || []).length + ' 词汇';
   if (slide.type === 'content') return slide.audio || '无音频';
   if (slide.type === 'video') return slide.video || '无视频';
   return '';
@@ -459,15 +459,25 @@ function openModalAddSlide(courseId) {
         <div class="type-option-name">练习页</div>
         <div class="type-option-desc">选择题、填空、连词等</div>
       </div>
-      <div class="type-option" data-type="display">
+      <div class="type-option" data-type="vocab">
         <div class="type-option-icon">📖</div>
         <div class="type-option-name">生词页</div>
         <div class="type-option-desc">词汇展示学习</div>
+      </div>
+      <div class="type-option" data-type="display">
+        <div class="type-option-icon">📋</div>
+        <div class="type-option-name">生词例句页</div>
+        <div class="type-option-desc">生词+例句双栏</div>
       </div>
       <div class="type-option" data-type="video">
         <div class="type-option-icon">🎬</div>
         <div class="type-option-name">视频页</div>
         <div class="type-option-desc">视频播放</div>
+      </div>
+      <div class="type-option" data-type="dialogue">
+        <div class="type-option-icon">💬</div>
+        <div class="type-option-name">Dialogue</div>
+        <div class="type-option-desc">对话练习</div>
       </div>
     </div>`, `
     <button class="btn btn-secondary" id="cancelBtn">取消</button>`);
@@ -508,7 +518,7 @@ async function slideView(courseId, index) {
 function renderSlideEditor(view, courseId, slide, audioFiles) {
   const type = slide.type || 'content';
   const typeBadgeClass = type;
-  const typeName = { content: '内容页', exercise: '练习页', display: '生词页', video: '视频页' }[type] || type;
+  const typeName = { content: '内容页', exercise: '练习页', vocab: '生词页', display: '生词例句页', video: '视频页', dialogue: 'Dialogue' }[type] || type;
 
   let bodyHtml = '';
 
@@ -516,10 +526,14 @@ function renderSlideEditor(view, courseId, slide, audioFiles) {
     bodyHtml = renderContentEditor(slide, courseId, audioFiles);
   } else if (type === 'exercise') {
     bodyHtml = renderExerciseEditor(slide, courseId, audioFiles);
+  } else if (type === 'vocab') {
+    bodyHtml = renderVocabEditor(slide, courseId, audioFiles);
   } else if (type === 'display') {
-    bodyHtml = renderDisplayEditor(slide, courseId);
+    bodyHtml = renderDisplay2Editor(slide, courseId, audioFiles);
   } else if (type === 'video') {
     bodyHtml = renderVideoEditor(slide, courseId, audioFiles);
+  } else if (type === 'dialogue') {
+    bodyHtml = renderDialogueEditor(slide, courseId, audioFiles);
   }
 
   view.innerHTML = `
@@ -620,8 +634,8 @@ function renderContentEditor(slide, courseId, audioFiles) {
     </div>`;
 }
 
-/* ── Display Editor ─────────────────────────── */
-function renderDisplayEditor(slide, courseId, audioFiles) {
+/* ── Vocab Editor ─────────────────────────── */
+function renderVocabEditor(slide, courseId, audioFiles) {
   const vocab = slide.vocab || [];
   const vocabFiles = (audioFiles || []).filter(f => f.sub === 'vocab');
   let vocabOptions = '<option value="">无音频</option>';
@@ -670,6 +684,86 @@ function renderDisplayEditor(slide, courseId, audioFiles) {
     </table>
     <button class="btn btn-secondary btn-sm" id="btnAddVocab">+ 添加词汇</button>
     <input type="file" id="vocabAudioInput" accept="audio/*" style="display:none">`;
+}
+
+/* ── Display2 Editor (生词+例句) ─────────────── */
+function renderDisplay2Editor(slide, courseId, audioFiles) {
+  const vocab = slide.vocab || [];
+  const examples = slide.examples || [];
+  const vocabFiles = (audioFiles || []).filter(f => f.sub === 'vocab');
+  const exampleFiles = (audioFiles || []).filter(f => f.sub === 'example');
+  let vocabOptions = '<option value="">无音频</option>';
+  vocabFiles.forEach(f => { vocabOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
+  let exampleOptions = '<option value="">无音频</option>';
+  exampleFiles.forEach(f => { exampleOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
+
+  return `
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="display-showPinyin" ${slide.showPinyin !== false ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">显示拼音</span>
+    </div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="display-showEnglish" ${slide.showEnglish !== false ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">显示英文</span>
+    </div>
+
+    <div class="section-title">词汇列表</div>
+    <table class="vocab-table">
+      <thead><tr>
+        <th>ID</th><th>汉字</th><th>拼音</th><th>词性</th><th>英文</th><th>图片</th><th>音频</th><th></th>
+      </tr></thead>
+      <tbody id="display2VocabTbody">
+        ${vocab.map((v, i) => `
+          <tr data-i="${i}">
+            <td><input class="form-input" value="${escAttr(v.id)}" style="width:50px" data-field="id"></td>
+            <td><input class="form-input" value="${escAttr(v.hanzi)}" data-field="hanzi"></td>
+            <td><input class="form-input" value="${escAttr(v.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(v.pos)}" style="width:60px" data-field="pos"></td>
+            <td><input class="form-input" value="${escAttr(v.en)}" data-field="en"></td>
+            <td><input class="form-input" value="${escAttr(v.image || '')}" data-field="image" style="width:80px"></td>
+            <td>
+              <div style="display:flex;gap:4px;align-items:center">
+                <select class="form-select v-audio" data-field="audio" style="width:110px">${vocabOptions}</select>
+                <button class="btn btn-xs btn-ghost btn-upload-vocab-audio" title="上传">📎</button>
+              </div>
+            </td>
+            <td><button class="btn btn-sm btn-danger btn-remove-display2-v">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" id="btnAddDisplay2Vocab">+ 添加词汇</button>
+    <input type="file" id="display2VocabAudioInput" accept="audio/*" style="display:none">
+
+    <div class="section-title" style="margin-top:24px">例句列表</div>
+    <table class="vocab-table">
+      <thead><tr>
+        <th>ID</th><th>汉字</th><th>拼音</th><th>英文</th><th>音频</th><th></th>
+      </tr></thead>
+      <tbody id="display2ExampleTbody">
+        ${examples.map((ex, i) => `
+          <tr data-i="${i}">
+            <td><input class="form-input" value="${escAttr(ex.id)}" style="width:50px" data-field="id"></td>
+            <td><input class="form-input" value="${escAttr(ex.hanzi)}" data-field="hanzi"></td>
+            <td><input class="form-input" value="${escAttr(ex.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(ex.en)}" data-field="en"></td>
+            <td>
+              <div style="display:flex;gap:4px;align-items:center">
+                <select class="form-select v-audio" data-field="audio" style="width:110px">${exampleOptions}</select>
+                <button class="btn btn-xs btn-ghost btn-upload-example-audio" title="上传">📎</button>
+              </div>
+            </td>
+            <td><button class="btn btn-sm btn-danger btn-remove-display2-ex">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" id="btnAddDisplay2Example">+ 添加例句</button>
+    <input type="file" id="display2ExampleAudioInput" accept="audio/*" style="display:none">`;
 }
 
 /* ── Exercise Editor ─────────────────────────── */
@@ -816,6 +910,108 @@ function renderQuestionCard(q, index, audioFiles) {
     </div>`;
 }
 
+/* ── Dialogue Editor ─────────────────────────── */
+function renderDialogueEditor(slide, courseId, audioFiles) {
+  const speakers = slide.speakers || [];
+  const lines = slide.lines || [];
+  const vocabList = slide.vocabList || [];
+  const dialogueFiles = (audioFiles || []).filter(f => f.sub === 'dialogue');
+  let dialogueOptions = '<option value="">无音频</option>';
+  dialogueFiles.forEach(f => { dialogueOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
+
+  return `
+    <div class="form-group">
+      <label class="form-label">音频文件</label>
+      <select class="form-select" id="slideAudio">
+        <option value="">无音频</option>
+        ${dialogueOptions}
+      </select>
+    </div>
+
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="dialogue-showText" ${slide.showText !== false ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">显示文本</span>
+    </div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="dialogue-showPinyin" ${slide.showPinyin !== false ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">显示拼音</span>
+    </div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="dialogue-showEnglish" ${slide.showEnglish === true ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">显示英文</span>
+    </div>
+    <div class="toggle-row">
+      <label class="toggle">
+        <input type="checkbox" id="dialogue-hasRolePlay" ${slide.hasRolePlay !== false ? 'checked' : ''}>
+        <span class="toggle-slider"></span>
+      </label>
+      <span class="toggle-label">角色扮演</span>
+    </div>
+
+    <div class="section-title">角色（Speakers）</div>
+    <table class="vocab-table">
+      <thead><tr><th>ID</th><th>名称</th><th>拼音</th><th>头像</th><th></th></tr></thead>
+      <tbody id="dialogueSpeakersTbody">
+        ${speakers.map((sp, i) => `
+          <tr data-i="${i}">
+            <td><input class="form-input" value="${escAttr(sp.id)}" style="width:50px" data-field="id"></td>
+            <td><input class="form-input" value="${escAttr(sp.name)}" data-field="name"></td>
+            <td><input class="form-input" value="${escAttr(sp.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(sp.avatar || '')}" data-field="avatar" style="width:120px"></td>
+            <td><button class="btn btn-sm btn-danger btn-remove-speaker">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" id="btnAddDialogueSpeaker">+ 添加角色</button>
+
+    <div class="section-title" style="margin-top:24px">对话行（Lines）</div>
+    <table class="vocab-table">
+      <thead><tr><th>角色</th><th>开始(s)</th><th>结束(s)</th><th>汉字</th><th>拼音</th><th>英文</th><th></th></tr></thead>
+      <tbody id="dialogueLinesTbody">
+        ${lines.map((ln, i) => `
+          <tr data-i="${i}">
+            <td>
+              <select class="form-select" data-field="speaker" style="width:70px">
+                ${speakers.map(sp => `<option value="${sp.id}" ${ln.speaker === sp.id ? 'selected' : ''}>${sp.id}</option>`).join('')}
+              </select>
+            </td>
+            <td><input class="form-input" type="number" step="0.1" value="${ln.start}" data-field="start" style="width:60px"></td>
+            <td><input class="form-input" type="number" step="0.1" value="${ln.end}" data-field="end" style="width:60px"></td>
+            <td><input class="form-input" value="${escAttr(ln.hanzi)}" data-field="hanzi"></td>
+            <td><input class="form-input" value="${escAttr(ln.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(ln.en || '')}" data-field="en"></td>
+            <td><button class="btn btn-sm btn-danger btn-remove-line">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" id="btnAddDialogueLine">+ 添加行</button>
+
+    <div class="section-title" style="margin-top:24px">词汇表（Vocab List）</div>
+    <table class="vocab-table">
+      <thead><tr><th>汉字</th><th>拼音</th><th>词性</th><th>英文</th><th></th></tr></thead>
+      <tbody id="dialogueVocabTbody">
+        ${vocabList.map((v, i) => `
+          <tr data-i="${i}">
+            <td><input class="form-input" value="${escAttr(v.hanzi)}" data-field="hanzi"></td>
+            <td><input class="form-input" value="${escAttr(v.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(v.pos)}" style="width:60px" data-field="pos"></td>
+            <td><input class="form-input" value="${escAttr(v.en)}" data-field="en"></td>
+            <td><button class="btn btn-sm btn-danger btn-remove-vocab">🗑</button></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <button class="btn btn-secondary btn-sm" id="btnAddDialogueVocab">+ 添加词汇</button>`;
+}
+
 /* ── Video Editor ─────────────────────────── */
 function renderVideoEditor(slide, courseId, audioFiles) {
   const videoFiles = (audioFiles || []).filter(f => f.sub === 'video');
@@ -869,16 +1065,30 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       data.spotlights = collectSpotlights(view);
       data.spotlightZones = collectSpotlightZones(view);
       data.backgroundImage = window._currentBgImage || slide.backgroundImage || '';
-    } else if (slide.type === 'display') {
+    } else if (slide.type === 'vocab') {
       data.showPinyin = document.getElementById('display-showPinyin')?.checked ?? true;
       data.showEnglish = document.getElementById('display-showEnglish')?.checked ?? true;
       data.hasRecording = document.getElementById('display-hasRecording')?.checked ?? true;
       data.vocab = collectVocab(view);
+    } else if (slide.type === 'display') {
+      data.showPinyin = document.getElementById('display-showPinyin')?.checked ?? true;
+      data.showEnglish = document.getElementById('display-showEnglish')?.checked ?? true;
+      data.vocab = collectDisplay2Vocab(view);
+      data.examples = collectDisplay2Examples(view);
     } else if (slide.type === 'exercise') {
       data.questions = collectQuestions(view);
       data.showPinyin = true;
     } else if (slide.type === 'video') {
       data.video = document.getElementById('slideVideo')?.value || '';
+    } else if (slide.type === 'dialogue') {
+      data.audio = document.getElementById('slideAudio')?.value || '';
+      data.showText = document.getElementById('dialogue-showText')?.checked ?? true;
+      data.showPinyin = document.getElementById('dialogue-showPinyin')?.checked ?? true;
+      data.showEnglish = document.getElementById('dialogue-showEnglish')?.checked ?? false;
+      data.hasRolePlay = document.getElementById('dialogue-hasRolePlay')?.checked ?? true;
+      data.speakers = collectDialogueSpeakers(view);
+      data.lines = collectDialogueLines(view);
+      data.vocabList = collectDialogueVocabList(view);
     }
 
     try {
@@ -1131,6 +1341,94 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     btn.addEventListener('click', () => btn.closest('tr')?.remove());
   });
 
+  // Display2: add vocab row
+  document.getElementById('btnAddDisplay2Vocab')?.addEventListener('click', () => {
+    const tbody = document.getElementById('display2VocabTbody');
+    const nextId = 'w' + (tbody.querySelectorAll('tr').length + 1);
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td><input class="form-input" value="${nextId}" style="width:50px" data-field="id"></td>
+      <td><input class="form-input" value="" data-field="hanzi"></td>
+      <td><input class="form-input" value="" data-field="pinyin"></td>
+      <td><input class="form-input" value="" style="width:60px" data-field="pos"></td>
+      <td><input class="form-input" value="" data-field="en"></td>
+      <td><input class="form-input" value="" style="width:80px" data-field="image"></td>
+      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-upload-vocab-audio" title="上传">📎</button></div></td>
+      <td><button class="btn btn-sm btn-danger btn-remove-display2-v">🗑</button></td>
+    </tr>`);
+  });
+  view.querySelectorAll('.btn-remove-display2-v').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('tr')?.remove());
+  });
+
+  // Display2: add example row
+  document.getElementById('btnAddDisplay2Example')?.addEventListener('click', () => {
+    const tbody = document.getElementById('display2ExampleTbody');
+    const nextId = 'e' + (tbody.querySelectorAll('tr').length + 1);
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td><input class="form-input" value="${nextId}" style="width:50px" data-field="id"></td>
+      <td><input class="form-input" value="" data-field="hanzi"></td>
+      <td><input class="form-input" value="" data-field="pinyin"></td>
+      <td><input class="form-input" value="" data-field="en"></td>
+      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-upload-example-audio" title="上传">📎</button></div></td>
+      <td><button class="btn btn-sm btn-danger btn-remove-display2-ex">🗑</button></td>
+    </tr>`);
+  });
+  view.querySelectorAll('.btn-remove-display2-ex').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('tr')?.remove());
+  });
+
+  // Dialogue: add speaker
+  document.getElementById('btnAddDialogueSpeaker')?.addEventListener('click', () => {
+    const tbody = document.getElementById('dialogueSpeakersTbody');
+    const i = tbody.querySelectorAll('tr').length;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr data-i="${i}">
+        <td><input class="form-input" value="" style="width:50px" data-field="id"></td>
+        <td><input class="form-input" value="" data-field="name"></td>
+        <td><input class="form-input" value="" data-field="pinyin"></td>
+        <td><input class="form-input" value="" style="width:120px" data-field="avatar"></td>
+        <td><button class="btn btn-sm btn-danger btn-remove-speaker">🗑</button></td>
+      </tr>`);
+  });
+  view.querySelectorAll('.btn-remove-speaker').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('tr')?.remove());
+  });
+
+  // Dialogue: add line
+  document.getElementById('btnAddDialogueLine')?.addEventListener('click', () => {
+    const tbody = document.getElementById('dialogueLinesTbody');
+    const i = tbody.querySelectorAll('tr').length;
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr data-i="${i}">
+        <td><select class="form-select" data-field="speaker" style="width:70px"><option value="A">A</option></select></td>
+        <td><input class="form-input" type="number" step="0.1" value="0" data-field="start" style="width:60px"></td>
+        <td><input class="form-input" type="number" step="0.1" value="1" data-field="end" style="width:60px"></td>
+        <td><input class="form-input" value="" data-field="hanzi"></td>
+        <td><input class="form-input" value="" data-field="pinyin"></td>
+        <td><input class="form-input" value="" data-field="en"></td>
+        <td><button class="btn btn-sm btn-danger btn-remove-line">🗑</button></td>
+      </tr>`);
+  });
+  view.querySelectorAll('.btn-remove-line').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('tr')?.remove());
+  });
+
+  // Dialogue: add vocab
+  document.getElementById('btnAddDialogueVocab')?.addEventListener('click', () => {
+    const tbody = document.getElementById('dialogueVocabTbody');
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td><input class="form-input" value="" data-field="hanzi"></td>
+        <td><input class="form-input" value="" data-field="pinyin"></td>
+        <td><input class="form-input" value="" style="width:60px" data-field="pos"></td>
+        <td><input class="form-input" value="" data-field="en"></td>
+        <td><button class="btn btn-sm btn-danger btn-remove-vocab">🗑</button></td>
+      </tr>`);
+  });
+  view.querySelectorAll('.btn-remove-vocab').forEach(btn => {
+    btn.addEventListener('click', () => btn.closest('tr')?.remove());
+  });
+
   // Exercise: add question
   document.getElementById('btnAddQ')?.addEventListener('click', () => {
     const type = document.getElementById('newQType')?.value || 'read';
@@ -1369,6 +1667,36 @@ function collectVocab(view) {
   }).filter(v => v.hanzi);
 }
 
+function collectDisplay2Vocab(view) {
+  return Array.from(view.querySelectorAll('#display2VocabTbody tr')).map(row => {
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
+    return {
+      id: fields.id || '',
+      hanzi: fields.hanzi || '',
+      pinyin: fields.pinyin || '',
+      pos: fields.pos || '',
+      en: fields.en || '',
+      image: fields.image || '',
+      audio: fields.audio || '',
+    };
+  }).filter(v => v.hanzi);
+}
+
+function collectDisplay2Examples(view) {
+  return Array.from(view.querySelectorAll('#display2ExampleTbody tr')).map(row => {
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
+    return {
+      id: fields.id || '',
+      hanzi: fields.hanzi || '',
+      pinyin: fields.pinyin || '',
+      en: fields.en || '',
+      audio: fields.audio || '',
+    };
+  }).filter(ex => ex.hanzi);
+}
+
 function collectQuestions(view) {
   return Array.from(view.querySelectorAll('.question-card')).map((card, qi) => {
     const type = card.querySelector('.q-type-badge')?.textContent?.trim() || 'read';
@@ -1457,6 +1785,47 @@ function base64Encode(arr) {
   }
   const pad = (3 - (arr.length % 3)) % 3;
   return result.slice(0, result.length - pad) + '=='.slice(0, pad);
+}
+
+function collectDialogueSpeakers(view) {
+  return Array.from(view.querySelectorAll('#dialogueSpeakersTbody tr')).map(row => {
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
+    return {
+      id: fields.id || '',
+      name: fields.name || '',
+      pinyin: fields.pinyin || '',
+      avatar: fields.avatar || '',
+    };
+  }).filter(sp => sp.id);
+}
+
+function collectDialogueLines(view) {
+  return Array.from(view.querySelectorAll('#dialogueLinesTbody tr')).map(row => {
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
+    return {
+      speaker: fields.speaker || 'A',
+      start: parseFloat(fields.start || 0),
+      end: parseFloat(fields.end || 0),
+      hanzi: fields.hanzi || '',
+      pinyin: fields.pinyin || '',
+      en: fields.en || '',
+    };
+  }).filter(ln => ln.hanzi);
+}
+
+function collectDialogueVocabList(view) {
+  return Array.from(view.querySelectorAll('#dialogueVocabTbody tr')).map(row => {
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
+    return {
+      hanzi: fields.hanzi || '',
+      pinyin: fields.pinyin || '',
+      pos: fields.pos || '',
+      en: fields.en || '',
+    };
+  }).filter(v => v.hanzi);
 }
 
 // Read file as ArrayBuffer (small files only)

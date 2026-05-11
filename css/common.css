@@ -1,0 +1,69 @@
+/* ============================================================
+   common.css — 通用页面样式
+   被 vocab/display/dialogue/exercise 类型 slide 引用
+   ============================================================ */
+
+/* ── BODY ─────────────────────────────────────────────────── */
+body {
+  background: #f7fcf9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────────────── */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 4px;
+}
+.page-header h2 { margin: 0; }
+.header-toggles {
+  position: absolute;
+  right: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ── TOGGLE SWITCH ───────────────────────────────────────── */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #555;
+  user-select: none;
+}
+.toggle-switch input { display: none; }
+.toggle-switch .toggle-slider {
+  width: 36px; height: 20px;
+  background: #ccc; border-radius: 20px;
+  position: relative; transition: background 0.2s;
+}
+.toggle-switch .toggle-slider::before {
+  content: '';
+  position: absolute;
+  left: 2px; top: 2px;
+  width: 16px; height: 16px;
+  background: #fff; border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--green); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(16px); }
+
+/* ── EXERCISE SUBTITLE ──────────────────────────────────── */
+.exercise-subtitle {
+  font-size: 1.05rem;
+  color: var(--body);
+  margin-bottom: 16px;
+  line-height: 1.6;
+  text-align: center;
+}

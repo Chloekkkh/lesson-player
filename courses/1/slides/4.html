@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HSK1 Lesson1 - 练习 4</title>
+  <title>HSK1 Lesson1 - 生词 4</title>
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/vocab.css">
 </head>
 <body>
-
   <div class="exercise-card">
     <div class="page-header">
-      <h2 id="exerciseTitle">练习 4</h2>
+      <h2 id="exerciseTitle">📚 词汇学习 New Words</h2>
       <div class="header-toggles">
         <label class="toggle-switch">
           <input type="checkbox" id="togglePinyin" checked>
@@ -25,41 +25,15 @@
         </label>
       </div>
     </div>
-    <p id="exerciseSubtitle" class="exercise-subtitle"></p>
-    <div id="exerciseAreas">
-      <div id="choiceArea" style="display:none">
-        <p class="question-text" id="questionText">Loading...</p>
-        <div id="playAudioWrap" style="display:none;text-align:center;margin: 16px 0;">
-          <button class="play-audio-btn" id="playAudioBtn">▶</button>
-        </div>
-        <div class="options" id="optionsContainer"></div>
-      </div>
-      <div class="arrange-area" id="arrangeArea"></div>
-      <div class="match-area" id="matchArea"></div>
-      <div class="fill-area" id="fillArea"></div>
-      <div class="trace-area" id="traceArea"></div>
-    </div>
-    <div class="action-row">
-      <button class="nav-btn" id="prevBtn" aria-label="上一题">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-      <button class="submit-btn" id="submitBtn">Submit</button>
-      <button class="nav-btn" id="nextBtn" aria-label="下一题" disabled>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </button>
+    <p id="exerciseSubtitle" class="exercise-subtitle">Master Your New Words</p>
+    <div class="vocab-grid" id="vocabGrid"></div>
+    <div class="vocab-nav-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
     </div>
   </div>
-
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
-  <script src="/js/exercise/multi-handler.js"></script>
-  <script src="/js/exercise/exercise.js"></script>
-  <script src="/js/exercise/types/choice.js"></script>
-  <script src="/js/exercise/types/arrange.js"></script>
-  <script src="/js/exercise/types/match.js"></script>
-  <script src="/js/exercise/types/fill.js"></script>
-<script src="/js/exercise/types/trace.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <script src="/js/vocab.js"></script>
 </body>
 </html>

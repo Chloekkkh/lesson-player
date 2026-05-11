@@ -90,7 +90,6 @@ function videoTemplate(slideNum, courseTitle) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${courseTitle} - 视频 ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/exercise.css">
 </head>
 <body>
   <div class="video-slide">
@@ -152,6 +151,7 @@ function exerciseTemplate(slideNum, courseTitle) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${courseTitle} - 练习 ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/exercise.css">
 </head>
 <body>
@@ -216,7 +216,7 @@ function dialogueTemplate(slideNum, courseTitle) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${courseTitle} - Dialogue ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/dialogue.css">
 </head>
 <body>
@@ -308,7 +308,7 @@ function dialogueTemplate(slideNum, courseTitle) {
 </html>`;
 }
 
-function displayTemplate(slideNum, courseTitle) {
+function vocabTemplate(slideNum, courseTitle) {
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -316,10 +316,11 @@ function displayTemplate(slideNum, courseTitle) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${courseTitle} - 生词 ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/vocab.css">
 </head>
 <body>
-<div class="exercise-card">
+  <div class="vocab-card">
     <div class="page-header">
       <h2 id="exerciseTitle">📚 词汇学习 New Words</h2>
       <div class="header-toggles">
@@ -335,9 +336,63 @@ function displayTemplate(slideNum, courseTitle) {
         </label>
       </div>
     </div>
-    <p id="exerciseSubtitle" class="exercise-subtitle"></p>
+    <p id="exerciseSubtitle" class="exercise-subtitle">Master Your New Words</p>
     <div class="vocab-grid" id="vocabGrid"></div>
-    <button class="vocab-next-btn" id="nextBtn">next page</button>
+    <div class="vocab-nav-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
+    </div>
+  </div>
+  <script src="/js/exercise/sound.js"></script>
+  <script src="/js/exercise/progress.js"></script>
+  <script src="/js/exercise/celebration.js"></script>
+  <script src="/js/vocab.js"></script>
+</body>
+</html>`;
+}
+
+/**
+ * display — 生词 + 例句 双栏展示
+ */
+function displayTemplate(slideNum, courseTitle) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${courseTitle} - 生词与例句 ${slideNum}</title>
+  <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/display.css">
+</head>
+<body>
+  <div class="display-card">
+    <div class="page-header">
+      <h2 id="exerciseTitle">📚 生词与例句 New Words</h2>
+      <div class="header-toggles">
+        <label class="toggle-switch">
+          <input type="checkbox" id="togglePinyin" checked>
+          <span class="toggle-slider"></span>
+          <span>拼音</span>
+        </label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEnglish" checked>
+          <span class="toggle-slider"></span>
+          <span>英文</span>
+        </label>
+      </div>
+    </div>
+    <p id="exerciseSubtitle" class="exercise-subtitle">Master Your New Words</p>
+    <div class="display-layout">
+      <div class="display-vocab-col">
+        <div id="vocabCol"></div>
+      </div>
+      <div class="display-example-col">
+        <div id="exampleCol"></div>
+      </div>
+    </div>
+    <div class="vocab-next-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
+    </div>
   </div>
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
@@ -354,17 +409,22 @@ function buildSlideEntry(slideType, slideNum) {
   var entry = {
     index: slideNum,
     type:  slideType,
-    title: slideType === 'display' ? '生词学习' : (slideType === 'exercise' ? '练习' : '第 ' + slideNum + ' 页')
+    title: slideType === 'vocab' ? '生词学习' : (slideType === 'display' ? '生词与例句' : (slideType === 'exercise' ? '练习' : '第 ' + slideNum + ' 页'))
   };
 
   if (slideType === 'exercise') {
     entry.title = '练习';
     entry.questions = [];
-  } else if (slideType === 'display') {
+  } else if (slideType === 'vocab') {
     entry.vocab = [];
     entry.showPinyin = true;
     entry.showEnglish = true;
     entry.hasRecording = true;
+  } else if (slideType === 'display') {
+    entry.vocab = [];
+    entry.examples = [];
+    entry.showPinyin = true;
+    entry.showEnglish = true;
   } else if (slideType === 'video') {
     entry.video = '';
     entry.title = '视频学习';
@@ -394,6 +454,7 @@ module.exports = {
   contentTemplate,
   videoTemplate,
   exerciseTemplate,
+  vocabTemplate,
   displayTemplate,
   dialogueTemplate,
   buildSlideEntry,

@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HSK1 Lesson1 - 生词 10</title>
+  <title>HSK1 Lesson1 - 生词与例句 8</title>
   <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/exercise.css">
+  <link rel="stylesheet" href="/css/common.css">
+  <link rel="stylesheet" href="/css/display.css">
 </head>
 <body>
-<div class="exercise-card">
+  <div class="display-card">
     <div class="page-header">
-      <h2 id="exerciseTitle">📚 词汇学习 New Words</h2>
+      <h2 id="exerciseTitle">生词与例句</h2>
       <div class="header-toggles">
         <label class="toggle-switch">
           <input type="checkbox" id="togglePinyin" checked>
@@ -24,14 +25,23 @@
         </label>
       </div>
     </div>
-    <p id="exerciseSubtitle" class="exercise-subtitle"></p>
-    <div class="vocab-grid" id="vocabGrid"></div>
-    <button class="vocab-next-btn" id="nextBtn">next page</button>
+    <div class="display-layout">
+      <div class="display-vocab-col">
+        <div class="display-col-title">生词 New Words</div>
+        <div id="vocabCol"></div>
+      </div>
+      <div class="display-example-col">
+        <div class="display-col-title">例句 Examples</div>
+        <div id="exampleCol"></div>
+      </div>
+    </div>
+    <div class="vocab-next-row">
+      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
+    </div>
   </div>
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
   <script src="/js/exercise/celebration.js"></script>
-  <script src="/js/exercise/exercise.js"></script>
-    <script src="/js/exercise/types/vocab.js"></script>
+  <script src="/js/display.js"></script>
 </body>
 </html>
