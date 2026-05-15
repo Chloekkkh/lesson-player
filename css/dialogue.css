@@ -70,6 +70,12 @@ body {
   line-height: 1.6;
 }
 
+/* 页面标题 flex 约束（与 display 页 .page-header h2 一致） */
+.dlg-card > .page-header {
+  flex-shrink: 0;
+  padding: 16px 40px 8px;
+}
+
 /* ── 左侧控制面板 ──────────────────────────────────────── */
 .dlg-left-panel {
   flex: 0 0 220px;
