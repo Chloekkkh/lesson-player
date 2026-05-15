@@ -52,6 +52,10 @@ class AdminAPI {
     return this.postRaw('/api/courses/' + courseId + '/slides/' + slideIndex + '/regenerate', {});
   }
 
+  async reorderSlides(courseId, fromIndex, toIndex) {
+    return this.post('/api/courses/' + courseId + '/slides/reorder', { fromIndex, toIndex });
+  }
+
   async put(url, data) {
     const r = await fetch(this.base + url, {
       method: 'PUT',
@@ -323,6 +327,8 @@ async function courseView(courseId) {
             <div class="slide-meta">${meta}</div>
           </div>
           <div class="slide-actions">
+            <button class="btn btn-sm btn-ghost btn-move-up" title="上移"${s.index <= 1 ? ' disabled' : ''}>⬆</button>
+            <button class="btn btn-sm btn-ghost btn-move-down" title="下移"${s.index >= (course.slides || []).length ? ' disabled' : ''}>⬇</button>
             <button class="btn btn-sm btn-ghost btn-preview-slide" title="预览">▶</button>
             <button class="btn btn-sm btn-ghost btn-regen-slide" title="重新生成HTML">↻</button>
             <button class="btn btn-sm btn-danger btn-delete-slide" title="删除">🗑</button>
@@ -428,6 +434,32 @@ async function courseView(courseId) {
           await api.del('/api/courses/' + courseId + '/slides/' + idx);
           showToast('已删除', 'success');
           courseView.call(null, courseId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    });
+
+    // Move up
+    view.querySelectorAll('.btn-move-up').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const idx = parseInt(btn.closest('.slide-item').dataset.index, 10);
+        try {
+          await api.reorderSlides(courseId, idx, idx - 1);
+          showToast('已上移', 'success');
+          courseView(courseId);
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    });
+
+    // Move down
+    view.querySelectorAll('.btn-move-down').forEach(btn => {
+      btn.addEventListener('click', async e => {
+        e.stopPropagation();
+        const idx = parseInt(btn.closest('.slide-item').dataset.index, 10);
+        try {
+          await api.reorderSlides(courseId, idx, idx + 1);
+          showToast('已下移', 'success');
+          courseView(courseId);
         } catch (e) { showToast(e.message, 'error'); }
       });
     });
@@ -570,6 +602,12 @@ function renderContentEditor(slide, courseId, audioFiles) {
     audioOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
   });
 
+  const imgFiles = (audioFiles || []).filter(f => f.sub === 'pptimg');
+  let imgOptions = '<option value="">无背景图</option>';
+  imgFiles.forEach(f => {
+    imgOptions += `<option value="${escAttr(f.path)}" ${slide.backgroundImage === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
+  });
+
   return `
     <div class="section-title">音频</div>
     <div class="audio-picker-row">
@@ -577,8 +615,7 @@ function renderContentEditor(slide, courseId, audioFiles) {
         <option value="">无音频</option>
         ${audioOptions}
       </select>
-      <button class="btn btn-secondary btn-sm" id="btnUploadAudio">上传到 narration/</button>
-      <input type="file" id="audioFileInput" accept="audio/*" style="display:none">
+      <button class="btn btn-secondary btn-sm" id="btnRefreshNarration" title="刷新音频列表">🔄</button>
     </div>
     <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
       <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
@@ -627,10 +664,10 @@ function renderContentEditor(slide, courseId, audioFiles) {
       </div>
     </div>
     <div class="hotspot-toolbar">
-      <button class="btn btn-secondary btn-sm" id="btnUploadBgImg">上传背景图</button>
+      <select class="form-select" id="bgImgSelect" style="width:200px">${imgOptions}</select>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshBgImg" title="刷新背景图">🔄</button>
       <button class="btn btn-secondary btn-sm" id="btnAddHotspot">+ 添加热区</button>
       <button class="btn btn-ghost btn-sm" id="btnPreviewSpotlight">▶ 预览 Spotlight</button>
-      <input type="file" id="bgImgFileInput" accept="image/*" style="display:none">
     </div>`;
 }
 
@@ -638,10 +675,15 @@ function renderContentEditor(slide, courseId, audioFiles) {
 function renderVocabEditor(slide, courseId, audioFiles) {
   const vocab = slide.vocab || [];
   const vocabFiles = (audioFiles || []).filter(f => f.sub === 'vocab');
-  let vocabOptions = '<option value="">无音频</option>';
-  vocabFiles.forEach(f => {
-    vocabOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`;
+  const narrationFiles = (audioFiles || []).filter(f => f.sub === 'narration');
+  let narrationOptions = '<option value="">无音频</option>';
+  narrationFiles.forEach(f => {
+    narrationOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
   });
+
+  const buildVocabOptions = (v) =>
+    '<option value="">无音频</option>' +
+    vocabFiles.map(f => `<option value="${escAttr(f.path)}" ${v.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`).join('');
 
   const toggle = (name, checked) => `
     <div class="toggle-row">
@@ -653,6 +695,18 @@ function renderVocabEditor(slide, courseId, audioFiles) {
     </div>`;
 
   return `
+    <div class="section-title">旁白音频</div>
+    <div class="audio-picker-row">
+      <select class="form-select" id="slideAudio">
+        <option value="">无音频</option>
+        ${narrationOptions}
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshNarration" title="刷新音频列表">🔄</button>
+    </div>
+    <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
+      <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
+    </div>
+
     <div class="toggle-row">${toggle('showPinyin', slide.showPinyin !== false)}</div>
     <div class="toggle-row">${toggle('showEnglish', slide.showEnglish !== false)}</div>
     <div class="toggle-row">${toggle('hasRecording', slide.hasRecording)}</div>
@@ -665,25 +719,24 @@ function renderVocabEditor(slide, courseId, audioFiles) {
       <tbody id="vocabTbody">
         ${vocab.map((v, i) => `
           <tr data-i="${i}">
-            <td><input class="form-input" value="${escAttr(v.id)}" style="width:50px"></td>
-            <td><input class="form-input" value="${escAttr(v.hanzi)}"></td>
-            <td><input class="form-input" value="${escAttr(v.pinyin)}"></td>
-            <td><input class="form-input" value="${escAttr(v.pos)}" style="width:60px"></td>
-            <td><input class="form-input" value="${escAttr(v.en)}"></td>
+            <td><input class="form-input" value="${escAttr(v.id)}" style="width:50px" data-field="id"></td>
+            <td><input class="form-input" value="${escAttr(v.hanzi)}" data-field="hanzi"></td>
+            <td><input class="form-input" value="${escAttr(v.pinyin)}" data-field="pinyin"></td>
+            <td><input class="form-input" value="${escAttr(v.pos)}" style="width:60px" data-field="pos"></td>
+            <td><input class="form-input" value="${escAttr(v.en)}" data-field="en"></td>
             <td>
               <div style="display:flex;gap:4px;align-items:center">
-                <select class="form-select v-audio" style="width:110px">
-                  ${vocabOptions}
+                <select class="form-select v-audio" data-field="audio" style="width:110px">
+                  ${buildVocabOptions(v)}
                 </select>
-                <button class="btn btn-xs btn-ghost btn-vocab-audio-upload" title="上传音频">📎</button>
+                <button class="btn btn-xs btn-ghost btn-refresh-vocab-audio" title="刷新音频">🔄</button>
               </div>
             </td>
             <td><button class="btn btn-sm btn-danger btn-remove-v">🗑</button></td>
           </tr>`).join('')}
       </tbody>
     </table>
-    <button class="btn btn-secondary btn-sm" id="btnAddVocab">+ 添加词汇</button>
-    <input type="file" id="vocabAudioInput" accept="audio/*" style="display:none">`;
+    <button class="btn btn-secondary btn-sm" id="btnAddVocab">+ 添加词汇</button>`;
 }
 
 /* ── Display2 Editor (生词+例句) ─────────────── */
@@ -691,13 +744,37 @@ function renderDisplay2Editor(slide, courseId, audioFiles) {
   const vocab = slide.vocab || [];
   const examples = slide.examples || [];
   const vocabFiles = (audioFiles || []).filter(f => f.sub === 'vocab');
-  const exampleFiles = (audioFiles || []).filter(f => f.sub === 'example');
+  const exampleFiles = (audioFiles || []).filter(f => f.sub === 'display');
+  const narrationFiles = (audioFiles || []).filter(f => f.sub === 'narration');
+  let narrationOptions = '<option value="">无音频</option>';
+  narrationFiles.forEach(f => {
+    narrationOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
+  });
   let vocabOptions = '<option value="">无音频</option>';
   vocabFiles.forEach(f => { vocabOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
   let exampleOptions = '<option value="">无音频</option>';
   exampleFiles.forEach(f => { exampleOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
 
+  const buildVocabOptions = (v) =>
+    '<option value="">无音频</option>' +
+    vocabFiles.map(f => `<option value="${escAttr(f.path)}" ${v.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`).join('');
+  const buildExampleOptions = (ex) =>
+    '<option value="">无音频</option>' +
+    exampleFiles.map(f => `<option value="${escAttr(f.path)}" ${ex.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`).join('');
+
   return `
+    <div class="section-title">旁白音频</div>
+    <div class="audio-picker-row">
+      <select class="form-select" id="slideAudio">
+        <option value="">无音频</option>
+        ${narrationOptions}
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshNarration" title="刷新音频列表">🔄</button>
+    </div>
+    <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
+      <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
+    </div>
+
     <div class="toggle-row">
       <label class="toggle">
         <input type="checkbox" id="display-showPinyin" ${slide.showPinyin !== false ? 'checked' : ''}>
@@ -729,8 +806,8 @@ function renderDisplay2Editor(slide, courseId, audioFiles) {
             <td><input class="form-input" value="${escAttr(v.image || '')}" data-field="image" style="width:80px"></td>
             <td>
               <div style="display:flex;gap:4px;align-items:center">
-                <select class="form-select v-audio" data-field="audio" style="width:110px">${vocabOptions}</select>
-                <button class="btn btn-xs btn-ghost btn-upload-vocab-audio" title="上传">📎</button>
+                <select class="form-select v-audio" data-field="audio" style="width:110px">${buildVocabOptions(v)}</select>
+                <button class="btn btn-xs btn-ghost btn-refresh-vocab-audio" title="刷新音频">🔄</button>
               </div>
             </td>
             <td><button class="btn btn-sm btn-danger btn-remove-display2-v">🗑</button></td>
@@ -738,7 +815,6 @@ function renderDisplay2Editor(slide, courseId, audioFiles) {
       </tbody>
     </table>
     <button class="btn btn-secondary btn-sm" id="btnAddDisplay2Vocab">+ 添加词汇</button>
-    <input type="file" id="display2VocabAudioInput" accept="audio/*" style="display:none">
 
     <div class="section-title" style="margin-top:24px">例句列表</div>
     <table class="vocab-table">
@@ -754,16 +830,15 @@ function renderDisplay2Editor(slide, courseId, audioFiles) {
             <td><input class="form-input" value="${escAttr(ex.en)}" data-field="en"></td>
             <td>
               <div style="display:flex;gap:4px;align-items:center">
-                <select class="form-select v-audio" data-field="audio" style="width:110px">${exampleOptions}</select>
-                <button class="btn btn-xs btn-ghost btn-upload-example-audio" title="上传">📎</button>
+                <select class="form-select v-audio" data-field="audio" style="width:110px">${buildExampleOptions(ex)}</select>
+                <button class="btn btn-xs btn-ghost btn-refresh-example-audio" title="刷新音频">🔄</button>
               </div>
             </td>
             <td><button class="btn btn-sm btn-danger btn-remove-display2-ex">🗑</button></td>
           </tr>`).join('')}
       </tbody>
     </table>
-    <button class="btn btn-secondary btn-sm" id="btnAddDisplay2Example">+ 添加例句</button>
-    <input type="file" id="display2ExampleAudioInput" accept="audio/*" style="display:none">`;
+    <button class="btn btn-secondary btn-sm" id="btnAddDisplay2Example">+ 添加例句</button>`;
 }
 
 /* ── Exercise Editor ─────────────────────────── */
@@ -771,6 +846,11 @@ const QUESTION_TYPES = ['read', 'listen', 'arrange', 'match', 'fill', 'trace'];
 
 function renderExerciseEditor(slide, courseId, audioFiles) {
   const questions = slide.questions || [];
+  const narrationFiles = (audioFiles || []).filter(f => f.sub === 'narration');
+  let narrationOptions = '<option value="">无音频</option>';
+  narrationFiles.forEach(f => {
+    narrationOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
+  });
 
   let questionsHtml = '';
   questions.forEach((q, i) => {
@@ -782,6 +862,18 @@ function renderExerciseEditor(slide, courseId, audioFiles) {
   }
 
   return `
+    <div class="section-title">旁白音频</div>
+    <div class="audio-picker-row">
+      <select class="form-select" id="slideAudio">
+        <option value="">无音频</option>
+        ${narrationOptions}
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshNarration" title="刷新音频列表">🔄</button>
+    </div>
+    <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
+      <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
+    </div>
+
     <div class="section-title">题目列表</div>
     <div id="questionList">
       ${questionsHtml}
@@ -799,13 +891,23 @@ function renderQuestionCard(q, index, audioFiles) {
   let innerForm = '';
 
   if (typeLabel === 'read' || typeLabel === 'listen') {
-    const opts = ['A','B','C','D'].map((oid, oi) => {
+    const optCount = Math.max(2, q.options ? q.options.length : 3);
+    const opts = Array.from({ length: optCount }, (_, oi) => {
+      const oid = String.fromCharCode(65 + oi);
       const opt = (q.options || [])[oi] || { id: oid, text: '' };
+      const showRemove = optCount > 2;
       return `
       <div class="q-option-row">
         <span style="width:24px;font-weight:700;color:#888">${oid}.</span>
-        <input class="form-input" value="${escAttr(opt.text)}" data-oi="${oi}" placeholder="选项${oid}">
+        <input class="form-input q-opt-text" value="${escAttr(opt.text)}" data-oi="${oi}" placeholder="文字">
+        <select class="form-select q-opt-image" data-oi="${oi}" data-current="${escAttr(opt.image || '')}" style="flex:0 0 160px"><option value="">无图片</option></select>
+        ${showRemove ? `<button class="btn btn-sm btn-danger btn-remove-option" data-oi="${oi}">🗑</button>` : ''}
       </div>`;
+    }).join('');
+
+    const answerOpts = Array.from({ length: optCount }, (_, oi) => {
+      const oid = String.fromCharCode(65 + oi);
+      return `<option value="${oid}" ${q.answer === oid ? 'selected' : ''}>${oid}</option>`;
     }).join('');
 
     let audioPickerHtml = '';
@@ -823,8 +925,7 @@ function renderQuestionCard(q, index, audioFiles) {
             <option value="">无音频</option>
             ${audioOptions}
           </select>
-          <button class="btn btn-secondary btn-sm btn-upload-q-audio">上传</button>
-          <input type="file" class="q-audio-file-input" accept="audio/*" style="display:none">
+          <button class="btn btn-secondary btn-sm btn-refresh-q-audio">🔄</button>
         </div>
       </div>`;
     }
@@ -838,11 +939,19 @@ function renderQuestionCard(q, index, audioFiles) {
       <div class="form-group">
         <label class="form-label">选项</label>
         <div class="q-options-list">${opts}</div>
+        <button class="btn btn-sm btn-secondary btn-add-option">+ 添加选项</button>
       </div>
       <div class="form-group">
-        <label class="form-label">正确答案（A / B / C / D）</label>
+        <label class="form-label">选项排列</label>
+        <select class="form-select q-layout" style="width:120px">
+          <option value="vertical" ${q.layout !== 'horizontal' ? 'selected' : ''}>纵向</option>
+          <option value="horizontal" ${q.layout === 'horizontal' ? 'selected' : ''}>横向</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">正确答案</label>
         <select class="form-select q-answer" style="width:100px">
-          ${['A','B','C','D'].map(o => `<option value="${o}" ${q.answer === o ? 'selected' : ''}>${o}</option>`).join('')}
+          ${answerOpts}
         </select>
       </div>`;
   } else if (typeLabel === 'arrange') {
@@ -861,28 +970,85 @@ function renderQuestionCard(q, index, audioFiles) {
         <button class="btn btn-sm btn-secondary btn-add-w">+ 添加词语</button>
       </div>`;
   } else if (typeLabel === 'match') {
+    const lt = q.leftType || 'text';
+    const rt = q.rightType || 'text';
+    const dr = q.direction || 'vertical';
+
+    function leftValHtml(p, lt) {
+      if (lt === 'audio') {
+        return `<select class="form-select q-left-val" data-oi="${p._pi}" data-current="${escAttr(p.left)}" style="flex:1"><option value="">加载中...</option></select>`;
+      }
+      return `<input class="form-input q-left" value="${escAttr(p.left)}" placeholder="左" style="flex:1">`;
+    }
+    function rightValHtml(p, rt) {
+      if (rt === 'image') {
+        return `<select class="form-select q-right-val" data-oi="${p._pi}" data-current="${escAttr(p.right)}" style="flex:1"><option value="">加载中...</option></select>`;
+      }
+      return `<input class="form-input q-right" value="${escAttr(p.right)}" placeholder="右" style="flex:1">`;
+    }
+
     const pairs = (q.pairs || []).map((p, pi) => {
+      p._pi = pi;
       const py = (q.pinyinMap && q.pinyinMap[p.left]) || '';
       return `
-      <div class="q-option-row">
-        <input class="form-input q-left" value="${escAttr(p.left)}" placeholder="左">
-        <input class="form-input q-pinyin" value="${escAttr(py)}" placeholder="拼音" style="width:80px">
-        <input class="form-input q-right" value="${escAttr(p.right)}" placeholder="右">
+      <div class="q-option-row" style="display:flex;gap:4px;align-items:center">
+        ${leftValHtml(p, lt)}
+        ${lt !== 'audio' ? `<input class="form-input q-pinyin" value="${escAttr(py)}" placeholder="拼音" style="width:80px">` : ''}
+        ${rightValHtml(p, rt)}
         <button class="btn btn-sm btn-danger btn-remove-pair" data-pi="${pi}">🗑</button>
       </div>`;
     }).join('');
+
     innerForm = `
-      <div class="form-group"><label class="form-label">配对（左 / 拼音 / 右）</label>
+      <div class="form-group"><label class="form-label">配对</label>
         <div>${pairs}</div>
         <button class="btn btn-sm btn-secondary btn-add-pair">+ 添加配对</button>
+      </div>
+      <div class="form-group" style="display:flex;gap:16px;flex-wrap:wrap">
+        <div>
+          <label class="form-label">左侧类型</label>
+          <select class="form-select q-left-type" style="width:90px">
+            <option value="text" ${lt === 'text' ? 'selected' : ''}>文本</option>
+            <option value="audio" ${lt === 'audio' ? 'selected' : ''}>音频</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">右侧类型</label>
+          <select class="form-select q-right-type" style="width:90px">
+            <option value="text" ${rt === 'text' ? 'selected' : ''}>文本</option>
+            <option value="image" ${rt === 'image' ? 'selected' : ''}>图片</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">排列方向</label>
+          <select class="form-select q-direction" style="width:90px">
+            <option value="vertical" ${dr === 'vertical' ? 'selected' : ''}>纵向</option>
+            <option value="horizontal" ${dr === 'horizontal' ? 'selected' : ''}>横向</option>
+          </select>
+        </div>
       </div>`;
   } else if (typeLabel === 'fill') {
+    const subQuestions = q.questions || [];
+    const sharedOpts = q.sharedOptions || [];
+    let subHtml = '';
+    subQuestions.forEach((sq, si) => {
+      subHtml += `
+        <div class="q-option-row fill-sub-row" data-si="${si}" style="display:flex;gap:6px;align-items:center">
+          <span style="width:24px;font-weight:700;color:#888;flex-shrink:0">${si + 1}.</span>
+          <input class="form-input fill-sub-q" value="${escAttr(sq.question || '')}" placeholder="题目（含 _____）" style="flex:1">
+          <input class="form-input fill-sub-a" value="${escAttr((sq.answer || []).join(', '))}" placeholder="答案" style="width:100px;flex-shrink:0">
+          <button class="btn btn-sm btn-danger btn-remove-fillsub" data-si="${si}">🗑</button>
+        </div>`;
+    });
     innerForm = `
-      <div class="form-group"><label class="form-label">题目（含 _____）</label>
-        <input class="form-input q-question" value="${escAttr(q.question || '')}">
+      <div class="form-group">
+        <label class="form-label">共享选项词池（每行一个词）</label>
+        <textarea class="form-input fill-shared-opts" rows="3" placeholder="词语1&#10;词语2&#10;词语3">${sharedOpts.join('\n')}</textarea>
       </div>
-      <div class="form-group"><label class="form-label">正确答案</label>
-        <input class="form-input q-answer" value="${escAttr(q.answer || '')}">
+      <div class="form-group">
+        <label class="form-label">子题目列表</label>
+        <div class="fill-sub-list">${subHtml}</div>
+        <button class="btn btn-sm btn-secondary btn-add-fillsub" style="margin-top:6px">+ 添加子题</button>
       </div>`;
   } else if (typeLabel === 'trace') {
     innerForm = `
@@ -903,7 +1069,7 @@ function renderQuestionCard(q, index, audioFiles) {
       <div class="question-card-header">
         <span class="q-number">#${index + 1}</span>
         <span class="q-type-badge">${typeLabel}</span>
-        <span class="q-summary">${escHtml(q.question || q.char || '(空)')}</span>
+        <span class="q-summary">${escHtml((q.questions && q.questions[0] && q.questions[0].question) || q.question || q.char || '(空)')}</span>
         <span class="q-delete" title="删除">🗑</span>
       </div>
       <div class="question-card-body">${innerForm}</div>
@@ -916,16 +1082,33 @@ function renderDialogueEditor(slide, courseId, audioFiles) {
   const lines = slide.lines || [];
   const vocabList = slide.vocabList || [];
   const dialogueFiles = (audioFiles || []).filter(f => f.sub === 'dialogue');
+  const narrationFiles = (audioFiles || []).filter(f => f.sub === 'narration');
   let dialogueOptions = '<option value="">无音频</option>';
-  dialogueFiles.forEach(f => { dialogueOptions += `<option value="${escAttr(f.path)}">${escHtml(f.file)}</option>`; });
+  dialogueFiles.forEach(f => { dialogueOptions += `<option value="${escAttr(f.path)}" ${slide.dialogueAudio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`; });
+  let narrationOptions = '<option value="">无音频</option>';
+  narrationFiles.forEach(f => { narrationOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`; });
 
   return `
     <div class="form-group">
-      <label class="form-label">音频文件</label>
-      <select class="form-select" id="slideAudio">
-        <option value="">无音频</option>
-        ${dialogueOptions}
-      </select>
+      <label class="form-label">旁白音频</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-select" id="slideAudio" style="flex:1">
+          <option value="">无音频</option>
+          ${narrationOptions}
+        </select>
+        <button class="btn btn-secondary btn-sm" id="btnRefreshDialogueNarration" title="刷新旁白列表">🔄</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">对话音频</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-select" id="dialogueAudioSelect" style="flex:1">
+          <option value="">无音频</option>
+          ${dialogueOptions}
+        </select>
+        <button class="btn btn-secondary btn-sm" id="btnRefreshDialogue" title="刷新音频">🔄</button>
+      </div>
     </div>
 
     <div class="toggle-row">
@@ -1019,20 +1202,56 @@ function renderVideoEditor(slide, courseId, audioFiles) {
   videoFiles.forEach(f => {
     videoOptions += `<option value="${escAttr(f.path)}" ${slide.video === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
   });
+  const narrationFiles = (audioFiles || []).filter(f => f.sub === 'narration');
+  let narrationOptions = '<option value="">无音频</option>';
+  narrationFiles.forEach(f => {
+    narrationOptions += `<option value="${escAttr(f.path)}" ${slide.audio === f.path ? 'selected' : ''}>${escHtml(f.file)}</option>`;
+  });
 
   return `
+    <div class="section-title">旁白音频</div>
+    <div class="audio-picker-row">
+      <select class="form-select" id="slideAudio">
+        <option value="">无音频</option>
+        ${narrationOptions}
+      </select>
+      <button class="btn btn-secondary btn-sm" id="btnRefreshNarration" title="刷新音频列表">🔄</button>
+    </div>
+    <div class="audio-preview-row" id="audioPreviewRow" style="display:none;margin-top:8px">
+      <audio id="audioPreview" controls style="height:36px;width:100%"></audio>
+    </div>
+
     <div class="form-group">
       <label class="form-label">视频文件</label>
-      <select class="form-select" id="slideVideo">
-        <option value="">无视频</option>
-        ${videoOptions}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">上传视频到 video/</label>
-      <button class="btn btn-secondary btn-sm" id="btnUploadVideo">选择视频文件</button>
-      <input type="file" id="videoFileInput" accept="video/*" style="display:none">
+      <div style="display:flex;gap:8px;align-items:center">
+        <select class="form-select" id="slideVideo">
+          <option value="">无视频</option>
+          ${videoOptions}
+        </select>
+        <button class="btn btn-secondary btn-sm" id="btnRefreshVideo" title="刷新视频">🔄</button>
+      </div>
     </div>`;
+}
+
+/* ── Editor helpers ─────────────────────────── */
+async function refreshFileDropdown(sub, selectEl, courseId, currentValue) {
+  if (!selectEl) return;
+  const selIdx = selectEl.selectedIndex;
+  selectEl.innerHTML = '<option value="">无文件</option>';
+  try {
+    const files = await api.get('/api/courses/' + courseId + '/audio-files').catch(() => []);
+    files.filter(f => f.sub === sub).forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.path;
+      opt.textContent = f.file;
+      selectEl.appendChild(opt);
+    });
+    if (currentValue) {
+      selectEl.value = currentValue;
+    } else if (selIdx > 0 && selectEl.options[selIdx]) {
+      selectEl.selectedIndex = selIdx;
+    }
+  } catch (e) { console.warn('refreshFileDropdown failed', e); }
 }
 
 /* ── Editor handlers ─────────────────────────── */
@@ -1064,24 +1283,29 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       data.subtitles = collectSubtitles(view);
       data.spotlights = collectSpotlights(view);
       data.spotlightZones = collectSpotlightZones(view);
-      data.backgroundImage = window._currentBgImage || slide.backgroundImage || '';
+      data.backgroundImage = document.getElementById('bgImgSelect')?.value || '';
     } else if (slide.type === 'vocab') {
+      data.audio = document.getElementById('slideAudio')?.value || '';
       data.showPinyin = document.getElementById('display-showPinyin')?.checked ?? true;
       data.showEnglish = document.getElementById('display-showEnglish')?.checked ?? true;
       data.hasRecording = document.getElementById('display-hasRecording')?.checked ?? true;
       data.vocab = collectVocab(view);
     } else if (slide.type === 'display') {
+      data.audio = document.getElementById('slideAudio')?.value || '';
       data.showPinyin = document.getElementById('display-showPinyin')?.checked ?? true;
       data.showEnglish = document.getElementById('display-showEnglish')?.checked ?? true;
       data.vocab = collectDisplay2Vocab(view);
       data.examples = collectDisplay2Examples(view);
     } else if (slide.type === 'exercise') {
+      data.audio = document.getElementById('slideAudio')?.value || '';
       data.questions = collectQuestions(view);
       data.showPinyin = true;
     } else if (slide.type === 'video') {
+      data.audio = document.getElementById('slideAudio')?.value || '';
       data.video = document.getElementById('slideVideo')?.value || '';
     } else if (slide.type === 'dialogue') {
       data.audio = document.getElementById('slideAudio')?.value || '';
+      data.dialogueAudio = document.getElementById('dialogueAudioSelect')?.value || '';
       data.showText = document.getElementById('dialogue-showText')?.checked ?? true;
       data.showPinyin = document.getElementById('dialogue-showPinyin')?.checked ?? true;
       data.showEnglish = document.getElementById('dialogue-showEnglish')?.checked ?? false;
@@ -1138,10 +1362,9 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     if (!imgEl) return;
     const zones = (slide.spotlightZones || []).map(z => z);
     // If we have a backgroundImage, show it
-    const bgPath = window._currentBgImage || slide.backgroundImage;
+    const bgPath = document.getElementById('bgImgSelect')?.value || window._currentBgImage || slide.backgroundImage;
     if (bgPath) {
-      const fullPath = bgPath.startsWith('pptimg/') ? bgPath : 'pptimg/' + bgPath;
-      imgEl.src = '/courses/' + courseId + '/' + fullPath;
+      imgEl.src = '/courses/' + courseId + '/' + bgPath;
       imgEl.style.display = 'block';
       imgEl.onload = () => syncRectsToCanvas(zones);
     } else {
@@ -1168,22 +1391,20 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     }).join('');
   }
 
-  // Upload background image
-  document.getElementById('btnUploadBgImg')?.addEventListener('click', () => {
-    document.getElementById('bgImgFileInput')?.click();
+  // Background image refresh
+  document.getElementById('btnRefreshBgImg')?.addEventListener('click', async () => {
+    const sel = document.getElementById('bgImgSelect');
+    await refreshFileDropdown('pptimg', sel, courseId, sel?.value);
   });
-  document.getElementById('bgImgFileInput')?.addEventListener('change', async function() {
-    const file = this.files && this.files[0];
-    if (!file) return;
-    try {
-      const result = await uploadFileChunked(file, 'pptimg', courseId);
-      const filename = result.path ? result.path.split('/').pop() : file.name;
-      window._currentBgImage = 'pptimg/' + filename;
-      const img = document.getElementById('hotspotBgImg');
-      if (img) { img.src = '/courses/' + courseId + '/pptimg/' + filename; img.style.display = 'block'; }
-      showToast('上传成功', 'success');
-    } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
-    this.value = '';
+  document.getElementById('bgImgSelect')?.addEventListener('change', function() {
+    window._currentBgImage = this.value;
+    const img = document.getElementById('hotspotBgImg');
+    if (this.value) {
+      img.src = '/courses/' + courseId + '/' + this.value;
+      img.style.display = 'block';
+    } else {
+      img.style.display = 'none';
+    }
   });
 
   // Draw hotspot on canvas
@@ -1314,7 +1535,7 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     if (sel?.value) {
       const previewAudio = document.getElementById('audioPreview');
       if (previewAudio) {
-        previewAudio.src = '/courses/' + courseId + '/audio/' + sel.value;
+        previewAudio.src = '/courses/' + courseId + '/' + sel.value;
         previewRow.style.display = 'flex';
       }
     }
@@ -1327,14 +1548,27 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     const nextId = 'w' + (tbody.querySelectorAll('tr').length + 1);
     tbody.insertAdjacentHTML('beforeend', `
       <tr>
-        <td><input class="form-input" value="${nextId}" style="width:50px"></td>
-        <td><input class="form-input" value=""></td>
-        <td><input class="form-input" value=""></td>
-        <td><input class="form-input" value="" style="width:60px"></td>
-        <td><input class="form-input" value=""></td>
-        <td><input class="form-input" value="" style="width:100px"></td>
+        <td><input class="form-input" value="${nextId}" style="width:50px" data-field="id"></td>
+        <td><input class="form-input" value="" data-field="hanzi"></td>
+        <td><input class="form-input" value="" data-field="pinyin"></td>
+        <td><input class="form-input" value="" style="width:60px" data-field="pos"></td>
+        <td><input class="form-input" value="" data-field="en"></td>
+        <td>
+          <div style="display:flex;gap:4px;align-items:center">
+            <select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select>
+            <button class="btn btn-xs btn-ghost btn-refresh-vocab-audio" title="刷新音频">🔄</button>
+          </div>
+        </td>
         <td><button class="btn btn-sm btn-danger btn-remove-v">🗑</button></td>
       </tr>`);
+    // Auto-refresh audio dropdown for the new row
+    const newRow = tbody.lastElementChild;
+    const newSelect = newRow.querySelector('.v-audio');
+    const newRefreshBtn = newRow.querySelector('.btn-refresh-vocab-audio');
+    newRefreshBtn?.addEventListener('click', async () => {
+      await refreshFileDropdown('vocab', newSelect, courseId, '');
+    });
+    refreshFileDropdown('vocab', newSelect, courseId, '');
   });
 
   view.querySelectorAll('.btn-remove-v').forEach(btn => {
@@ -1352,9 +1586,16 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       <td><input class="form-input" value="" style="width:60px" data-field="pos"></td>
       <td><input class="form-input" value="" data-field="en"></td>
       <td><input class="form-input" value="" style="width:80px" data-field="image"></td>
-      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-upload-vocab-audio" title="上传">📎</button></div></td>
+      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-refresh-vocab-audio" title="刷新音频">🔄</button></div></td>
       <td><button class="btn btn-sm btn-danger btn-remove-display2-v">🗑</button></td>
     </tr>`);
+    const newRow = tbody.lastElementChild;
+    const newSelect = newRow.querySelector('.v-audio');
+    const newRefreshBtn = newRow.querySelector('.btn-refresh-vocab-audio');
+    newRefreshBtn?.addEventListener('click', async () => {
+      await refreshFileDropdown('vocab', newSelect, courseId, '');
+    });
+    refreshFileDropdown('vocab', newSelect, courseId, '');
   });
   view.querySelectorAll('.btn-remove-display2-v').forEach(btn => {
     btn.addEventListener('click', () => btn.closest('tr')?.remove());
@@ -1369,9 +1610,16 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
       <td><input class="form-input" value="" data-field="hanzi"></td>
       <td><input class="form-input" value="" data-field="pinyin"></td>
       <td><input class="form-input" value="" data-field="en"></td>
-      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-upload-example-audio" title="上传">📎</button></div></td>
+      <td><div style="display:flex;gap:4px;align-items:center"><select class="form-select v-audio" data-field="audio" style="width:110px"><option value="">无音频</option></select><button class="btn btn-xs btn-ghost btn-refresh-example-audio" title="刷新音频">🔄</button></div></td>
       <td><button class="btn btn-sm btn-danger btn-remove-display2-ex">🗑</button></td>
     </tr>`);
+    const newRow = tbody.lastElementChild;
+    const newSelect = newRow.querySelector('.v-audio');
+    const newRefreshBtn = newRow.querySelector('.btn-refresh-example-audio');
+    newRefreshBtn?.addEventListener('click', async () => {
+      await refreshFileDropdown('display', newSelect, courseId, '');
+    });
+    refreshFileDropdown('display', newSelect, courseId, '');
   });
   view.querySelectorAll('.btn-remove-display2-ex').forEach(btn => {
     btn.addEventListener('click', () => btn.closest('tr')?.remove());
@@ -1445,32 +1693,10 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     attachQuestionHandlers(card, courseId);
   });
 
-  // Content: audio upload
-  document.getElementById('btnUploadAudio')?.addEventListener('click', () => {
-    document.getElementById('audioFileInput')?.click();
-  });
-  document.getElementById('audioFileInput')?.addEventListener('change', async function() {
-    const file = this.files && this.files[0];
-    if (!file) return;
-    try {
-      const result = await uploadFileChunked(file, 'narration', courseId);
-      const select = document.getElementById('slideAudio');
-      const audioPath = result.path;
-      const opt = document.createElement('option');
-      opt.value = audioPath;
-      opt.textContent = file.name;
-      opt.selected = true;
-      select.appendChild(opt);
-      // Update audio preview
-      const previewAudio = document.getElementById('audioPreview');
-      const previewRow = document.getElementById('audioPreviewRow');
-      if (previewAudio) {
-        previewAudio.src = '/courses/' + courseId + '/audio/' + audioPath;
-        previewRow.style.display = 'flex';
-      }
-      showToast('上传成功', 'success');
-    } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
-    this.value = '';
+  // Content: narration audio refresh
+  document.getElementById('btnRefreshNarration')?.addEventListener('click', async () => {
+    const sel = document.getElementById('slideAudio');
+    await refreshFileDropdown('narration', sel, courseId, sel?.value);
   });
 
   // Content: sync audio preview on select change
@@ -1478,7 +1704,7 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     const previewAudio = document.getElementById('audioPreview');
     const previewRow = document.getElementById('audioPreviewRow');
     if (this.value) {
-      previewAudio.src = '/courses/' + courseId + '/audio/' + this.value;
+      previewAudio.src = '/courses/' + courseId + '/' + this.value;
       previewRow.style.display = 'flex';
     } else {
       previewAudio.src = '';
@@ -1486,65 +1712,62 @@ function attachEditorHandlers(view, courseId, slide, audioFiles) {
     }
   });
 
-  // Video: upload
-  document.getElementById('btnUploadVideo')?.addEventListener('click', () => {
-    document.getElementById('videoFileInput')?.click();
+  // Video: refresh
+  document.getElementById('btnRefreshVideo')?.addEventListener('click', async () => {
+    const sel = document.getElementById('slideVideo');
+    await refreshFileDropdown('video', sel, courseId, sel?.value);
   });
-  document.getElementById('videoFileInput')?.addEventListener('change', async function() {
-    const file = this.files && this.files[0];
-    if (!file) return;
-    try {
-      const result = await uploadFileChunked(file, 'video', courseId);
-      const select = document.getElementById('slideVideo');
-      const opt = document.createElement('option');
-      opt.value = result.path;
-      opt.textContent = file.name;
-      opt.selected = true;
-      select.appendChild(opt);
-      showToast('上传成功', 'success');
-    } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
-    this.value = '';
-  });
-
-  // Display: vocab audio upload
-  view.querySelectorAll('.btn-vocab-audio-upload').forEach((btn, ri) => {
-    if (btn.dataset.bound) return;
-    btn.dataset.bound = '1';
-    const fileInput = document.getElementById('vocabAudioInput');
-    btn.addEventListener('click', () => {
-      if (!fileInput) return;
-      fileInput.dataset.targetRow = ri;
-      fileInput.click();
+  // Vocab audio: refresh all
+  view.querySelectorAll('.btn-refresh-vocab-audio').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const targets = document.querySelectorAll('.v-audio');
+      const vals = Array.from(targets).map(s => s.value);
+      await Promise.all(Array.from(targets).map(s => refreshFileDropdown('vocab', s, courseId, '')));
+      targets.forEach((s, i) => { if (vals[i]) s.value = vals[i]; });
     });
   });
-  document.getElementById('vocabAudioInput')?.addEventListener('change', async function() {
-    const file = this.files && this.files[0];
-    if (!file) return;
-    const ri = parseInt(this.dataset.targetRow || '0', 10);
-    try {
-      const result = await uploadFileChunked(file, 'vocab', courseId);
-      const path = result.path;
-      // Update all vocab audio selects
-      view.querySelectorAll('.v-audio').forEach(select => {
-        const opt = document.createElement('option');
-        opt.value = path;
-        opt.textContent = file.name;
-        select.appendChild(opt);
-      });
-      // Set the select in the row that triggered the upload
-      const rows = view.querySelectorAll('#vocabTbody tr');
-      const targetSelect = rows[ri]?.querySelector('.v-audio');
-      if (targetSelect) {
-        const opt = document.createElement('option');
-        opt.value = path;
-        opt.textContent = file.name;
-        opt.selected = true;
-        targetSelect.appendChild(opt);
-      }
-      showToast('上传成功', 'success');
-    } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
-    this.value = '';
+
+  // Example audio: refresh per row
+  view.querySelectorAll('.btn-refresh-example-audio').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const sel = btn.closest('tr')?.querySelector('.v-audio');
+      await refreshFileDropdown('display', sel, courseId, sel?.value);
+    });
   });
+
+  // Dialogue narration audio: refresh
+  document.getElementById('btnRefreshDialogueNarration')?.addEventListener('click', async () => {
+    const sel = document.getElementById('slideAudio');
+    await refreshFileDropdown('narration', sel, courseId, sel?.value);
+  });
+
+  // Dialogue audio: refresh
+  document.getElementById('btnRefreshDialogue')?.addEventListener('click', async () => {
+    const sel = document.getElementById('dialogueAudioSelect');
+    await refreshFileDropdown('dialogue', sel, courseId, sel?.value);
+  });
+}
+
+function _refreshOptionRemoveButtons(container) {
+  const rows = container.querySelectorAll('.q-option-row');
+  rows.forEach((row, i) => {
+    const btn = row.querySelector('.btn-remove-option');
+    if (!btn) return;
+    btn.style.display = rows.length > 2 ? '' : 'none';
+  });
+}
+
+function _refreshAnswerSelect(card, optCount) {
+  const select = card.querySelector('.q-answer');
+  if (!select) return;
+  const currentAnswer = select.value;
+  select.innerHTML = Array.from({ length: optCount }, (_, oi) => {
+    const oid = String.fromCharCode(65 + oi);
+    return `<option value="${oid}">${oid}</option>`;
+  }).join('');
+  if (currentAnswer && currentAnswer.charCodeAt(0) < 65 + optCount) {
+    select.value = currentAnswer;
+  }
 }
 
 function attachQuestionHandlers(card, courseId) {
@@ -1581,43 +1804,134 @@ function attachQuestionHandlers(card, courseId) {
   card.querySelector('.btn-add-pair')?.addEventListener('click', () => {
     const container = card.querySelector('.btn-add-pair').parentElement.querySelector('div');
     const pi = container.querySelectorAll('.q-option-row').length;
-    const html = `<div class="q-option-row">
-      <input class="form-input q-left" value="" placeholder="左">
-      <input class="form-input q-pinyin" value="" placeholder="拼音" style="width:80px">
-      <input class="form-input q-right" value="" placeholder="右">
+    const lt = card.querySelector('.q-left-type')?.value || 'text';
+    const rt = card.querySelector('.q-right-type')?.value || 'text';
+    const leftHtml = lt === 'audio'
+      ? `<select class="form-select q-left-val" data-oi="${pi}" style="flex:1"><option value="">选择音频...</option></select>`
+      : `<input class="form-input q-left" value="" placeholder="左" style="flex:1">`;
+    const rightHtml = rt === 'image'
+      ? `<select class="form-select q-right-val" data-oi="${pi}" style="flex:1"><option value="">选择图片...</option></select>`
+      : `<input class="form-input q-right" value="" placeholder="右" style="flex:1">`;
+    const pyHtml = lt !== 'audio'
+      ? `<input class="form-input q-pinyin" value="" placeholder="拼音" style="width:80px">`
+      : '';
+    const html = `<div class="q-option-row" style="display:flex;gap:4px;align-items:center">
+      ${leftHtml}
+      ${pyHtml}
+      ${rightHtml}
       <button class="btn btn-sm btn-danger btn-remove-pair" data-pi="${pi}">🗑</button>
     </div>`;
     container.insertAdjacentHTML('beforeend', html);
     card.querySelectorAll('.btn-remove-pair').forEach(b => {
       b.addEventListener('click', () => b.closest('.q-option-row')?.remove());
     });
+    // load file options if needed
+    if (lt === 'audio') {
+      const sel = container.querySelectorAll('.q-left-val')[pi];
+      if (sel) refreshFileDropdown('exercise', sel, courseId, '');
+    }
+    if (rt === 'image') {
+      const sel = container.querySelectorAll('.q-right-val')[pi];
+      if (sel) refreshFileDropdown('exercise-img', sel, courseId, '');
+    }
   });
 
-  // listen: audio upload per question card
-  card.querySelectorAll('.btn-upload-q-audio').forEach(btn => {
+  // fill: remove sub-question
+  card.querySelectorAll('.btn-remove-fillsub').forEach(btn => {
     btn.addEventListener('click', () => {
-      const fileInput = card.querySelector('.q-audio-file-input');
-      fileInput?.click();
+      const list = card.querySelector('.fill-sub-list');
+      if (list.querySelectorAll('.fill-sub-row').length <= 1) return;
+      btn.closest('.fill-sub-row')?.remove();
     });
   });
-  card.querySelectorAll('.q-audio-file-input').forEach(fileInput => {
-    fileInput.addEventListener('change', async function() {
-      const file = this.files && this.files[0];
-      if (!file) return;
-      try {
-        const result = await uploadFileChunked(file, 'exercise', courseId);
-        const select = card.querySelector('.q-audio');
-        if (select) {
-          const opt = document.createElement('option');
-          opt.value = result.path;
-          opt.textContent = file.name;
-          opt.selected = true;
-          select.appendChild(opt);
-        }
-        showToast('上传成功', 'success');
-      } catch (e) { showToast('上传失败: ' + e.message, 'error'); }
-      this.value = '';
+
+  // fill: add sub-question
+  card.querySelector('.btn-add-fillsub')?.addEventListener('click', () => {
+    const list = card.querySelector('.fill-sub-list');
+    const si = list.querySelectorAll('.fill-sub-row').length;
+    const html = `<div class="q-option-row fill-sub-row" data-si="${si}" style="display:flex;gap:6px;align-items:center">
+      <span style="width:24px;font-weight:700;color:#888;flex-shrink:0">${si + 1}.</span>
+      <input class="form-input fill-sub-q" value="" placeholder="题目（含 _____）" style="flex:1">
+      <input class="form-input fill-sub-a" value="" placeholder="答案" style="width:100px;flex-shrink:0">
+      <button class="btn btn-sm btn-danger btn-remove-fillsub" data-si="${si}">🗑</button>
+    </div>`;
+    list.insertAdjacentHTML('beforeend', html);
+    list.querySelectorAll('.btn-remove-fillsub').forEach(b => {
+      b.addEventListener('click', () => {
+        const rows = list.querySelectorAll('.fill-sub-row');
+        if (rows.length <= 1) return;
+        b.closest('.fill-sub-row')?.remove();
+      });
     });
+  });
+
+  // choice (listen/read): add option
+  card.querySelector('.btn-add-option')?.addEventListener('click', () => {
+    const container = card.querySelector('.q-options-list');
+    const rows = container.querySelectorAll('.q-option-row');
+    const oi = rows.length;
+    const oid = String.fromCharCode(65 + oi);
+    const html = `<div class="q-option-row">
+      <span style="width:24px;font-weight:700;color:#888">${oid}.</span>
+      <input class="form-input q-opt-text" value="" data-oi="${oi}" placeholder="文字">
+      <select class="form-select q-opt-image" data-oi="${oi}" style="flex:0 0 160px"><option value="">无图片</option></select>
+      <button class="btn btn-sm btn-danger btn-remove-option" data-oi="${oi}">🗑</button>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    const newImgSel = container.querySelectorAll('select.q-opt-image')[oi];
+    if (newImgSel) refreshFileDropdown('exercise-img', newImgSel, courseId, '');
+    _refreshOptionRemoveButtons(container);
+    // update answer select
+    _refreshAnswerSelect(card, oi + 1);
+    // rebind remove handlers
+    container.querySelectorAll('.btn-remove-option').forEach(b => {
+      b.addEventListener('click', () => {
+        const rows2 = container.querySelectorAll('.q-option-row');
+        if (rows2.length <= 2) return;
+        b.closest('.q-option-row')?.remove();
+        _refreshOptionRemoveButtons(container);
+        _refreshAnswerSelect(card, container.querySelectorAll('.q-option-row').length);
+      });
+    });
+  });
+
+  // choice (listen/read): remove option
+  card.querySelectorAll('.btn-remove-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const container = card.querySelector('.q-options-list');
+      const rows = container.querySelectorAll('.q-option-row');
+      if (rows.length <= 2) return;
+      btn.closest('.q-option-row')?.remove();
+      _refreshOptionRemoveButtons(container);
+      _refreshAnswerSelect(card, container.querySelectorAll('.q-option-row').length);
+    });
+  });
+
+  // listen: audio refresh per question card
+  card.querySelectorAll('.btn-refresh-q-audio').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const sel = card.querySelector('.q-audio');
+      await refreshFileDropdown('exercise', sel, courseId, sel?.value);
+    });
+  });
+
+  // match: load audio/image file dropdowns on init
+  const lt = card.querySelector('.q-left-type')?.value || 'text';
+  const rt = card.querySelector('.q-right-type')?.value || 'text';
+  if (lt === 'audio') {
+    card.querySelectorAll('.q-left-val').forEach(sel => {
+      refreshFileDropdown('exercise', sel, courseId, sel?.dataset?.current || sel?.value);
+    });
+  }
+  if (rt === 'image') {
+    card.querySelectorAll('.q-right-val').forEach(sel => {
+      refreshFileDropdown('exercise-img', sel, courseId, sel?.dataset?.current || sel?.value);
+    });
+  }
+
+  // choice (listen/read): populate image option dropdowns on init
+  card.querySelectorAll('select.q-opt-image').forEach(sel => {
+    refreshFileDropdown('exercise-img', sel, courseId, sel.dataset.current || '');
   });
 }
 
@@ -1655,14 +1969,15 @@ function collectSpotlightZones(view) {
 
 function collectVocab(view) {
   return Array.from(view.querySelectorAll('#vocabTbody tr')).map(row => {
-    const inputs = row.querySelectorAll('input');
+    const fields = {};
+    row.querySelectorAll('[data-field]').forEach(el => { fields[el.dataset.field] = el.value || ''; });
     return {
-      id: inputs[0]?.value || '',
-      hanzi: inputs[1]?.value || '',
-      pinyin: inputs[2]?.value || '',
-      pos: inputs[3]?.value || '',
-      en: inputs[4]?.value || '',
-      audio: inputs[5]?.value || '',
+      id: fields.id || '',
+      hanzi: fields.hanzi || '',
+      pinyin: fields.pinyin || '',
+      pos: fields.pos || '',
+      en: fields.en || '',
+      audio: fields.audio || '',
     };
   }).filter(v => v.hanzi);
 }
@@ -1705,13 +2020,15 @@ function collectQuestions(view) {
     if (type === 'read' || type === 'listen') {
       q.question = card.querySelector('.q-question')?.value || '';
       q.audio = card.querySelector('.q-audio')?.value || '';
-      const optionIds = ['A', 'B', 'C', 'D'];
-      q.options = optionIds.map((id, oi) => {
-        const row = card.querySelectorAll('.q-option-row')[oi];
-        const text = row ? row.querySelector('input')?.value || '' : '';
-        return { id, text };
-      });
+      const rows = card.querySelectorAll('.q-option-row');
+      q.options = Array.from(rows).map((row, oi) => {
+        const id = String.fromCharCode(65 + oi);
+        const text = row.querySelector('input.q-opt-text')?.value || '';
+        const image = row.querySelector('select.q-opt-image')?.value || '';
+        return { id, text, ...(image && { image }) };
+      }).filter(opt => opt.text);
       q.answer = card.querySelector('.q-answer')?.value || '';
+      q.layout = card.querySelector('.q-layout')?.value || 'vertical';
     } else if (type === 'arrange') {
       const rows = card.querySelectorAll('.q-option-row');
       const pinyinMap = {};
@@ -1726,20 +2043,46 @@ function collectQuestions(view) {
       q.answer = [...words];
       q.pinyinMap = pinyinMap;
     } else if (type === 'match') {
+      const lt = card.querySelector('.q-left-type')?.value || 'text';
+      const rt = card.querySelector('.q-right-type')?.value || 'text';
       const rows = card.querySelectorAll('.q-option-row');
       const pinyinMap = {};
       q.pairs = Array.from(rows).map(row => {
-        const inp = row.querySelectorAll('input');
-        const left = inp[0]?.value || '';
-        const py = inp[1]?.value || '';
-        const right = inp[2]?.value || '';
+        let left, py, right;
+        if (lt === 'audio') {
+          left = row.querySelector('.q-left-val')?.value || '';
+          py = '';
+        } else {
+          const inp = row.querySelectorAll('input');
+          left = inp[0]?.value || '';
+          py = inp[1]?.value || '';
+        }
+        if (rt === 'image') {
+          right = row.querySelector('.q-right-val')?.value || '';
+        } else {
+          const allInp = row.querySelectorAll('input');
+          right = lt === 'audio' ? allInp[1]?.value || '' : allInp[2]?.value || '';
+        }
         if (left && py) pinyinMap[left] = py;
         return { left, right };
       }).filter(p => p.left);
       q.pinyinMap = pinyinMap;
+      q.leftType = lt;
+      q.rightType = rt;
+      q.direction = card.querySelector('.q-direction')?.value || 'vertical';
     } else if (type === 'fill') {
-      q.question = card.querySelector('.q-question')?.value || '';
-      q.answer = card.querySelector('.q-answer')?.value || '';
+      q.sharedOptions = (card.querySelector('.fill-shared-opts')?.value || '').split('\n').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+      q.questions = [];
+      card.querySelectorAll('.fill-sub-row').forEach(function(row, si) {
+        var sqId = q.id ? q.id + '-' + (si + 1) : '';
+        var ansRaw = row.querySelector('.fill-sub-a')?.value || '';
+        var answers = ansRaw.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+        q.questions.push({
+          id: sqId,
+          question: row.querySelector('.fill-sub-q')?.value || '',
+          answer: answers
+        });
+      });
     } else if (type === 'trace') {
       q.char = card.querySelector('.q-char')?.value || '';
       q.pinyin = card.querySelector('.q-pinyin')?.value || '';
@@ -1757,9 +2100,15 @@ function buildBlankQuestion(type) {
   } else if (type === 'arrange') {
     return { words: ['词语1', '词语2'], answer: ['词语1', '词语2'], pinyinMap: {} };
   } else if (type === 'match') {
-    return { pairs: [{ left: '左', right: '右' }], pinyinMap: {} };
+    return { pairs: [{ left: '左', right: '右' }], pinyinMap: {}, leftType: 'text', rightType: 'text', direction: 'vertical' };
   } else if (type === 'fill') {
-    return { question: '请填空 _____', answer: '' };
+    return {
+      sharedOptions: ['词语1', '词语2', '词语3'],
+      questions: [
+        { id: '', question: '请填空 _____。', answer: ['词语1'] },
+        { id: '', question: '请填空 _____。', answer: ['词语2'] }
+      ]
+    };
   } else if (type === 'trace') {
     return { char: '谢', pinyin: 'xiè', en: 'thanks', stars: { '1': 0.3, '2': 0.6, '3': 0.85 } };
   }

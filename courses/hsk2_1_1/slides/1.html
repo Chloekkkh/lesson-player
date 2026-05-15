@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson1 - 第1页</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft YaHei UI","PingFang SC",sans-serif;
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      width: 1200px;
+      height: 675px;
+      background-size: cover;
+      background-position: center;
+      background-color: #f5f5f5;
+    }
+    .hotspot {
+      position: absolute;
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide-bg"></div>
+  <div id="hotspot-container"></div>
+
+  <script src="/js/spotlight.js"></script>
+  <script>
+    Spotlight.init({ dimness: 0.75, container: document.body });
+
+    function renderHotspots(zones) {
+      var container = document.getElementById('hotspot-container');
+      zones.forEach(function(zone) {
+        var div = document.createElement('div');
+        div.id = zone.elementId;
+        div.className = 'hotspot';
+        div.style.cssText = 'position:absolute;left:' + zone.x + '%;top:' + zone.y + '%;width:' + zone.w + '%;height:' + zone.h + '%;';
+        container.appendChild(div);
+      });
+    }
+
+    var zonesRendered = false;
+
+    window.addEventListener('message', function(e) {
+      var msg = e.data;
+      if (!msg) return;
+
+      if (msg.spotlightZones && !zonesRendered) {
+        zonesRendered = true;
+        renderHotspots(msg.spotlightZones);
+      }
+
+      if (msg.type === 'slideData') {
+        if (msg.data.backgroundImage) {
+          var bg = document.querySelector('.slide-bg');
+          if (bg) bg.style.backgroundImage = 'url(/courses/' + msg.data.courseId + '/' + msg.data.backgroundImage + ')';
+        }
+        if (msg.data.spotlightZones && !zonesRendered) {
+          zonesRendered = true;
+          renderHotspots(msg.data.spotlightZones);
+        }
+      }
+      if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
+      if (msg.type === 'spotlightClear') Spotlight.clear();
+    });
+  </script>
+</body>
+</html>

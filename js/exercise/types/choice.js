@@ -59,6 +59,11 @@ ChoiceHandler.prototype = {
     var container = document.getElementById('optionsContainer');
     if (container) {
       container.innerHTML = '';
+      if (q.layout === 'horizontal') {
+        container.classList.add('layout-horizontal');
+      } else {
+        container.classList.remove('layout-horizontal');
+      }
       var self = this;
       (q.options || []).forEach(function(opt) {
         var btn = document.createElement('button');
@@ -67,11 +72,18 @@ ChoiceHandler.prototype = {
         var idSpan = document.createElement('span');
         idSpan.className = 'option-id';
         idSpan.textContent = opt.id;
-        var textSpan = document.createElement('span');
-        textSpan.className = 'option-text';
-        textSpan.textContent = opt.text;
+        var contentSpan = document.createElement('span');
+        contentSpan.className = 'option-text';
+        if (opt.image) {
+          var img = document.createElement('img');
+          img.src = (self._config.imgBase || '') + opt.image;
+          img.alt = opt.text || '';
+          contentSpan.appendChild(img);
+        } else {
+          contentSpan.textContent = opt.text || '';
+        }
         btn.appendChild(idSpan);
-        btn.appendChild(textSpan);
+        btn.appendChild(contentSpan);
         btn.addEventListener('click', function() {
           if (!self._submitted) self._select(opt.id, btn);
         });

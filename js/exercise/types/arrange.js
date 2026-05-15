@@ -274,6 +274,8 @@ ArrangeHandler.prototype = {
       document.querySelectorAll('.arrange-answer-btn').forEach(function(b) {
         b.classList.add('answer-correct');
       });
+      var answerArea = document.querySelector('.arrange-answer');
+      if (answerArea) answerArea.classList.add('answer-correct');
       this._callbacks.onDone({ correct: true });
       this._callbacks.onComplete({ correct: true });
     } else {
@@ -282,6 +284,22 @@ ArrangeHandler.prototype = {
         area.classList.add('shake');
         setTimeout(function() { area.classList.remove('shake'); }, 500);
       }
+      var answerArea = document.querySelector('.arrange-answer');
+      if (answerArea) answerArea.classList.add('wrong');
+      // 为答错的按钮添加 wrong 类
+      var btns = document.querySelectorAll('.arrange-answer-btn');
+      for (var i = 0; i < this._answer.length; i++) {
+        if (this._answer[i] !== i) {
+          if (btns[i]) btns[i].classList.add('wrong');
+        }
+      }
+      setTimeout(function() {
+        var a = document.querySelector('.arrange-answer');
+        if (a) a.classList.remove('wrong');
+        document.querySelectorAll('.arrange-answer-btn.wrong').forEach(function(b) {
+          b.classList.remove('wrong');
+        });
+      }, 600);
       this._submitted = false;
       var submitBtn = document.getElementById('submitBtn');
       if (submitBtn) {

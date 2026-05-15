@@ -9,169 +9,144 @@
       "index": 1,
       "type": "content",
       "title": "第 1 页",
-      "audio": "narration/1.mp3",
-      "backgroundImage": "pptimg/content1.PNG",
-      "spotlights": [
-        {
-          "elementId": "zone-1",
-          "at": 9,
-          "duration": 2
-        },
-        {
-          "elementId": "zone-2",
-          "at": 16,
-          "duration": 5
-        },
-        {
-          "elementId": "zone-3",
-          "at": 26,
-          "duration": 5
-        }
-      ],
-      "spotlightZones": [
-        {
-          "elementId": "zone-1",
-          "x": 4.2,
-          "y": 25.2,
-          "w": 27.3,
-          "h": 28.2
-        },
-        {
-          "elementId": "zone-2",
-          "x": 32.3,
-          "y": 24.2,
-          "w": 62.4,
-          "h": 29.3
-        },
-        {
-          "elementId": "zone-3",
-          "x": 18.2,
-          "y": 61.7,
-          "w": 61.4,
-          "h": 31.5
-        }
-      ],
+      "audio": "assets/ppt/audio/ppt_1.mp3",
+      "backgroundImage": "assets/ppt/img/ppt_1.PNG",
+      "spotlights": [],
+      "spotlightZones": [],
       "subtitles": [
         {
           "at": 0.1,
-          "text": "We’ve already learned how to use “多少” to ask about quantity,"
-        },
-        {
-          "at": 5,
-          "text": "for example, “她有多少个学生？”."
+          "text": "大家好！欢迎来到新HSK教程2。 Welcome to New HSK Course 2. "
         },
         {
           "at": 8,
-          "text": "Now let’s look at “几”."
-        },
-        {
-          "at": 12,
-          "text": "We use “几” when the number is small, usually under 10."
-        },
-        {
-          "at": 15,
-          "text": "For example: “你有几个姐姐？” “你家有几口人？”."
-        },
-        {
-          "at": 22,
-          "text": "So here’s a simple rule. "
-        },
-        {
-          "at": 24,
-          "text": "If the number is large, use “多少”."
-        },
-        {
-          "at": 28,
-          "text": "If the number is small, under 10, use “几”. "
-        },
-        {
-          "at": 32,
-          "text": "Very clear, right?"
+          "text": "第1课，她请我们吃了北京烤鸭, Lesson 1, She treated us to Peking Duck."
         }
       ]
     },
     {
       "index": 2,
-      "type": "content",
-      "title": "第 2 页",
-      "audio": "narration/2.mp3",
-      "subtitles": [
-        {
-          "at": 0.1,
-          "text": "There’s one more thing to remember. "
-        },
-        {
-          "at": 3,
-          "text": "When you use “多少”, the measure word can be used, or it can be left out."
-        },
-        {
-          "at": 8,
-          "text": " For example, you can say “你有多少个学生？”, or simply “你有多少学生？”."
-        },
-        {
-          "at": 15,
-          "text": "But when you use “几”, the measure word is required. "
-        },
-        {
-          "at": 19,
-          "text": "You must say “你有几个姐姐？”. You cannot say “你有几姐姐？”. Keep this in mind."
-        }
-      ],
-      "spotlights": [
-        {
-          "elementId": "zone-1",
-          "at": 4,
-          "duration": 2
-        },
-        {
-          "elementId": "zone-2",
-          "at": 8,
-          "duration": 2
-        }
-      ],
-      "spotlightZones": [
-        {
-          "elementId": "zone-1",
-          "x": 1,
-          "y": 52.1,
-          "w": 29.7,
-          "h": 46.2
-        },
-        {
-          "elementId": "zone-2",
-          "x": 29.2,
-          "y": 15.5,
-          "w": 68.6,
-          "h": 73.9
-        }
-      ],
-      "backgroundImage": "pptimg/content2.PNG"
-    },
-    {
-      "index": 3,
       "type": "vocab",
       "title": "生词学习",
       "vocab": [
         {
           "id": "w1",
-          "hanzi": "谢谢",
-          "pinyin": "xiè xie",
-          "pos": "verb",
-          "en": "thank you",
-          "audio": "w1.wav"
+          "hanzi": "就",
+          "pinyin": "jiù",
+          "pos": "adv.",
+          "en": "exactly; precisely",
+          "audio": "assets/vocab/jiu.mp3"
         },
         {
           "id": "w2",
-          "hanzi": "你好",
-          "pinyin": "nǐ hǎo",
-          "pos": "verb",
-          "en": "hello",
-          "audio": "w2.wav"
+          "hanzi": "给",
+          "pinyin": "gěi",
+          "pos": "prep.",
+          "en": "(used to introduce the recipient of an action) to; for",
+          "audio": "assets/vocab/gei.mp3"
+        },
+        {
+          "id": "w3",
+          "hanzi": "让",
+          "pinyin": "ràng",
+          "pos": "v.",
+          "en": "let; allow; to ask (somebody) to",
+          "audio": "assets/vocab/rang.mp3"
+        },
+        {
+          "id": "w4",
+          "hanzi": "接",
+          "pinyin": "jiē",
+          "pos": "v.",
+          "en": "meet; welcome; receive; pick up (somebody)",
+          "audio": "assets/vocab/jie.mp3"
         }
       ],
       "showPinyin": true,
       "showEnglish": true,
-      "hasRecording": true
+      "hasRecording": true,
+      "audio": "systemAssets/audio/vocab.mp3"
+    },
+    {
+      "index": 3,
+      "type": "content",
+      "title": "第 2 页",
+      "audio": "assets/ppt/audio/ppt_2.mp3",
+      "subtitles": [
+        {
+          "at": 0.1,
+          "text": "In Book 1, we learned how to use “给” as a verb, which means \"to give\" "
+        },
+        {
+          "at": 6,
+          "text": "for example, \"请给我一杯牛奶\""
+        },
+        {
+          "at": 10,
+          "text": "Today, we are going to learn how to use “给” as a preposition."
+        },
+        {
+          "at": 15,
+          "text": "As a preposition, “给” is used to introduce the recipient or the beneficiary of an action."
+        },
+        {
+          "at": 24,
+          "text": "It is equivalent to the English words \"to\" or \"for\". The basic sentence structure is:"
+        },
+        {
+          "at": 31,
+          "text": "Subject + 给 + Recipient + Verb + Others"
+        },
+        {
+          "at": 39,
+          "text": "Here are some examples: 给妹妹打电话；医生正在给病人看病"
+        },
+        {
+          "at": 47,
+          "text": "Hope this explanation helps!"
+        }
+      ],
+      "spotlights": [
+        {
+          "elementId": "zone-1",
+          "at": 6,
+          "duration": 4
+        },
+        {
+          "elementId": "zone-2",
+          "at": 30,
+          "duration": 7.1
+        },
+        {
+          "elementId": "zone-3",
+          "at": 40,
+          "duration": 5
+        }
+      ],
+      "spotlightZones": [
+        {
+          "elementId": "zone-1",
+          "x": 3.4,
+          "y": 32.4,
+          "w": 35.1,
+          "h": 44.1
+        },
+        {
+          "elementId": "zone-2",
+          "x": 44,
+          "y": 19.2,
+          "w": 52.9,
+          "h": 22.5
+        },
+        {
+          "elementId": "zone-3",
+          "x": 44.5,
+          "y": 43.8,
+          "w": 52.7,
+          "h": 36.6
+        }
+      ],
+      "backgroundImage": "assets/ppt/img/ppt_2.PNG"
     },
     {
       "index": 5,
@@ -180,59 +155,240 @@
       "vocab": [
         {
           "id": "w1",
-          "hanzi": "请问",
-          "pinyin": "qǐng wèn",
-          "pos": "verb",
-          "en": "excuse me",
+          "hanzi": "就",
+          "pinyin": "jiù",
+          "pos": "adv.",
+          "en": "just; exactly; precisely",
           "image": "",
-          "audio": "vocab/qingwen.wav"
+          "audio": "assets/vocab/jiu.mp3"
         }
       ],
       "examples": [
         {
           "id": "e1",
-          "hanzi": "请问，你叫什么名字？",
-          "pinyin": "qǐng wèn, nǐ jiào shén me míng zi?",
-          "en": "Excuse me, what is your name?",
-          "audio": ""
+          "hanzi": "您好！我就是丽莎。",
+          "pinyin": "Nín hǎo!   Wǒ jiù shì  Lìshā.",
+          "en": " Hello! I am exactly Lisa.",
+          "audio": "assets/display/audio/jiu_e1.mp3"
         },
         {
           "id": "e2",
-          "hanzi": "请问，图书馆在哪儿？",
-          "pinyin": "qǐng wèn, tú shū guǎn zài nǎr?",
-          "en": "Excuse me, where is the library?",
-          "audio": ""
+          "hanzi": "我家就在前面。",
+          "pinyin": " Wǒ jiā jiù zài qiánmiàn.",
+          "en": "  My home is just ahead.",
+          "audio": "assets/display/audio/jiu_e2.mp3"
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true,
+      "audio": "systemAssets/audio/display.mp3"
+    },
+    {
+      "index": 6,
+      "type": "display",
+      "title": "生词与例句",
+      "vocab": [
+        {
+          "id": "w1",
+          "hanzi": "给",
+          "pinyin": "gěi",
+          "pos": "prep.",
+          "en": "(used to introduce the recipient of an action) to; for",
+          "image": "",
+          "audio": "assets/vocab/gei.mp3"
+        }
+      ],
+      "examples": [
+        {
+          "id": "e1",
+          "hanzi": "他在给朋友打电话。",
+          "pinyin": "Tā zài gěi péngyou dǎ diànhuà.",
+          "en": "He’s calling his friend.",
+          "audio": "assets/display/audio/gei_e1.mp3"
+        },
+        {
+          "id": "e2",
+          "hanzi": "他给女朋友买了一些水果。",
+          "pinyin": "Tā gěi nǚpéngyou mǎi le yìxiē shuǐguǒ.",
+          "en": "He bought his girlfriend some fruits.",
+          "audio": "assets/display/audio/gei_e2.mp3"
         },
         {
           "id": "e3",
-          "hanzi": "请问，这个多少钱？",
-          "pinyin": "qǐng wèn, zhè ge duō shǎo qián?",
-          "en": "Excuse me, how much is this?",
-          "audio": ""
+          "hanzi": "妈妈在给女儿做饭。",
+          "pinyin": "Māma zài gěi nǚ’ér zuòfàn.",
+          "en": "Mom is cooking for her daughter.",
+          "audio": "assets/display/audio/gei_e3.mp3"
         }
       ],
       "showPinyin": true,
       "showEnglish": true
     },
     {
-      "index": 6,
+      "index": 7,
+      "type": "display",
+      "title": "生词与例句",
+      "vocab": [
+        {
+          "id": "w1",
+          "hanzi": "接",
+          "pinyin": "jiē",
+          "pos": "v.",
+          "en": "meet; welcome; receive; pick up (somebody)",
+          "image": "",
+          "audio": "assets/vocab/jie.mp3"
+        }
+      ],
+      "examples": [
+        {
+          "id": "e1",
+          "hanzi": "去机场接朋友。",
+          "pinyin": "qù jīchǎng jiē péngyou.",
+          "en": "go to the airport to pick up a friend.",
+          "audio": "assets/display/audio/jie_e1.mp3"
+        },
+        {
+          "id": "e2",
+          "hanzi": "去学校接孩子。",
+          "pinyin": "qù xuéxiào jiē háizi.",
+          "en": "go to the school to pick up the child",
+          "audio": "assets/display/audio/jie_e2.mp3"
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true
+    },
+    {
+      "index": 8,
+      "type": "display",
+      "title": "生词与例句",
+      "vocab": [
+        {
+          "id": "w1",
+          "hanzi": "让",
+          "pinyin": "ràng",
+          "pos": "v.",
+          "en": "let; allow; to ask (somebody) to",
+          "image": "",
+          "audio": "assets/vocab/rang.mp3"
+        }
+      ],
+      "examples": [
+        {
+          "id": "e1",
+          "hanzi": "一飞让我来接你们。",
+          "pinyin": "Yīfēi ràng wǒ lái jiē nǐmen.",
+          "en": "Yifei asked me to come pick you up.",
+          "audio": "assets/display/audio/rang_e1.mp3"
+        },
+        {
+          "id": "e2",
+          "hanzi": "妈妈不让我看电视。",
+          "pinyin": "Māma bú ràng wǒ kàn diànshì.",
+          "en": "Mom doesn’t allow me to watch TV.",
+          "audio": "assets/display/audio/rang_e2.mp3"
+        }
+      ],
+      "showPinyin": true,
+      "showEnglish": true
+    },
+    {
+      "index": 9,
+      "type": "exercise",
+      "title": "Practice!",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "match",
+          "pairs": [
+            {
+              "left": "assets/exercise/audio/1.1.mp3",
+              "right": "assets/exercise/img/img2.png"
+            },
+            {
+              "left": "assets/exercise/audio/1.2.mp3",
+              "right": "assets/exercise/img/img3.png"
+            },
+            {
+              "left": "assets/exercise/audio/1.3.mp3",
+              "right": "assets/exercise/img/img1.png"
+            },
+            {
+              "left": "assets/exercise/audio/1.4.mp3",
+              "right": "assets/exercise/img/img4.png"
+            }
+          ],
+          "pinyinMap": {},
+          "leftType": "audio",
+          "rightType": "image",
+          "direction": "vertical"
+        },
+        {
+          "id": "q2",
+          "type": "read",
+          "question": "谁来接百家乐了？",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "王一飞"
+            },
+            {
+              "id": "B",
+              "text": "王一雪"
+            },
+            {
+              "id": "C",
+              "text": "她的姐姐"
+            }
+          ],
+          "answer": "B",
+          "layout": "vertical"
+        },
+        {
+          "id": "q3",
+          "type": "read",
+          "question": "王一飞给谁打电话了？",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "安妮"
+            },
+            {
+              "id": "B",
+              "text": "白家月"
+            },
+            {
+              "id": "C",
+              "text": "王一雪"
+            }
+          ],
+          "answer": "C",
+          "layout": "vertical"
+        }
+      ],
+      "showPinyin": true,
+      "audio": "systemAssets/audio/exercise.mp3"
+    },
+    {
+      "index": 10,
       "type": "dialogue",
-      "title": "第 1 课",
-      "subtitle": "情景对话",
-      "audio": "dialogue/d1.mp3",
-      "sceneImage": "img/dialogue/bg.png",
+      "title": "课文 dialogue",
+      "audio": "systemAssets/audio/dialogue.mp3",
+      "sceneImage": "assets/dialogue/img/bg.png",
       "speakers": [
         {
           "id": "A",
-          "name": "老师",
-          "pinyin": "lǎo shī",
-          "avatar": "img/dialogue/dialogue_avator1.png"
+          "name": "图书管理员",
+          "pinyin": "tú shū guǎn lǐ yuán",
+          "avatar": "assets/dialogue/img/dialogue_avator1.png"
         },
         {
           "id": "B",
           "name": "学生",
           "pinyin": "xué shēng",
-          "avatar": "img/dialogue/dialogue_avator1.png"
+          "avatar": "assets/dialogue/img/dialogue_avator1.png"
         }
       ],
       "showPinyin": true,
@@ -243,40 +399,186 @@
           "speaker": "A",
           "start": 0,
           "end": 3,
-          "hanzi": "你好！",
-          "pinyin": "nǐ hǎo",
-          "en": "Hello!",
-          "vocab": []
+          "hanzi": "你好！请问有什么可以帮你的？",
+          "pinyin": "nǐ hǎo, qǐng wèn yǒu shén me kě yǐ bāng nǐ de",
+          "en": "Hello! How can I help you?"
         },
         {
           "speaker": "B",
           "start": 3,
-          "end": 6,
-          "hanzi": "你好！请问，你叫什么名字？",
-          "pinyin": "nǐ hǎo, qǐng wèn, nǐ jiào shén me míng zi",
-          "en": "Hello, what's your name?",
-          "vocab": []
+          "end": 8,
+          "hanzi": "你好！我想借这本书。请问可以借多久？",
+          "pinyin": "nǐ hǎo, wǒ xiǎng jiè zhè běn shū. qǐng wèn kě yǐ jiè duō jiǔ",
+          "en": "Hello! I'd like to borrow this book. How long can I keep it?"
         },
         {
           "speaker": "A",
-          "start": 6,
-          "end": 10,
-          "hanzi": "我叫小明。你呢？",
-          "pinyin": "wǒ jiào xiǎo míng. nǐ ne",
-          "en": "I'm Xiaoming. And you?",
-          "vocab": ["我", "你呢"]
+          "start": 8,
+          "end": 12,
+          "hanzi": "可以借一个月。请问你有图书证吗？",
+          "pinyin": "kě yǐ jiè yí gè yuè. qǐng wèn nǐ yǒu tú shū zhèng ma",
+          "en": "You can borrow it for one month. Do you have a library card?"
         },
         {
           "speaker": "B",
-          "start": 10,
-          "end": 14,
-          "hanzi": "我叫小红。很高兴认识你！",
-          "pinyin": "wǒ jiào xiǎo hóng. hěn gāo xìng rèn shi nǐ",
-          "en": "I'm Xiaohong. Nice to meet you!",
-          "vocab": []
+          "start": 12,
+          "end": 16,
+          "hanzi": "有的，这是我的图书证。谢谢！",
+          "pinyin": "yǒu de, zhè shì wǒ de tú shū zhèng. xiè xiè",
+          "en": "Yes, here is my library card. Thank you!"
         }
       ],
-      "vocabList": []
+      "vocabList": [],
+      "showText": true,
+      "dialogueAudio": "assets/dialogue/audio/d1.mp3"
+    },
+    {
+      "index": 11,
+      "type": "content",
+      "title": "第 7 页",
+      "audio": "assets/ppt/audio/ppt_3.mp3",
+      "subtitles": [
+        {
+          "at": 0.1,
+          "text": "The modal particle “吧” is used at the end of a question to express a tone of conjecture or estimation."
+        },
+        {
+          "at": 8,
+          "text": "Basically, when you use “吧” in a question, you are making a guess that you are fairly confident about, and you are asking the other person to confirm it."
+        },
+        {
+          "at": 18,
+          "text": "Here are some examples:你们就是她的学生吧？她唱歌很好听吧？"
+        }
+      ],
+      "spotlights": [
+        {
+          "elementId": "zone-1",
+          "at": 0.1,
+          "duration": 8
+        },
+        {
+          "elementId": "zone-2",
+          "at": 18,
+          "duration": 6.2
+        }
+      ],
+      "spotlightZones": [
+        {
+          "elementId": "zone-1",
+          "x": 40.3,
+          "y": 18.3,
+          "w": 58.6,
+          "h": 34.8
+        },
+        {
+          "elementId": "zone-2",
+          "x": 43.1,
+          "y": 51.3,
+          "w": 53.2,
+          "h": 45.3
+        }
+      ],
+      "backgroundImage": "assets/ppt/img/ppt_3.PNG"
+    },
+    {
+      "index": 12,
+      "type": "exercise",
+      "title": "Quiz Time!",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "fill",
+          "sharedOptions": [
+            "就",
+            "给",
+            "让",
+            "接"
+          ],
+          "questions": [
+            {
+              "id": "q1-1",
+              "question": "上课的时候，老师不_____睡觉。",
+              "answer": [
+                "让"
+              ]
+            },
+            {
+              "id": "q1-2",
+              "question": "你们_____是她的学生吧？",
+              "answer": [
+                "就"
+              ]
+            },
+            {
+              "id": "q1-3",
+              "question": "爸爸没_____我打电话。",
+              "answer": [
+                "给"
+              ]
+            },
+            {
+              "id": "q1-4",
+              "question": "你几点到机场？我去_____你。",
+              "answer": [
+                "接"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "q2",
+          "type": "arrange",
+          "words": [
+            "你",
+            "没",
+            "吃",
+            "早饭",
+            "吧"
+          ],
+          "answer": [
+            "你",
+            "没",
+            "吃",
+            "早饭",
+            "吧"
+          ],
+          "pinyinMap": {
+            "你": "nǐ",
+            "没": "méi",
+            "吃": "chī",
+            "早饭": "zǎofàn",
+            "吧": "ba"
+          }
+        },
+        {
+          "id": "q3",
+          "type": "arrange",
+          "words": [
+            "她",
+            "唱歌",
+            "很",
+            "好听",
+            "吧"
+          ],
+          "answer": [
+            "她",
+            "唱歌",
+            "很",
+            "好听",
+            "吧"
+          ],
+          "pinyinMap": {
+            "她": "tā",
+            "唱歌": "chànggē",
+            "很": "hěn",
+            "好听": "hǎotīng",
+            "吧": "ba"
+          }
+        }
+      ],
+      "showPinyin": true,
+      "audio": "systemAssets/audio/exercise.mp3"
     }
   ]
 }

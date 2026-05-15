@@ -15,6 +15,8 @@
   --green-soft:  rgba(34, 168, 110, 0.12);
   --red:        #e05555;
   --orange:    #f39a32;
+  --yellow:    #d4a017;
+  --yellow-soft: rgba(212, 160, 23, 0.1);
   --shadow:    0 28px 60px rgba(32, 55, 102, 0.08);
   --radius:    26px;
 }

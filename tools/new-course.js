@@ -45,7 +45,6 @@ function main() {
 
   const courseDir   = path.join(ROOT, 'courses', courseId);
   const slidesDir   = path.join(courseDir, 'slides');
-  const audioDir    = path.join(courseDir, 'audio');
   
   if (fs.existsSync(courseDir)) {
     console.error(`错误: 课程 ${courseId} 已存在`);
@@ -53,13 +52,14 @@ function main() {
   }
 
   // Create directories
-  fs.mkdirSync(slidesDir,   { recursive: true });
-  fs.mkdirSync(audioDir,    { recursive: true });
-  fs.mkdirSync(path.join(audioDir, 'narration'), { recursive: true });
-  fs.mkdirSync(path.join(audioDir, 'vocab'),     { recursive: true });
-  fs.mkdirSync(path.join(audioDir, 'exercise'),  { recursive: true });
-  fs.mkdirSync(path.join(audioDir, 'video'),     { recursive: true });
-  fs.mkdirSync(path.join(courseDir, 'pptimg'), { recursive: true });
+  fs.mkdirSync(slidesDir, { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'ppt', 'audio'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'ppt', 'img'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'vocab'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'vedio'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'exercise'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'dialogue', 'audio'), { recursive: true });
+  fs.mkdirSync(path.join(courseDir, 'assets', 'dialogue', 'img'), { recursive: true });
 
   // course.json
   const courseJson = {

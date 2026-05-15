@@ -483,9 +483,9 @@ body {
 .inline-edit:hover { border-color: #ddd; }
 .inline-edit:focus { outline: none; border-color: #4fc3f7; background: #fff; }
 
-/* ── Reorder handles ─────────────────────────── */
-.drag-handle { cursor: grab; color: #ccc; font-size: 1rem; }
-.drag-handle:active { cursor: grabbing; }
+/* ── Move buttons ─────────────────────────── */
+.btn-move-up:disabled,
+.btn-move-down:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
 /* ── Loading ─────────────────────────────── */
 .loading { text-align: center; padding: 40px; color: #aaa; }

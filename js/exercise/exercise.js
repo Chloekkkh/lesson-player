@@ -21,7 +21,7 @@ function postToParent(action, payload) {
 }
 
 /* ── 音效初始化（自动） ─────────────────────────────────── */
-Sound.init('/audio/system/');
+Sound.init('/systemAssets/audio/');
 
 /* ── 类型处理器映射表 ────────────────────────────────────── */
 var TypeHandlers = {};

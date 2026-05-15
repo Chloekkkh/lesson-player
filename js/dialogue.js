@@ -26,6 +26,10 @@ var totalLines = 0;
 // ── 入口 ────────────────────────────────────────────────
 window.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'slideData') init(e.data.data);
+  if (e.data && e.data.type === 'stopAudio') {
+    audio.pause();
+    rpAudio.pause();
+  }
 });
 
 function init(data) {
@@ -47,8 +51,10 @@ function init(data) {
   totalLines = data.lines ? data.lines.length : 0;
 
   // ── 渲染左侧控制面板 ──────────────────────────────────
-  var themeEl = document.getElementById('ctrlTheme');
-  if (themeEl) themeEl.textContent = data.title || '情景对话';
+  var titleEl = document.getElementById('ctrlTitle');
+  if (titleEl) titleEl.textContent = data.title || '';
+  var subtitleEl = document.getElementById('ctrlSubtitle');
+  if (subtitleEl) subtitleEl.textContent = data.subtitle || '';
 
   document.getElementById('pinyinToggle').checked = showPinyin;
   document.getElementById('englishToggle').checked = showEnglish;
@@ -100,20 +106,33 @@ function init(data) {
 
   applyVisibility();
 
-// 默认锁定课文 — 听完音频后才解锁
-  document.getElementById('textSection').classList.add('locked');
-  var enterBtn = document.getElementById('enterPracticeBtn');
-  if (enterBtn) enterBtn.disabled = true;
-  var textLabel = document.getElementById('textToggleLabel');
-  if (textLabel) textLabel.textContent = '显示课文内容';
+  // 默认锁定课文 — 听完音频后才解锁（但已听过则跳过）
+  var listenedKey = 'dlg-listened-' + data.courseId + '-' + data.index;
+  if (!sessionStorage.getItem(listenedKey)) {
+    document.getElementById('textSection').classList.add('locked');
+    var enterBtn = document.getElementById('enterPracticeBtn');
+    if (enterBtn) enterBtn.disabled = true;
+    var textToggle = document.getElementById('textToggle');
+    if (textToggle) textToggle.disabled = true;
+    var textLabel = document.getElementById('textToggleLabel');
+    if (textLabel) textLabel.textContent = 'Show transcript';
+  } else {
+    // 已听过：保持解锁状态
+    var enterBtn2 = document.getElementById('enterPracticeBtn');
+    if (enterBtn2) enterBtn2.disabled = false;
+    var textToggle2 = document.getElementById('textToggle');
+    if (textToggle2) textToggle2.disabled = false;
+  }
 
   // ── 音频设置 ──────────────────────────────────────────
-  audio.src = data.audioBase + data.audio;
+  audio.src = data.audioBase + (data.dialogueAudio || data.audio || '');
   audio.playbackRate = 1.0;
 
-  // 如果有逐句音频则设置
+  // 如果有逐句音频则设置，否则清除旧 src
   if (data.rolePlay && data.rolePlay.dialogueAudio) {
     rpAudio.src = data.audioBase + data.rolePlay.dialogueAudio;
+  } else {
+    rpAudio.src = '';
   }
 
   // ── 事件绑定 ──────────────────────────────────────────
@@ -166,8 +185,13 @@ function bindAudioEvents(data) {
     isTextFocused = true;
     var enterBtn = document.getElementById('enterPracticeBtn');
     if (enterBtn) enterBtn.disabled = false;
+    var textToggle = document.getElementById('textToggle');
+    if (textToggle) textToggle.disabled = false;
     var textLabel = document.getElementById('textToggleLabel');
-    if (textLabel) textLabel.textContent = '隐藏课文内容';
+    if (textLabel) textLabel.textContent = 'Hide transcript';
+    // 记住已听过，下次进入直接解锁
+    var listenedKey = 'dlg-listened-' + data.courseId + '-' + data.index;
+    sessionStorage.setItem(listenedKey, '1');
     parent.postMessage({ type: 'playerMessage', action: 'displayComplete' }, '*');
   });
 
@@ -291,7 +315,7 @@ function bindToolbar(data) {
     if (textSection && textSection.classList.contains('locked')) return;
     isTextFocused = !isTextFocused;
     sceneCard.classList.toggle('focus-mode', isTextFocused);
-    if (textLabel) textLabel.textContent = isTextFocused ? '显示课文内容' : '隐藏课文内容';
+    if (textLabel) textLabel.textContent = isTextFocused ? 'Show transcript' : 'Hide transcript';
   };
 
   // 进入对话练习
@@ -365,7 +389,8 @@ function showPracticeStage(stage) {
 }
 
 function clearChat() {
-  document.getElementById('chatContainer').innerHTML = '';
+  var container = document.getElementById('chatContainer');
+  if (container) container.innerHTML = '';
 }
 
 function bindPracticeEvents(data) {
@@ -505,41 +530,66 @@ function addChatBubble(line, isMy, data) {
 }
 
 function playLineAudio(line, data, onEnd) {
-  // 如果有逐句音频文件，播放对应段落；否则用主音频seek
-  if (rpAudio.src) {
-    rpAudio.currentTime = line.start;
-    rpAudio.play();
-    var checkEnd = setInterval(function() {
-      if (rpAudio.currentTime >= line.end - 0.05) {
-        clearInterval(checkEnd);
-        rpAudio.pause();
-        if (onEnd) onEnd();
-      }
-    }, 100);
-  } else {
-    // 用主音频 seek 到 line.start 播放
-    audio.currentTime = line.start;
-    audio.play();
-    var checkEnd = setInterval(function() {
-      if (audio.currentTime >= line.end - 0.05) {
-        clearInterval(checkEnd);
-        audio.pause();
-        if (onEnd) onEnd();
-      }
-    }, 100);
+  // 全局 audio 已加载完成，单次 seek + play 即可
+  var target = audio;
+
+  function doPlay(targetEl) {
+    targetEl.currentTime = line.start;
+    var playPromise = targetEl.play();
+    if (playPromise) {
+      playPromise.then(function() {
+        var timer = setInterval(function() {
+          if (targetEl.currentTime >= line.end - 0.05) {
+            clearInterval(timer);
+            targetEl.pause();
+            if (onEnd) onEnd();
+          }
+        }, 100);
+        setTimeout(function() {
+          clearInterval(timer);
+          if (onEnd) onEnd();
+        }, 30000);
+      }).catch(function(err) {
+        console.warn('playLineAudio play() rejected:', err && err.name, err && err.message);
+        var doneBtn = document.getElementById('rpActionDone');
+        if (doneBtn) {
+          doneBtn.style.display = 'inline-block';
+          doneBtn.disabled = false;
+          doneBtn.textContent = 'Next ▶';
+        }
+      });
+    }
   }
+
+  doPlay(target);
 }
 
 function onUserReadDone(data) {
-  // 用户点击"我读完了" → 进入下一句
   rpAudio.pause();
   audio.pause();
 
-  if (rpIndex < totalLines - 1) {
-    rpIndex++;
-    playRpLine(data);
+  function advance() {
+    if (rpIndex < totalLines - 1) {
+      rpIndex++;
+      playRpLine(data);
+    } else {
+      onAllLinesComplete(data);
+    }
+  }
+
+  // 等 MediaRecorder 完全停止、麦克风释放后再播放音频
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    var prevOnStop = mediaRecorder.onstop;
+    mediaRecorder.onstop = function(e) {
+      if (prevOnStop) prevOnStop.call(this, e);
+      advance();
+    };
+    if (isRecording) {
+      isRecording = false;
+      mediaRecorder.stop();
+    }
   } else {
-    onAllLinesComplete(data);
+    advance();
   }
 }
 
@@ -572,6 +622,13 @@ function clearRecordingState() {
 }
 
 function showRecordUI(line) {
+  // 停止任何活跃录音，避免 MediaRecorder 泄漏
+  if (mediaRecorder && isRecording) {
+    isRecording = false;
+    mediaRecorder.stop();
+  }
+  mediaRecorder = null;
+
   // 显示录音提示和区域，隐藏"我读完了"
   var hint = document.getElementById('rpRecordHint');
   var area = document.getElementById('rpRecordArea');
@@ -596,10 +653,20 @@ function showRecordUI(line) {
 }
 
 function startRecording() {
-  // 防止重复点击
+  // 防止重复点击 — 同步设置标志，避免快速按下-释放绕过状态机
   if (isRecording) return;
+  isRecording = true;
 
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+  var getMedia = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices))
+      || (navigator.getUserMedia && navigator.getUserMedia.bind(navigator));
+  if (!getMedia) {
+    console.warn('Microphone API not available');
+    isRecording = false;
+    var doneBtn = document.getElementById('rpActionDone');
+    if (doneBtn) { doneBtn.style.display = 'inline-block'; doneBtn.disabled = false; }
+    return;
+  }
+  getMedia({ audio: true }).then(function(stream) {
     audioChunks = [];
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = function(e) {
@@ -619,11 +686,11 @@ function startRecording() {
       stream.getTracks().forEach(function(t) { t.stop(); });
     };
     mediaRecorder.start();
-    isRecording = true;
     var recBtn = document.getElementById('recordBtn');
     if (recBtn) recBtn.classList.add('recording');
   }).catch(function(err) {
     console.warn('录音权限被拒绝:', err);
+    isRecording = false;
     // 即使没权限，也让用户点"我读完了"
     var doneBtn = document.getElementById('rpActionDone');
     if (doneBtn) {

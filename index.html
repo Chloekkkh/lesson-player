@@ -184,17 +184,24 @@
   const errorEl = document.getElementById('error');
 
   const COURSE_ORDER = [
-    'lesson-thanks',
+    '1',
+    'hsk2_1_1',
     // 新课程请按顺序添加到这里（自动排序显示）
   ];
 
   const ICONS = ['📖','💬','🏠','🍜','🚌','🛒','👨‍⚕️','🏥','📅','🎉','✈️','🎓','👔','💰','🎯'];
 
   async function getCourses() {
-    const res = await fetch('/api/courses');
-    if (!res.ok) return [];
-    const courses = await res.json();
-    return courses.map(c => c.id);
+    try {
+      const res = await fetch('/api/courses');
+      if (res.ok) {
+        const courses = await res.json();
+        const ids = courses.map(c => c.id);
+        const merged = new Set([...COURSE_ORDER, ...ids]);
+        return [...merged];
+      }
+    } catch (e) { /* 静态部署无 API，回退到 COURSE_ORDER */ }
+    return COURSE_ORDER.length > 0 ? COURSE_ORDER : [];
   }
 
   async function loadCourse(id) {
@@ -269,5 +276,26 @@
   init();
 })();
 </script>
+<!-- 测试 -->
+
+<style>
+  #dify-chatbot-bubble-button {
+    background-color: #1C64F2 !important;
+  }
+  #dify-chatbot-bubble-window {
+    width: 24rem !important;
+    height: 40rem !important;
+  }
+</style>
+
+<style>
+  #dify-chatbot-bubble-button {
+    background-color: #1C64F2 !important;
+  }
+  #dify-chatbot-bubble-window {
+    width: 24rem !important;
+    height: 40rem !important;
+  }
+</style>
 </body>
 </html>

@@ -13,7 +13,7 @@ var Sound = {
    * @param {string} basePath  音效文件目录，默认 /audio/
    */
   init: function(basePath) {
-    basePath = basePath || '/audio/system/';
+    basePath = basePath || '/systemAssets/audio/';
     ['correct', 'wrong', 'complete'].forEach(function(name) {
       var audio = new Audio();
       audio.src = basePath + name + '.wav';

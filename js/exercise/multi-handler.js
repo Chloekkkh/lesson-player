@@ -152,13 +152,7 @@ MultiQuestionHandler.prototype = {
     if (englishToggle) this._config.showEnglish = englishToggle.checked;
 
     // 统一传单题 config：multi-handler 控制所有题间的导航
-    var configForHandler = {
-      questions: [question],
-      type:        question.type,
-      audioBase:  this._config.audioBase,
-      showHint:   this._config.showHint,
-      showPinyin: this._config.showPinyin
-    };
+    var configForHandler = this._buildSingleQuestionConfig(this._config, idx);
 
     // 每道题新建 handler 实例（单题单例），不复用
     var handler = this._createHandler(question);
@@ -170,6 +164,15 @@ MultiQuestionHandler.prototype = {
       onComplete: function(data) { self._onQuestionComplete(idx, data); },
       onError:    function(msg)  { self._onError(msg); }
     });
+
+    // fill 类型：全局 Submit 按钮 → 调用 fill._submitAll
+    if (question.type === 'fill') {
+      var submitBtn = document.getElementById('submitBtn');
+      var fillH = window._fillHandler;
+      if (submitBtn && fillH) {
+        submitBtn.onclick = function() { fillH._submitAll(); };
+      }
+    }
 
     this._updateNavButtons();
   },
@@ -199,12 +202,18 @@ MultiQuestionHandler.prototype = {
 
   /* ── 为 arrange/match/fill 构造单题 config ─────────────── */
   _buildSingleQuestionConfig: function(fullConfig, idx) {
+    var question = fullConfig.questions[idx];
     return {
-      questions: [fullConfig.questions[idx]],
-      // 透传其他字段（audioBase、showHint 等）
-      type:       fullConfig.type,
-      audioBase:  fullConfig.audioBase,
-      showHint:   fullConfig.showHint
+      questions: [question],
+      // 透传其他字段（audioBase、imgBase、showHint、sharedOptions 等）
+      type:         question.type,
+      audioBase:   fullConfig.audioBase,
+      imgBase:     fullConfig.imgBase,
+      showHint:    fullConfig.showHint,
+      // fill 类型的 sharedOptions 在 question 自身，其余从 fullConfig 取
+      sharedOptions: (question && question.type === 'fill')
+        ? (question.sharedOptions || [])
+        : (fullConfig.sharedOptions || [])
     };
   },
 
@@ -229,10 +238,25 @@ MultiQuestionHandler.prototype = {
     Progress.setProgress(this._completed, this._total);
 
     if (this._completed >= this._total) {
-      this._renderStats();
-      Celebration.show('full');
-      this._callbacks.onAllComplete({ correct: true });
+      // 最后一题答对：显示 Finish 按钮，等学生点击后再显示统计页
+      this._renderFinishButton();
     }
+  },
+
+  /* ── 显示 Finish 按钮（最后一题答对后） ─────────────────── */
+  _renderFinishButton: function() {
+    var submitBtn = document.getElementById('submitBtn');
+    if (!submitBtn) return;
+    var self = this;
+    submitBtn.style.display = '';
+    submitBtn.textContent = 'Finish';
+    submitBtn.className = 'submit-btn finish-btn enabled';
+    submitBtn.disabled = false;
+    submitBtn.onclick = function() {
+      submitBtn.style.display = 'none';
+      self._renderStats();
+      Celebration.show('full');
+    };
   },
 
   /* ── 渲染统计结果页 ─────────────────────────────────── */

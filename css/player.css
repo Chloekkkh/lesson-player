@@ -418,22 +418,16 @@
 .assistant.dragging { cursor: grabbing; }
 
 .assistant-avatar {
-  position: relative;
   width: 60px;
   height: 60px;
-  right: 0px;
   border-radius: 50%;
-  background: var(--blue);
-  color: #fff;
-  font-size: 1.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow: 0 4px 12px rgba(74, 130, 239, 0.4);
+  background: #fff;
   flex-shrink: 0;
   border: 3px solid #fff;
   transition: opacity 0.2s, transform 0.2s;
   cursor: pointer;
+  object-fit: cover;
 }
 .assistant-avatar.muted {
   opacity: 0.35;
@@ -443,7 +437,7 @@
 .assistant-bubble {
   position: absolute;
   right: 70px;
-  bottom: 0px;
+  bottom: 5px;
   top: auto;
   background: #fff;
   border-radius: 16px 16px 4px 16px;

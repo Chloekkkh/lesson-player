@@ -168,7 +168,7 @@ function videoTemplate(slideNum, courseTitle) {
       if (!msg) return;
       if (msg.type === 'slideData') {
         if (msg.data.video) {
-          videoEl.src = '/courses/' + msg.data.courseId + '/audio/' + msg.data.video;
+          videoEl.src = '/courses/' + msg.data.courseId + '/' + msg.data.video;
           videoEl.play();
         }
       }
@@ -355,12 +355,6 @@ function dialogueTemplate(slideNum, courseTitle) {
             </div>
           </div>
         </div>
-        <div class="speed-slider-wrap">
-          <span class="speed-label">0.8x</span>
-          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
-          <span class="speed-label">1.4x</span>
-          <span class="speed-current" id="speedCurrent">1.0x</span>
-        </div>
         <button class="ctrl-text-toggle" id="textToggle">
           <span id="textToggleLabel">显示课文内容</span>
         </button>
@@ -368,7 +362,13 @@ function dialogueTemplate(slideNum, courseTitle) {
 
       <!-- 卡片2：工具栏 -->
       <div class="tool-card">
-        <div class="lang-toggles">
+        <div class="speed-slider-wrap">
+          <span class="speed-label">0.8x</span>
+          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
+          <span class="speed-label">1.4x</span>
+          <span class="speed-current" id="speedCurrent">1.0x</span>
+        </div>
+        <div class="lang-row">
           <label class="toggle-switch">
             <input type="checkbox" id="pinyinToggle" checked>
             <span class="toggle-slider"></span>
@@ -636,8 +636,9 @@ function buildSlideEntry(slideType, exerciseType, slideNum) {
       entry.stars = { '3': 0.85, '2': 0.6, '1': 0.3 };
     } else if (exerciseType === 'fill') {
       entry.questions = [
-        { type: 'fill', question: '请填空', answer: '答案' }
+        { type: 'fill', question: '请填空 _____', answer: '答案' }
       ];
+      entry.sharedOptions = [];
     } else {
       // 旧题型兼容
       entry.question = '请在此输入题目';

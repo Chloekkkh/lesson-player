@@ -1,142 +1,182 @@
 /* ============================================================
-   vocab.css — 词汇学习页面样式
-   被 vocab 类型 slide HTML 引用
+   vocab.css — 词汇学习页面样式（水平活页词表版）
    ============================================================ */
 
-/* ── CSS VARIABLES ─────────────────────────────────────── */
 :root {
   --green:       #22a86e;
   --green-deep:  #1b8a5a;
   --green-soft:  rgba(34, 168, 110, 0.10);
-  --green-light: #e8f7f0;
+  --hanzi-color: #1e293b;
+  --pinyin-color: #22a86e;
+  --pos-bg:      #22a86e;
+  --en-color:    #64748b;
+  --divider:     rgba(0,0,0,0.08);
+  --line:        rgba(0,0,0,0.10);
 }
 
-/* ── VOCAB CARD (container) ─────────────────────────────── */
+/* ── VOCAB CARD ─────────────────────────────────────────── */
 .vocab-card {
   background: #fff;
   border-radius: 24px;
-  padding: 45px 40px 28px;
+  padding: 40px 36px 28px;
   width: 100%;
   height: 100%;
   box-shadow: 0 12px 48px rgba(34, 168, 110, 0.10);
-  text-align: center;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: flex-start;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
-  gap: 0;
 }
 
-/* ── VOCAB GRID ──────────────────────────────────────────── */
+/* ── VOCAB GRID — 单列纵向列表 ──────────────────────────── */
 .vocab-grid {
-  display: grid;
-  height: calc(100vh - 120px);
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  gap: 0px;
+  padding: 10px 180px 0;
 }
+
+/* ── VOCAB ITEM — 水平行（Grid 5列对齐） ─────────────────── */
 .vocab-item {
-  background: var(--green-soft);
-  border-radius: 16px;
-  height: max-content;
-  padding: 20px 16px;
-  text-align: center;
-  border: 2px solid transparent;
-  transition: border-color 0.2s, transform 0.15s;
-  cursor: default;
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 72px 100px auto 1fr 109px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-bottom: 1px dashed var(--divider);
+  cursor: pointer;
+  transition: background 0.15s;
+  min-height: 60px;
 }
-.vocab-item:hover { border-color: var(--green); transform: translateY(-2px); }
+.vocab-item:last-child { border-bottom: none; }
+.vocab-item:hover { background: var(--green-soft); }
+.vocab-item:hover .vocab-actions { opacity: 1; }
+
+/* 汉字 */
 .vocab-hanzi {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 6px;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--hanzi-color);
+  min-width: 72px;
+  text-align: left;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
 }
-.vocab-meta { margin-bottom: 8px; }
+
+/* ── 拼音 / 词性 并排横向区 ─────────────────────────────── */
+.vocab-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .vocab-pinyin {
-  font-size: 1.2rem;
-  color: var(--body);
-  margin-bottom: 4px;
+  font-size: 1.05rem;
+  color: var(--pinyin-color);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  min-width: 100px;
+  white-space: nowrap;
 }
+
 .vocab-pos {
-  font-size: 1.1rem;
-  color: var(--green);
-  margin-bottom: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--pos-bg);
+  padding: 2px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  align-self: center;
 }
+
+/* 英文 */
 .vocab-en {
   font-size: 1rem;
-  color: var(--body);
+  color: var(--en-color);
+  line-height: normal;
+  text-align: left;
+  flex: 1;
 }
+
+/* ── 操作按钮（右侧） ──────────────────────────────────── */
 .vocab-actions {
   display: flex;
-  gap: 8px;
-  justify-content: center;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+  align-items: center;
 }
+
 .vocab-audio-btn,
 .vocab-rec-btn {
-  width: 36px; height: 36px;
+  width: 34px; height: 34px;
   border-radius: 50%;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   display: flex; align-items: center; justify-content: center;
-  transition: transform 0.15s;
+  transition: transform 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
-.vocab-audio-btn {
-  background: var(--green);
-  color: #fff;
-}
+.vocab-audio-btn { background: var(--green); color: #fff; }
 .vocab-audio-btn:hover { transform: scale(1.1); }
-.vocab-rec-btn {
-  background: var(--red, #e55);
-  color: #fff;
-}
+.vocab-rec-btn { background: #e55; color: #fff; }
 .vocab-rec-btn:hover { transform: scale(1.1); }
-.vocab-rec-btn.recording {
-  background: var(--red);
-  animation: rec-blink 1s infinite;
-}
+.vocab-rec-btn.recording { background: #c00; animation: rec-blink 1s infinite; }
+
 @keyframes rec-blink {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.5; }
 }
 
-/* ── VOCAB CONTROLS ──────────────────────────────────────── */
+/* ── 控制开关（右上角） ────────────────────────────────── */
 .vocab-controls {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   position: absolute;
   top: 0;
   right: 0;
   padding: 16px;
 }
 .ctrl-btn {
-  padding: 8px 20px;
-  border: 2px solid var(--line);
+  padding: 7px 18px;
+  border: 1.5px solid var(--line);
   border-radius: 50px;
   background: #fff;
-  font-size: 0.9rem;
-  color: var(--body);
+  font-size: 0.85rem;
+  color: var(--en-color);
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 .ctrl-btn.active {
   border-color: var(--green);
   color: var(--green);
   background: var(--green-soft);
 }
+
+/* ── 底部按钮 ─────────────────────────────────────────── */
+.vocab-next-row {
+  display: flex;
+  justify-content: center;
+  padding-top: 18px;
+}
 .vocab-next-btn {
   display: block;
   margin: 0 auto;
-  padding: 14px 48px;
+  padding: 13px 44px;
   background: var(--green);
   color: #fff;
   border: none;
   border-radius: 50px;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-family: inherit;
   cursor: pointer;
   transition: box-shadow 0.2s, transform 0.15s;

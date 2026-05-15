@@ -1,8 +1,6 @@
 /* ============================================================
-   fill.js — 填空题
-   支持两种模式：
-   - options 有值：选词填空（词卡点击选择）
-   - options 为空：自由输入（原有行为）
+   fill.js — 选词填空题（多题版）
+   N道题，M个共享选项词池，点击空格激活后选词填入
    ============================================================ */
 
 'use strict';
@@ -12,207 +10,253 @@ registerType('fill', FillHandler);
 function FillHandler() {}
 
 FillHandler.prototype = {
-  _config:     null,
-  _callbacks:  null,
-  _q:          null,
-  _submitted:  false,
-  _selectedOpt: null,   // 选词模式下选中的词
+  _config:         null,
+  _callbacks:      null,
+  _questions:      [],
+  _sharedOptions:  [],
+  _filled:         {},       // questionIdx → [answers]
+  _activeSlot:     null,    // { qIdx, slotIdx }
+  _submitted:      false,
+  _slotCounts:     {},
 
   /* ── init ─────────────────────────────────────────────── */
   init: function(config, callbacks) {
     this._config    = config;
     this._callbacks = callbacks;
-    this._q        = config.questions[0] || null;
+    this._questions = (config.questions && config.questions[0] && config.questions[0].type === 'fill' && config.questions[0].questions)
+      ? config.questions[0].questions
+      : (config.questions || []);
+    this._sharedOptions = config.sharedOptions || [];
+    this._filled    = {};
+    this._activeSlot = null;
     this._submitted = false;
-    this._selectedOpt = null;
+    this._slotCounts = {};
+    window._fillHandler = this;   // 供 slot 点击事件访问
     this._render();
   },
 
   /* ── 渲染 ─────────────────────────────────────────────── */
   _render: function() {
-    var q = this._q;
-    if (!q) return;
-
+    var self = this;
     this._submitted = false;
-    this._selectedOpt = null;
+    this._filled   = {};
+    this._slotCounts = {};
 
     var area = document.getElementById('fillArea');
     if (!area) return;
     area.style.display = '';
     area.innerHTML = '';
 
-    var self = this;
-
-    if (q.options && q.options.length > 0) {
-      // ── 选词填空模式 ──────────────────────────────
-      area.innerHTML =
-        '<div class="question-text">' +
-        '<p class="question-main fill-blank-q">' + (q.question || '') + '</p>' +
-        '</div>' +
-        '<div class="fill-options-grid" id="fillOptions"></div>';
-
-      var grid = document.getElementById('fillOptions');
-      q.options.forEach(function(word) {
-        var card = document.createElement('button');
-        card.className = 'fill-opt-card';
-        card.textContent = word;
-        card.dataset.word = word;
-        card.addEventListener('click', function() { self._selectOpt(word, card); });
-        grid.appendChild(card);
-      });
-
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) {
-        submitBtn.className = 'submit-btn';
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submit';
-        submitBtn.style.display = '';
-        submitBtn.onclick = function() { self._submitWordChoice(); };
-      }
-    } else {
-      // ── 自由输入模式（原有行为）────────────────
-      area.innerHTML =
-        '<div class="question-text" id="questionText">' +
-        '<p class="question-main">' + (q.question || '') + '</p>' +
-        '</div>' +
-        '<div class="fill-input-wrap">' +
-        '<input type="text" class="fill-input" id="fillInput" placeholder="Type your answer">' +
-        '</div>';
-
-      var input = document.getElementById('fillInput');
-      if (input) {
-        input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') self._submitText();
-        });
-        input.addEventListener('input', function() {
-          var btn = document.getElementById('submitBtn');
-          if (btn) {
-            btn.disabled = !input.value.trim();
-            btn.classList.toggle('enabled', !!input.value.trim());
-          }
-        });
-        setTimeout(function() { input.focus(); }, 100);
-      }
-
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) {
-        submitBtn.className = 'submit-btn';
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submit';
-        submitBtn.style.display = '';
-        submitBtn.onclick = function() { self._submitText(); };
-      }
-    }
-  },
-
-  /* ── 选词 ─────────────────────────────────────────────── */
-  _selectOpt: function(word, card) {
-    if (this._submitted) return;
-    var prev = document.querySelector('.fill-opt-card.selected');
-    if (prev) prev.classList.remove('selected');
-    card.classList.add('selected');
-    this._selectedOpt = word;
     var submitBtn = document.getElementById('submitBtn');
     if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.classList.add('enabled');
+      submitBtn.style.display = '';
+      submitBtn.className = 'submit-btn';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submit';
     }
+
+    var optsHtml =
+      '<div class="fill-shared-options">' +
+        '<div class="fill-options-grid" id="fillOptionsGrid">';
+    this._sharedOptions.forEach(function(word) {
+      optsHtml += '<button class="fill-opt-card" data-word="' + word + '">' + word + '</button>';
+    });
+    optsHtml += '</div></div>';
+
+    var listHtml = '<div class="fill-blank-list" id="fillBlankList">';
+    this._questions.forEach(function(q, qIdx) {
+      listHtml +=
+        '<div class="fill-blank-item" id="fi-' + qIdx + '">' +
+          '<span class="fill-q-num">' + (qIdx + 1) + '.</span>' +
+          '<span class="fill-blank-q" id="fq-' + qIdx + '">' +
+            self._renderQuestion(q.question || '', qIdx) +
+          '</span>' +
+        '</div>';
+    });
+    listHtml += '</div>';
+
+    area.innerHTML = optsHtml + listHtml;
+
+    // 绑定选项卡点击
+    area.querySelectorAll('.fill-opt-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        self._selectOption(card.dataset.word, card);
+      });
+    });
+
+    // 默认激活第一题第一空
+    this._setActiveSlot(0, 0);
   },
 
-  /* ── 提交（选词模式）─────────────────────────────────── */
-  _submitWordChoice: function() {
-    if (this._submitted || !this._q) return;
-    if (!this._selectedOpt) return;
+  /* ── 将 question 文本中的占位符转为可点击空格 ──────── */
+  _renderQuestion: function(text, qIdx) {
+    var self = this;
+    return text.replace(/_____+/g, function() {
+      var idx = self._slotCounts[qIdx] || 0;
+      self._slotCounts[qIdx] = idx + 1;
+      var id = 'slot-' + qIdx + '-' + idx;
+      return '<span class="blank-slot" id="' + id + '" data-q="' + qIdx + '" data-si="' + idx + '">___</span>';
+    });
+  },
 
-    this._submitted = true;
-    var q = this._q;
-    var correct = this._selectedOpt === (q.answer || '').trim();
+  /* ── 激活空格 ─────────────────────────────────────────── */
+  _setActiveSlot: function(qIdx, slotIdx) {
+    document.querySelectorAll('.blank-slot.active').forEach(function(el) {
+      el.classList.remove('active');
+    });
+    var slot = document.getElementById('slot-' + qIdx + '-' + slotIdx);
+    if (slot) {
+      slot.classList.add('active');
+      slot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    this._activeSlot = { qIdx: qIdx, slotIdx: slotIdx };
+  },
 
-    Sound.play(correct ? 'correct' : 'wrong');
-    this._showWordChoiceResult(correct);
+  /* ── 点击选项词 ─────────────────────────────────────── */
+  _selectOption: function(word, card) {
+    if (this._submitted) return;
+    if (card.classList.contains('used')) return;
+    if (!this._activeSlot) return;
 
-    if (correct) {
-      this._callbacks.onDone({
-        selected: this._selectedOpt,
-        answer:   q.answer,
-        correct:  true
-      });
-      this._callbacks.onComplete({ correct: true });
-    } else {
-      // 选错：取消选中，允许重选
-      var card = document.querySelector('.fill-opt-card.selected');
-      if (card) card.classList.remove('selected');
-      this._selectedOpt = null;
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.classList.remove('enabled');
+    var qIdx  = this._activeSlot.qIdx;
+    var sIdx  = this._activeSlot.slotIdx;
+    var slot  = document.getElementById('slot-' + qIdx + '-' + sIdx);
+    if (!slot) return;
+
+    // 填词
+    slot.textContent = word;
+    slot.classList.remove('blank-slot', 'active');
+    slot.classList.add('filled-slot');
+
+    card.classList.add('used');
+
+    if (!this._filled[qIdx]) this._filled[qIdx] = [];
+    this._filled[qIdx][sIdx] = word;
+
+    // 找下一空
+    var total = this._slotCounts[qIdx] || 0;
+    var found = false;
+    for (var i = 0; i < total; i++) {
+      var s = document.getElementById('slot-' + qIdx + '-' + i);
+      if (s && s.classList.contains('blank-slot')) {
+        this._setActiveSlot(qIdx, i);
+        found = true;
+        break;
       }
-      this._submitted = false;
+    }
+    if (!found) {
+      // 本题填满，移至下一题第一空
+      var nextQ = qIdx + 1;
+      if (nextQ < this._questions.length) {
+        this._setActiveSlot(nextQ, 0);
+      } else {
+        this._activeSlot = null;
+      }
+    }
+
+    this._updateSubmitButton();
+  },
+
+  /* ── 激活空格（外部调用） ───────────────────────────── */
+  activateSlot: function(qIdx, slotIdx) {
+    if (this._submitted) return;
+    var slot = document.getElementById('slot-' + qIdx + '-' + slotIdx);
+    if (!slot || slot.classList.contains('filled-slot')) return;
+    this._setActiveSlot(qIdx, slotIdx);
+  },
+
+  /* ── 更新 Submit 按钮 ───────────────────────────────── */
+  _updateSubmitButton: function() {
+    var self = this;
+    var allDone = this._questions.every(function(q, qIdx) {
+      var total = self._slotCounts[qIdx] || 0;
+      var count = 0;
+      var arr = self._filled[qIdx] || [];
+      for (var i = 0; i < total; i++) {
+        if (arr[i]) count++;
+      }
+      return count === total;
+    });
+    var btn = document.getElementById('submitBtn');
+    if (btn) {
+      btn.disabled = !allDone;
+      btn.classList.toggle('enabled', allDone);
     }
   },
 
-  /* ── 显示对错样式（选词模式）────────────────────────── */
-  _showWordChoiceResult: function(correct) {
-    var selectedCard = document.querySelector('.fill-opt-card.selected');
-    var answerWord = (this._q.answer || '').trim();
-
-    if (correct) {
-      if (selectedCard) selectedCard.classList.add('opt-correct');
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) submitBtn.style.display = 'none';
-    } else {
-      if (selectedCard) selectedCard.classList.add('opt-wrong');
-      // 高亮正确答案
-      var allCards = document.querySelectorAll('.fill-opt-card');
-      allCards.forEach(function(c) {
-        if (c.dataset.word === answerWord) c.classList.add('opt-reveal');
-      });
-    }
-  },
-
-  /* ── 提交（输入模式）─────────────────────────────────── */
-  _submitText: function() {
-    if (this._submitted || !this._q) return;
-    var input = document.getElementById('fillInput');
-    if (!input) return;
-
-    var userAnswer = input.value.trim();
-    if (!userAnswer) return;
-
+  /* ── 提交 ───────────────────────────────────────────── */
+  _submitAll: function() {
+    if (this._submitted) return;
     this._submitted = true;
 
-    var q = this._q;
-    var correct = userAnswer === (q.answer || '').trim();
+    var self = this;
+    var allCorrect = true;
 
-    Sound.play(correct ? 'correct' : 'wrong');
-    this._showResult(input, correct);
+    this._questions.forEach(function(q, qIdx) {
+      var filled = self._filled[qIdx] || [];
+      var answers = Array.isArray(q.answer)
+        ? q.answer
+        : (q.answer || '').toString().trim().split(',').map(function(s) { return s.trim(); });
 
-    if (correct) {
-      this._callbacks.onDone({
-        selected: userAnswer,
-        answer:   q.answer,
-        correct:  true
+      answers.forEach(function(correctWord, si) {
+        var slot = document.getElementById('slot-' + qIdx + '-' + si);
+        if (!slot) return;
+        var userWord = (filled[si] || '').trim();
+        if (userWord === correctWord) {
+          slot.classList.add('opt-correct');
+        } else {
+          slot.classList.add('opt-wrong');
+          slot.title = 'Correct: ' + correctWord;
+          allCorrect = false;
+        }
       });
-      this._callbacks.onComplete({ correct: true });
-    } else {
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.classList.add('enabled');
-        submitBtn.textContent = 'Submit';
-      }
-      this._submitted = false;
-    }
-  },
+    });
 
-  /* ── 显示对错样式（输入模式）────────────────────────── */
-  _showResult: function(input, correct) {
-    input.classList.add(correct ? 'correct' : 'wrong');
-    if (correct) {
-      input.readOnly = true;
-      var submitBtn = document.getElementById('submitBtn');
-      if (submitBtn) submitBtn.style.display = 'none';
-    }
+    Sound.play(allCorrect ? 'correct' : 'wrong');
+
+    var btn = document.getElementById('submitBtn');
+    if (btn) btn.style.display = 'none';
+
+    this._callbacks.onDone({ correct: allCorrect });
+    this._callbacks.onComplete({ correct: allCorrect });
   }
 };
+
+/* ── slot 点击事件（委托到 document 级别）─────────────── */
+document.addEventListener('click', function(e) {
+  var h = window._fillHandler;
+  if (!h) return;
+
+  // 点击已填空格 → 退回选项池
+  var filledSlot = e.target.closest('.filled-slot');
+  if (filledSlot && !h._submitted) {
+    var qIdx = parseInt(filledSlot.dataset.q, 10);
+    var sIdx = parseInt(filledSlot.dataset.si, 10);
+    var word = filledSlot.textContent.trim();
+
+    // 恢复选项卡
+    var card = document.querySelector('.fill-opt-card[data-word="' + word + '"].used');
+    if (card) card.classList.remove('used');
+
+    // 清空 slot
+    filledSlot.textContent = '___';
+    filledSlot.classList.remove('filled-slot', 'opt-correct', 'opt-wrong');
+    filledSlot.classList.add('blank-slot');
+    filledSlot.title = '';
+
+    // 清除 filled 记录
+    if (h._filled[qIdx]) h._filled[qIdx][sIdx] = undefined;
+
+    h.activateSlot(qIdx, sIdx);
+    h._updateSubmitButton();
+    return;
+  }
+
+  // 点击空白格 → 激活
+  var blankSlot = e.target.closest('.blank-slot');
+  if (blankSlot) {
+    var qIdx2 = parseInt(blankSlot.dataset.q, 10);
+    var sIdx2 = parseInt(blankSlot.dataset.si, 10);
+    h.activateSlot(qIdx2, sIdx2);
+  }
+});

@@ -137,11 +137,13 @@ function handleApi(req, res, urlPath) {
 
       // 创建课程目录结构
       fs.mkdirSync(path.join(courseDir, 'slides'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'audio', 'narration'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'audio', 'vocab'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'audio', 'video'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'audio', 'exercises'), { recursive: true });
-      fs.mkdirSync(path.join(courseDir, 'pptimg'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'ppt', 'audio'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'ppt', 'img'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'vocab'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'vedio'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'exercise'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'dialogue', 'audio'), { recursive: true });
+      fs.mkdirSync(path.join(courseDir, 'assets', 'dialogue', 'img'), { recursive: true });
 
       const courseJson = {
         id, title: title || id, description: description || '',
@@ -248,6 +250,46 @@ function handleApi(req, res, urlPath) {
     return;
   }
 
+  /* ═══ POST /api/courses/:id/slides/reorder — 重排幻灯片顺序 ══ */
+  if (m === 'POST' && rest === '/slides/reorder') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      let data;
+      try { data = JSON.parse(body); } catch (e) { return error(res, 'Invalid JSON'); }
+      const { fromIndex, toIndex } = data;
+      if (fromIndex == null || toIndex == null) return error(res, 'Missing fromIndex or toIndex');
+
+      const course = readCourseJson(courseDir);
+      const slidesDir = path.join(courseDir, 'slides');
+      const fromSlide = course.slides.find(s => s.index === fromIndex);
+      if (!fromSlide) return error(res, 'Source slide not found', 404);
+
+      course.slides = course.slides.filter(s => s.index !== fromIndex);
+      const direction = fromIndex < toIndex ? 1 : -1;
+      course.slides.forEach(s => {
+        if (direction > 0 && s.index > fromIndex && s.index <= toIndex) {
+          const oldPath = path.join(slidesDir, `${s.index}.html`);
+          const newPath = path.join(slidesDir, `${s.index - 1}.html`);
+          if (fs.existsSync(oldPath)) fs.renameSync(oldPath, newPath);
+          s.index--;
+        } else if (direction < 0 && s.index >= toIndex && s.index < fromIndex) {
+          const oldPath = path.join(slidesDir, `${s.index}.html`);
+          const newPath = path.join(slidesDir, `${s.index + 1}.html`);
+          if (fs.existsSync(oldPath)) fs.renameSync(oldPath, newPath);
+          s.index++;
+        }
+      });
+
+      fromSlide.index = toIndex;
+      course.slides.push(fromSlide);
+      course.slides.sort((a, b) => a.index - b.index);
+      writeCourseJson(courseDir, course);
+      return json(res, course.slides);
+    });
+    return;
+  }
+
   // 解析幻灯片级别路由：/api/courses/:id/slides/:index/...
   const slideMatch = rest.match(/^\/slides\/(\d+)(\/.*)?$/);
   if (slideMatch) {
@@ -308,62 +350,38 @@ function handleApi(req, res, urlPath) {
       fs.writeFileSync(path.join(slidesDir, `${slideIndex}.html`), html, 'utf8');
       return json(res, { ok: true });
     }
-
-    /* ═══ POST /api/courses/:id/slides/reorder — 拖拽重排顺序 ══ */
-    if (m === 'POST' && slideRest === '/reorder') {
-      let body = '';
-      req.on('data', chunk => body += chunk);
-      req.on('end', () => {
-        let data;
-        try { data = JSON.parse(body); } catch (e) { return error(res, 'Invalid JSON'); }
-        const { fromIndex, toIndex } = data;
-        if (fromIndex == null || toIndex == null) return error(res, 'Missing fromIndex or toIndex');
-
-        const slidesDir = path.join(courseDir, 'slides');
-        const fromSlide = course.slides.find(s => s.index === fromIndex);
-        if (!fromSlide) return error(res, 'Source slide not found', 404);
-
-        // 从原位置移除
-        course.slides = course.slides.filter(s => s.index !== fromIndex);
-
-        // 受影响的幻灯片 index 顺移
-        const direction = fromIndex < toIndex ? 1 : -1;
-        course.slides.forEach(s => {
-          if (direction > 0 && s.index > fromIndex && s.index <= toIndex) {
-            const oldPath = path.join(slidesDir, `${s.index}.html`);
-            const newPath = path.join(slidesDir, `${s.index - 1}.html`);
-            if (fs.existsSync(oldPath)) fs.renameSync(oldPath, newPath);
-            s.index--;
-          } else if (direction < 0 && s.index >= toIndex && s.index < fromIndex) {
-            const oldPath = path.join(slidesDir, `${s.index}.html`);
-            const newPath = path.join(slidesDir, `${s.index + 1}.html`);
-            if (fs.existsSync(oldPath)) fs.renameSync(oldPath, newPath);
-            s.index++;
-          }
-        });
-
-        fromSlide.index = toIndex;
-        course.slides.push(fromSlide);
-        course.slides.sort((a, b) => a.index - b.index);
-        writeCourseJson(courseDir, course);
-        return json(res, course.slides);
-      });
-      return;
-    }
-
       }
 
   /* ═══ GET /api/courses/:id/audio-files — 列出已上传的音频/图片文件 ══ */
   if (m === 'GET' && rest === '/audio-files') {
-    const audioDir = path.join(courseDir, 'audio');
+    const assetsDir = path.join(courseDir, 'assets');
     const result = [];
-    ['narration', 'vocab', 'video', 'exercises'].forEach(sub => {
-      const subDir = path.join(audioDir, sub);
+    const subMap = {
+      narration:   'ppt/audio',
+      vocab:       'vocab',
+      video:       'vedio',
+      exercise:    'exercise/audio',
+      'exercise-img': 'exercise/img',
+      pptimg:      'ppt/img',
+      dialogue:    'dialogue/audio',
+      display:     'display/audio',
+    };
+    Object.entries(subMap).forEach(([sub, assetsSub]) => {
+      const subDir = path.join(assetsDir, assetsSub);
       if (!fs.existsSync(subDir)) return;
       fs.readdirSync(subDir).forEach(file =>
-        result.push({ sub, file, path: `${sub}/${file}` })
+        result.push({ sub, file, path: `assets/${assetsSub}/${file}` })
       );
     });
+
+    // 系统级旁白音频（共享资源）
+    const systemAudioDir = path.join(ROOT, 'systemAssets', 'audio');
+    if (fs.existsSync(systemAudioDir)) {
+      fs.readdirSync(systemAudioDir).forEach(file =>
+        result.push({ sub: 'narration', file, path: `systemAssets/audio/${file}` })
+      );
+    }
+
     return json(res, result);
   }
 
@@ -373,9 +391,10 @@ function handleApi(req, res, urlPath) {
    *   - 单次上传：{ sub, filename, data: base64字符串 }
    *   - 分块上传：{ sub, filename, chunks: [base64], chunkIdx, totalChunks, end }
    *
-   * sub 可选值：narration | vocab | video | exercises | pptimg
-   *   narration/vocab/video → courses/<id>/audio/<sub>/<filename>
-   *   pptimg              → courses/<id>/pptimg/<filename>
+   * sub 可选值：narration | vocab | video | exercises | pptimg | dialogue
+   *   narration/vocab/video/exercises → courses/<id>/assets/<sub>/
+   *   pptimg → courses/<id>/assets/ppt/img/
+   *   dialogue → courses/<id>/assets/dialogue/audio/
    */
   if (m === 'POST' && rest === '/audio-files') {
     let body = '';
@@ -384,10 +403,21 @@ function handleApi(req, res, urlPath) {
       let data;
       try { data = JSON.parse(body); } catch (e) { return error(res, 'Invalid JSON'); }
       const { sub, filename, data: base64, chunks, chunkIdx, end } = data;
-      if (!['narration', 'vocab', 'video', 'exercises', 'pptimg'].includes(sub)) return error(res, 'Invalid sub directory');
-      if (!filename) return error(res, 'Missing filename');
+      if (!['narration', 'vocab', 'video', 'exercise', 'exercise-img', 'pptimg', 'dialogue', 'display'].includes(sub)) return error(res, 'Invalid sub directory');
 
-      const subDir = path.join(courseDir, sub === 'pptimg' ? 'pptimg' : 'audio', sub);
+      // assets 子目录映射
+      const assetMap = {
+        narration:   'ppt/audio',
+        vocab:       'vocab',
+        video:       'vedio',
+        exercise:    'exercise/audio',
+        'exercise-img': 'exercise/img',
+        pptimg:      'ppt/img',
+        dialogue:    'dialogue/audio',
+        display:     'display/audio',
+      };
+      const assetsSub = assetMap[sub];
+      const subDir = path.join(courseDir, 'assets', assetsSub);
       if (!fs.existsSync(subDir)) fs.mkdirSync(subDir, { recursive: true });
       const filePath = path.join(subDir, filename);
 
@@ -410,15 +440,13 @@ function handleApi(req, res, urlPath) {
           );
           fs.writeFileSync(filePath, buf);
         } catch (e) { return error(res, 'Failed to assemble chunks: ' + e.message); }
-        const prefix = sub === 'pptimg' ? 'pptimg/' : sub + '/';
-        return json(res, { path: prefix + filename }, 201);
+        return json(res, { path: 'assets/' + assetsSub + '/' + filename }, 201);
       }
 
       // 单次上传：直接写文件
       if (!base64) return error(res, 'Missing filename or data');
       fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
-      const prefix = sub === 'pptimg' ? 'pptimg/' : sub + '/';
-      return json(res, { path: prefix + filename }, 201);
+      return json(res, { path: 'assets/' + assetsSub + '/' + filename }, 201);
     });
     return;
   }

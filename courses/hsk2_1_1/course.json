@@ -1,0 +1,62 @@
+{
+  "id": "hsk2_1_1",
+  "title": "HSK2 - Lesson1",
+  "description": "",
+  "author": "teacher",
+  "created": "2026-05-13",
+  "slides": [
+    {
+      "index": 1,
+      "type": "content",
+      "title": "第 1 页",
+      "audio": "",
+      "subtitles": [],
+      "spotlights": [],
+      "spotlightZones": [],
+      "backgroundImage": "assets/ppt/img/ppt_1.PNG"
+    },
+    {
+      "index": 2,
+      "type": "content",
+      "title": "第 2 页",
+      "audio": "",
+      "subtitles": [],
+      "spotlights": [],
+      "spotlightZones": [],
+      "backgroundImage": "assets/ppt/img/ppt_2.PNG"
+    },
+    {
+      "index": 3,
+      "type": "exercise",
+      "title": "练习",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "read",
+          "question": "",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "选项 A"
+            },
+            {
+              "id": "B",
+              "text": "选项 B"
+            },
+            {
+              "id": "C",
+              "text": "选项 C"
+            },
+            {
+              "id": "D",
+              "text": "选项 D"
+            }
+          ],
+          "answer": "A"
+        }
+      ],
+      "showPinyin": true
+    }
+  ]
+}

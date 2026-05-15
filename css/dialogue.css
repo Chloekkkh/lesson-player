@@ -26,6 +26,9 @@ body {
   box-shadow: 0 12px 48px rgba(34,168,110,0.10);
   overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -34,11 +37,37 @@ body {
 
 /* ── 主视图容器 ─────────────────────────────────────────── */
 .dlg-main-view {
+  flex: 1;
+  min-height: 0;
   display: flex;
   width: 100%;
-  height: 100%;
-  padding: 28px 32px 20px;
+  padding: 0 32px 16px;
   gap: 28px;
+  overflow: hidden;
+}
+
+/* ── 页面标题（与 vocab/display 页一致） ─────────────── */
+.dlg-page-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 16px 40px 8px;
+  gap: 0;
+  flex-direction: column;
+}
+.dlg-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--green);
+  margin: 0;
+}
+.dlg-subtitle {
+  font-size: 1.05rem;
+  color: var(--body);
+  margin: 4px 0 0;
+  line-height: 1.6;
 }
 
 /* ── 左侧控制面板 ──────────────────────────────────────── */
@@ -61,21 +90,12 @@ body {
   transition: border-color 0.2s;
 }
 
-/* 卡片1：课程信息 */
-.ctrl-theme {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--green);
-  text-align: center;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e8ecf0;
-}
-
-/* 音频播放器 */
+/* 音频播放器：垂直排列，播放按钮在上 */
 .ctrl-audio-player {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .ctrl-play-btn {
@@ -171,26 +191,39 @@ body {
   border: none;
 }
 
-/* 显示/隐藏课文按钮 */
+/* 显示/隐藏课文按钮 — 与开始对话练习按钮样式一致 */
 .ctrl-text-toggle {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 50px;
   border: none;
-  background: var(--green-soft);
-  color: var(--green);
-  font-size: 13px;
-  font-weight: 500;
+  background: var(--green);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   width: 100%;
-  transition: background 0.2s;
+  box-shadow: 0 4px 16px rgba(34,168,110,0.3);
+  transition: background 0.2s, transform 0.15s, opacity 0.2s;
 }
-.ctrl-text-toggle:hover { background: rgba(34,168,110,0.18); }
+.ctrl-text-toggle:hover { background: var(--green-deep); transform: translateY(-1px); }
+.ctrl-text-toggle:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #c0c8d0;
+  box-shadow: none;
+  transform: none;
+}
 
 /* 工具栏卡片 */
 .lang-toggles {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.lang-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 .toggle-switch {
   display: flex;
@@ -234,9 +267,16 @@ body {
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(34,168,110,0.3);
-  transition: background 0.2s, transform 0.15s;
+  transition: background 0.2s, transform 0.15s, opacity 0.2s;
 }
 .enter-practice-btn:hover { background: var(--green-deep); transform: translateY(-1px); }
+.enter-practice-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #c0c8d0;
+  box-shadow: none;
+  transform: none;
+}
 
 /* ── 右侧内容面板 ──────────────────────────────────────── */
 .dlg-right-panel {
@@ -272,15 +312,16 @@ body {
 /* 解锁状态：locked只控制交互，display由focus-mode决定 */
 .text-section.locked { pointer-events: none; }
 
-/* ── 场景图区域：16:9 横版 ────────────────────────────── */
+/* ── 场景图区域 ──────────────────────────────────────── */
 .scene-section {
-    flex: 1;
-    padding: 50px;
-    aspect-ratio: 16 / 9;
+    flex: 6;
+    padding: 24px;
     overflow: hidden;
-    background: #eef7f1;
+    background: #ffffff;
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
 }
 .scene-img {
   width: 100%;
@@ -291,12 +332,14 @@ body {
 
 /* ── 人物头像行 ──────────────────────────────────────── */
 .speakers-row {
-  flex: 0 0 auto;
+  flex: 4;
   display: flex;
   gap: 16px;
   justify-content: center;
-  padding: 10px 16px;
+  align-items: center;
+  padding: 0 16px;
   background: #fff;
+  min-height: 0;
 }
 .speaker-badge {
   display: flex;
@@ -361,7 +404,7 @@ body {
 .dlg-text-pinyin { font-size: 13px; color: var(--body); }
 .dlg-text-en { font-size: 13px; color: var(--body); font-style: italic; }
 .dlg-text-pinyin.hidden,
-.dlg-text-en.hidden { display: none; }
+.dlg-text-en.hidden { visibility: hidden; }
 
 /* 词汇高亮 */
 .dlg-vocab-hl {
@@ -574,7 +617,7 @@ body {
   padding: 10px 14px;
 }
 .chat-bubble.right .bubble-body {
-  background: var(--green);
+  background: #e8a817;
   border-radius: 16px 16px 4px 16px;
   padding: 10px 14px;
   color: #fff;
@@ -589,19 +632,19 @@ body {
 
 /* 当前说话气泡 — 波纹效果 */
 .chat-bubble.speaking .bubble-body {
-  box-shadow: 0 0 0 3px rgba(46,204,113,0.35);
+  box-shadow: 0 0 0 3px rgba(232,168,23,0.35);
   animation: ripple-bubble 1.2s ease-out infinite;
 }
 @keyframes ripple-bubble {
-  0%   { box-shadow: 0 0 0 0 rgba(46,204,113,0.45); }
-  70%  { box-shadow: 0 0 0 10px rgba(46,204,113,0); }
-  100% { box-shadow: 0 0 0 0 rgba(46,204,113,0); }
+  0%   { box-shadow: 0 0 0 0 rgba(232,168,23,0.45); }
+  70%  { box-shadow: 0 0 0 10px rgba(232,168,23,0); }
+  100% { box-shadow: 0 0 0 0 rgba(232,168,23,0); }
 }
 
 /* 用户当前待读句子 */
 .chat-bubble.current.right .bubble-body {
-  border: 2.5px solid #2ecc71;
-  box-shadow: 0 0 0 4px rgba(46,204,113,0.15);
+  border: 2.5px solid #e8a817;
+  box-shadow: 0 0 0 4px rgba(232,168,23,0.15);
 }
 
 /* 系统提示气泡 */
@@ -795,5 +838,5 @@ body {
 .rp-result-done:hover { background: var(--green-deep); }
 
 /* ── 进度条进度数值隐藏控制 ────────────────────────────── */
-.pinyin-hidden .bubble-pinyin { display: none; }
-.english-hidden .bubble-en { display: none; }
+.pinyin-hidden .bubble-pinyin { visibility: hidden; }
+.english-hidden .bubble-en { visibility: hidden; }

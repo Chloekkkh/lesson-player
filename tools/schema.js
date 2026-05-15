@@ -21,14 +21,14 @@ module.exports = {
     index: { type: 'number', required: true,  desc: '幻灯片编号（从 1 开始）' },
     type:  { type: 'enum',   required: true,  values: ['content', 'exercise', 'display', 'video', 'dialogue'], desc: '页面类型' },
     title: { type: 'string', required: false, desc: '页面标题' },
-    audio: { type: 'string', required: false, desc: '音频文件路径，相对于 audio/ 目录，如 narration/1.mp3' },
+    audio: { type: 'string', required: false, desc: '音频文件路径，相对于课程根目录，如 assets/ppt/audio/ppt_1.mp3' },
   },
 
   // ── type: content ──────────────────────────────────────
   // 旁白驱动型内容页。音频播放完毕自动切换下一页。
   contentSlide: {
     // 继承 slideCommon
-    backgroundImage: { type: 'string', required: false, desc: '背景图路径，相对于课程根目录，如 pptimg/bg.png' },
+    backgroundImage: { type: 'string', required: false, desc: '背景图路径，相对于课程根目录，如 assets/ppt/img/bg.png' },
     spotlightZones:  { type: 'array',  required: false, desc: '热区坐标数组，供 admin 热区编辑器使用', item: { elementId: 'string', x: 'number', y: 'number', w: 'number', h: 'number' } },
     spotlights:      { type: 'array',  required: false, desc: '聚光灯触发配置', item: { elementId: 'string', at: 'number', duration: 'number' } },
     subtitles:       { type: 'array',  required: false, desc: '伴学助手字幕，指定时间显示提示文本', item: { at: 'number', text: 'string' } },
@@ -39,7 +39,7 @@ module.exports = {
   // 视频播放页。播完后显示重播和下一页按钮。
   videoSlide: {
     // 继承 slideCommon
-    video: { type: 'string', required: true, desc: '视频文件路径，相对于 audio/ 目录，如 video/demo.mp4' },
+    video: { type: 'string', required: true, desc: '视频文件路径，相对于课程根目录，如 assets/vedio/demo.mp4' },
   },
 
   // ── type: display ──────────────────────────────────────
@@ -57,7 +57,7 @@ module.exports = {
         pos:    { type: 'string', required: false, desc: '词性，如 verb / noun / adj' },
         en:     { type: 'string', required: true,  desc: '英文释义' },
         image:  { type: 'string', required: false, desc: '配图路径（可选）' },
-        audio:  { type: 'string', required: false, desc: '发音音频路径，相对于 audio/vocab/' },
+        audio:  { type: 'string', required: false, desc: '发音音频路径，相对于课程根目录，如 assets/vocab/gei.mp3' },
       }
     },
     examples: {
@@ -93,17 +93,24 @@ module.exports = {
     //   read      — 阅读题（读句选答案）
     //   arrange   — 排序题（将乱序词语组成正确句子）
     //   match     — 配对题（左右两组词连线）
-    //   fill      — 填空题（输入框）
+    //   fill      — 选词填空题（多题版：N道题+M个共享选项池，点击空格后选词填入）
     //   trace     — 描图题（SVG 描红）
 
-    question:   { type: 'string', required: true,  desc: '题目文本（题干）' },
+    question:   { type: 'string', required: true,  desc: '题目文本（题干），用 _____ 作为待填空格' },
     options: {
       type:     'array',
       required: false,
       desc:     '选项列表（choice / listen / read 用）',
-      item: { id: 'string', text: 'string' }
+      item: { id: 'string', text: 'string', image: 'string' }
     },
-    placeholder: { type: 'string', required: false, desc: '输入框占位文字（fill 用）' },
+    layout: { type: 'string', required: false, desc: '选项排列方式：vertical 纵向 / horizontal 横向（listen/choice/read 用）' },
+    sharedOptions: {
+      type:     'array',
+      required: false,
+      desc:     '选词填空共享选项池（fill 用，所有题目共用）',
+      item: 'string'
+    },
+    placeholder: { type: 'string', required: false, desc: '输入框占位文字（fill 自由输入模式用）' },
     pairs: {
       type:     'array',
       required: false,
@@ -177,8 +184,8 @@ module.exports = {
         index: 1,
         type:  'content',
         title: '第一页',
-        audio: 'narration/1.mp3',
-        backgroundImage: 'pptimg/bg1.png',
+        audio: 'assets/ppt/audio/ppt_1.mp3',
+        backgroundImage: 'assets/ppt/img/ppt_1.PNG',
         spotlights: [{ elementId: 'zone-1', at: 0, duration: 2 }],
         spotlightZones: [{ elementId: 'zone-1', x: 10, y: 20, w: 25, h: 30 }],
       },
@@ -202,8 +209,8 @@ module.exports = {
         type:  'display',
         title: '生词与例句',
         vocab: [
-          { id: 'w1', hanzi: '谢谢', pinyin: 'xiè xiè', pos: 'verb', en: 'thank you', audio: 'vocab/xiexie.wav' },
-          { id: 'w2', hanzi: '你好', pinyin: 'nǐ hǎo', pos: 'verb', en: 'hello', audio: 'vocab/nihao.wav' },
+          { id: 'w1', hanzi: '谢谢', pinyin: 'xiè xiè', pos: 'verb', en: 'thank you', audio: 'assets/vocab/gei.mp3' },
+          { id: 'w2', hanzi: '你好', pinyin: 'nǐ hǎo', pos: 'verb', en: 'hello', audio: 'assets/vocab/rang.mp3' },
         ],
         examples: [
           { id: 'e1', hanzi: '谢谢你的帮助。', pinyin: 'xiè xiè nǐ de bāng zhù', en: 'Thank you for your help.' },

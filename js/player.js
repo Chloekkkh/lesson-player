@@ -26,6 +26,7 @@ var intervalId    = null;   // setInterval 的 ID，用于取消计时器
 var isTransitioning = false; // 切换锁，防止重复调用
 var pendingIndex    = null;  // 过渡期间记录的待切换目标
 var autoAdvanced   = false; // 音频结束自动切换后，下一页立即自动播放
+var pendingSlideData = {};  // iframe 未就绪时积压的 slideData，{ index: slideData }
 
 /* ─────────────────────────────────────────────────────────
    聚光灯（Spotlight）状态
@@ -49,8 +50,8 @@ var errorScreen     = $('errorScreen');      // 错误提示层
 var errorMessage    = $('errorMessage');      // 错误信息文本
 var playerContainer = $('playerContainer');   // 播放器主容器
 var player          = $('player');           // 幻灯片容器（iframe 包裹层）
-var courseTitleEl   = $('courseTitle');     // 课程标题
-var courseDescEl    = $('courseDesc');      // 课程描述
+var courseTitleEl = $('courseTitle');   // 课程标题
+var courseDescEl = $('courseDesc');    // 课程描述
 var dotsEl          = $('dots');            // 圆点导航容器
 var statusIndicator = $('statusIndicator'); // 状态指示点（绿/红/黄）
 var statusText      = $('statusText');      // 状态文字（播放中/已暂停/请确认答案）
@@ -124,6 +125,9 @@ function init() {
     .then(function(data) {
       course = data; // 保存课程配置
 
+      if (courseTitleEl) courseTitleEl.textContent = course.title || '';
+      if (courseDescEl) courseDescEl.textContent = course.description || '';
+
       // 隐藏加载层，显示播放器
       loadingScreen.classList.add('hidden');
       playerContainer.classList.add('visible');
@@ -179,6 +183,16 @@ function buildIframes(courseId) {
 
     // 设置 iframe 加载的页面路径（video 类型延迟到切换时再加载）
     iframe.src = slide.type === 'video' ? '' : 'courses/' + courseId + '/slides/' + slide.index + '.html';
+
+    // 监听 iframe load 事件，可靠地等待其 JS 就绪后再发送数据
+    iframe.addEventListener('load', function() {
+      iframe._ready = true;
+      var idx = parseInt(iframe.dataset.index, 10);
+      if (pendingSlideData[idx] !== undefined) {
+        sendSlideData(iframe, pendingSlideData[idx]);
+        delete pendingSlideData[idx];
+      }
+    });
 
     // 插入到 player 容器中（confirmOverlay 之前）
     player.insertBefore(iframe, confirmOverlay);
@@ -346,6 +360,7 @@ function loadSlide(index, isInit) {
   // 清除旧 iframe 的聚光灯
   if (prevFrame) {
     sendSpotlightClear(prevFrame);
+    sendStopAudio(prevFrame);
   }
 
   // 重置伴学助手字幕状态
@@ -360,6 +375,11 @@ function loadSlide(index, isInit) {
 
   var slide = course.slides[index];
 
+  // content 页面提前落 playing 状态，避免 line 397 读到旧 playing=true
+  if ((slide.type === 'content' || slide.audio) && !autoAdvanced) {
+    playing = false;
+  }
+
   // 向 iframe 发送当前页的题目数据（video 类型先加载 iframe）
   if (nextFrame) {
     if (slide.type === 'video' && !nextFrame.src) {
@@ -370,6 +390,7 @@ function loadSlide(index, isInit) {
       nextFrame.addEventListener('load', iframeOnload);
       nextFrame.src = 'courses/' + course.id + '/slides/' + slide.index + '.html';
     } else {
+      // sendSlideData 内部会检查 _ready：未加载完成时自动积压，等 load 事件触发后再发
       sendSlideData(nextFrame, slide);
     }
   }
@@ -397,17 +418,16 @@ function loadSlide(index, isInit) {
   // exercise / display / video / dialogue 页面：让点击穿透到 iframe（选项/按钮可点）
   clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') ? 'none' : 'auto';
 
+  // 统一音频加载：所有 slide 类型，有 audio 字段就加载旁白
+  if (slide.audio) {
+    var audioSrc = slide.audio.startsWith('systemAssets/')
+      ? slide.audio
+      : 'courses/' + course.id + '/' + slide.audio;
+    loadAudio(audioSrc, slide);
+  }
+
   // ═══ 练习题（exercise）═══
   if (slide.type === 'exercise') {
-    // 新型题型（questions 数组）：iframe 自己管理音频和流程
-    // legacy 题型（question 字段）：player.js 复用旧的音频+确认按钮流程
-    if (slide.questions && slide.audio) {
-      // listen 类型有 slides.audio（intro 音频），由 player.js 播放
-      loadAudio('courses/' + course.id + '/audio/' + slide.audio, slide);
-    } else if (slide.question && slide.audio) {
-      // legacy 有题目的 exercise 类型
-      loadAudio('courses/' + course.id + '/audio/' + slide.audio, slide);
-    }
     // exercise 类型不自动切换，由 iframe 通过 postMessage 控制
     playing = false;
     statusIndicator.className = 'status-indicator waiting';
@@ -456,9 +476,6 @@ function loadSlide(index, isInit) {
   }
 
   // ═══ 内容页（content）═══
-  if (slide.audio) {
-    loadAudio('courses/' + course.id + '/audio/' + slide.audio, slide);
-  }
   // 遮罩由 loadSlide 顶部的早期 block 统一处理，这里只设状态
   playing = false;
   statusIndicator.className = 'status-indicator paused';
@@ -514,11 +531,16 @@ function goToSlide(index) {
  * @param {object} slideData          - course.json 中对应 slide 的数据
  */
 function sendSlideData(frame, slideData) {
+  // iframe 未加载完成，先积压，等 load 事件触发后再发送
+  if (!frame._ready) {
+    pendingSlideData[parseInt(frame.dataset.index, 10)] = slideData;
+    return;
+  }
   try {
     // 注入课程路径前缀，供 iframe 拼接音频完整路径
     var payload = Object.assign({}, slideData, {
       courseId: course.id,
-      audioBase: '/courses/' + course.id + '/audio/',
+      audioBase: '/courses/' + course.id + '/',
       imgBase: '/courses/' + course.id + '/'
     });
     frame.contentWindow.postMessage({ type: 'slideData', data: payload }, '*');
@@ -678,6 +700,12 @@ function sendSpotlightClear(frame) {
   } catch (e) {}
 }
 
+function sendStopAudio(frame) {
+  try {
+    frame.contentWindow.postMessage({ type: 'stopAudio' }, '*');
+  } catch (e) {}
+}
+
 /* ═══════════════════════════════════════════════════════
    AUDIO — 音频播放控制
    ═══════════════════════════════════════════════════════ */
@@ -706,8 +734,16 @@ function loadAudio(src, slide) {
     timerTotal    = audioDuration * 1000; // 以音频时长作为总时长
     progressTimeEl.textContent = '0:00 / ' + formatTime(audioDuration);
 // 自动切换后的下一页立即自动播放
-    if (autoAdvanced && slide.type === 'content') {
+    if (autoAdvanced && slide.audio) {
       autoAdvanced = false;
+      playing = true;
+      statusIndicator.className = 'status-indicator';
+      statusText.textContent = '播放中';
+      audioEl.play().catch(function() {});
+      startSpotlightRaf();
+      updateControlBarState();
+    } else if (slide.audio && (slide.type === 'vocab' || slide.type === 'display' || slide.type === 'exercise' || slide.type === 'dialogue')) {
+      // vocab/display/exercise 旁白：切到页面时自动播放
       playing = true;
       statusIndicator.className = 'status-indicator';
       statusText.textContent = '播放中';
@@ -803,7 +839,7 @@ function replayAudio() {
 
 function updateControlBarState() {
   var slide = course.slides[current];
-  var isContentOrVideo = (slide.type === 'content' || slide.type === 'video');
+  var isContentOrVideo = (slide.type === 'content' || slide.type === 'video' || !!slide.audio);
   var isFirst = current === 0;
   var isLast = current === course.slides.length - 1;
 
@@ -855,7 +891,7 @@ function onAudioEnded(slide) {
     statusIndicator.className = 'status-indicator waiting';
     statusText.textContent = '请确认答案';
     playing = false;
-} else {
+} else if (slide.type === 'content') {
     // 内容页：音频播完，延迟0.5s后进入下一页
     autoAdvanced = true;
     setTimeout(function() {
@@ -966,7 +1002,7 @@ function resumeAudio() {
   var slide = course.slides[current];
 
   // exercise / display / video 类型不支持暂停/恢复
-  if (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'video') {
+  if (slide.type === 'exercise' || slide.type === 'video') {
     pauseScreen.style.display = 'none';
     return;
   }
@@ -999,7 +1035,7 @@ btnReplay.addEventListener('click', replayAudio);
 
 btnPlayPause.addEventListener('click', function() {
   var slide = course.slides[current];
-  if (slide.type !== 'content' && slide.type !== 'video') return;
+  if (slide.type !== 'content' && slide.type !== 'video' && !slide.audio) return;
   if (playing) pauseAudio(); else resumeAudio();
 });
 
@@ -1077,7 +1113,9 @@ window.addEventListener('message', function(e) {
     goToSlide(current + 1);
 
   } else if (msg.action === 'displayComplete') {
-    // display / dialogue 类型直接翻页
+    // display 类型（vocab 等）音频播完直接翻页
+    // dialogue 类型：displayComplete 只解锁课文区域，不翻页，等待 rolePlayComplete
+    if (course.slides[current].type === 'dialogue') return;
     goToSlide(current + 1);
 
   } else if (msg.action === 'rolePlayComplete') {

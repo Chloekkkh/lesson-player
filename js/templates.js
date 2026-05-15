@@ -127,7 +127,7 @@ function videoTemplate(slideNum, courseTitle) {
       if (!msg) return;
       if (msg.type === 'slideData') {
         if (msg.data.video) {
-          videoEl.src = '/courses/' + msg.data.courseId + '/audio/' + msg.data.video;
+          videoEl.src = '/courses/' + msg.data.courseId + '/' + msg.data.video;
           videoEl.play();
         }
       }
@@ -243,12 +243,6 @@ function dialogueTemplate(slideNum, courseTitle) {
             </div>
           </div>
         </div>
-        <div class="speed-slider-wrap">
-          <span class="speed-label">0.8x</span>
-          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
-          <span class="speed-label">1.4x</span>
-          <span class="speed-current" id="speedCurrent">1.0x</span>
-        </div>
         <button class="ctrl-text-toggle" id="textToggle">
           <span id="textToggleLabel">显示课文内容</span>
         </button>
@@ -256,7 +250,13 @@ function dialogueTemplate(slideNum, courseTitle) {
 
       <!-- 卡片2：工具栏 -->
       <div class="tool-card">
-        <div class="lang-toggles">
+        <div class="speed-slider-wrap">
+          <span class="speed-label">0.8x</span>
+          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
+          <span class="speed-label">1.4x</span>
+          <span class="speed-current" id="speedCurrent">1.0x</span>
+        </div>
+        <div class="lang-row">
           <label class="toggle-switch">
             <input type="checkbox" id="pinyinToggle" checked>
             <span class="toggle-slider"></span>
@@ -417,8 +417,6 @@ function vocabTemplate(slideNum, courseTitle) {
     <p id="exerciseSubtitle" class="exercise-subtitle">Master Your New Words</p>
     <div class="vocab-grid" id="vocabGrid"></div>
     <div class="vocab-nav-row">
-      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
-    </div>
   </div>
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>
@@ -469,8 +467,6 @@ function displayTemplate(slideNum, courseTitle) {
       </div>
     </div>
     <div class="vocab-next-row">
-      <button class="vocab-next-btn" id="nextBtn">下一页 →</button>
-    </div>
   </div>
   <script src="/js/exercise/sound.js"></script>
   <script src="/js/exercise/progress.js"></script>

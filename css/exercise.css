@@ -9,6 +9,10 @@
   --green-deep:  #1b8a5a;
   --green-soft:  rgba(34, 168, 110, 0.10);
   --green-light: #e8f7f0;
+  --arrange-fill:      #f39a32;
+  --arrange-fill-soft: rgba(243, 154, 50, 0.10);
+  --arrange-fill-light:rgba(243, 154, 50, 0.20);
+  --finish-color: #4a82ef;
 }
 
 /* ── BODY ─────────────────────────────────────────────────── */
@@ -263,6 +267,25 @@ body {
   margin: 0 auto 0px;
 }
 
+#optionsContainer.layout-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 900px;
+}
+#optionsContainer.layout-horizontal .option-btn {
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: 220px;
+  text-align: center;
+  justify-content: center;
+}
+#optionsContainer.layout-horizontal .option-btn img {
+  max-width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+}
+
 .option-btn {
   display: flex;
   align-items: center;
@@ -370,7 +393,89 @@ body {
 .fill-opt-card.opt-correct { border-color: var(--green); background: rgba(58,138,51,0.12); color: var(--green); pointer-events: none; }
 .fill-opt-card.opt-wrong   { border-color: var(--red);   background: rgba(224,85,85,0.08);  color: var(--red);   pointer-events: none; }
 .fill-opt-card.opt-reveal  { border-color: var(--green); background: rgba(58,138,51,0.08); color: var(--green); animation: blink 0.4s 3; }
+.fill-opt-card.used        { opacity: 0.35; cursor: not-allowed; pointer-events: none; border-color: var(--line); }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── 选词填空（多题版）────────────────────────────────── */
+.fill-blank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.fill-blank-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f9fafb;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 16px;
+}
+.fill-q-num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--green);
+  min-width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.fill-blank-q {
+  font-size: 1.15rem;
+  line-height: 2.2;
+  color: var(--ink);
+  word-break: break-word;
+}
+}
+.blank-slot {
+  display: inline-block;
+  min-width: 120px;
+  padding: 6px 20px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-bottom: 3px solid var(--blue);
+  color: var(--blue);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  border-radius: 4px 4px 0 0;
+  text-align: center;
+  margin: 0 3px;
+}
+.blank-slot:hover   { background: rgba(74,130,239,0.08); }
+.blank-slot.active  { border-color: var(--green); color: var(--green); background: rgba(34,168,110,0.08); box-shadow: 0 0 0 3px rgba(34,168,110,0.15); }
+.filled-slot {
+  display: inline-block;
+  min-width: 90px;
+  font-size: 1.1rem;
+  background: rgba(34,168,110,0.12);
+  border: 1.5px solid var(--green);
+  border-radius: 6px;
+  color: var(--green-deep);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin: 0 3px;
+}
+.filled-slot.opt-correct { background: rgba(58,138,51,0.15); border-color: var(--green); color: var(--green-deep); }
+.filled-slot.opt-wrong   { background: rgba(224,85,85,0.12); border-color: var(--red);   color: var(--red); }
+
+.fill-shared-options {
+  border-radius: 14px;
+  padding: 14px 20px 10px;
+}
+.fill-options-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+.fill-submit-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
 
 /* ── MATCHING ──────────────────────────────────────────────── */
 .match-area {
@@ -397,6 +502,8 @@ body {
 }
 .match-btn:hover         { border-color: var(--green); background: var(--green-soft); transform: scale(1.03); }
 .match-btn.paired        { border-color: var(--green); background: rgba(58,138,51,0.12); color: var(--green); pointer-events: none; }
+.match-btn.connected     { border-color: var(--yellow); background: var(--yellow-soft); color: var(--yellow); }
+.match-btn.wrong         { border-color: var(--red); background: rgba(244,67,54,0.08); color: var(--red); }
 .match-pinyin { display: block; font-size: 0.8rem; color: var(--body); margin-bottom: 2px; }
 .match-text { display: block; font-size: 1.1rem; }
 
@@ -484,6 +591,21 @@ body {
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(34, 168, 110, 0.3);
 }
+.submit-btn.finish-btn {
+  opacity: 1;
+  pointer-events: auto;
+  background: var(--finish-color);
+  box-shadow: 0 4px 16px rgba(74, 130, 239, 0.35);
+}
+.submit-btn.finish-btn:hover {
+  background: #3a6fd8;
+  box-shadow: 0 6px 24px rgba(74, 130, 239, 0.5);
+  transform: translateY(-2px);
+}
+.submit-btn.finish-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(74, 130, 239, 0.3);
+}
 
 /* ── PLAY AUDIO BUTTON ──────────────────────────────────── */
 
@@ -568,31 +690,45 @@ body {
 }
 
 .arrange-answer.drag-over {
-  border-color: var(--green);
-  background: var(--green-light);
+  border-color: var(--arrange-fill);
+  background: var(--arrange-fill-light);
 }
 .arrange-answer.has-words {
+  border-style: dashed;
+  border-color: var(--arrange-fill);
+  background: var(--arrange-fill-soft);
+}
+.arrange-answer.has-words.answer-correct {
   border-style: solid;
   border-color: var(--green);
-  background: var(--green-soft);
+  background: rgba(58,138,51,0.12);
+}
+.arrange-answer.wrong {
+  border-color: var(--red);
+  background: rgba(224, 85, 85, 0.08);
 }
 .arrange-answer-btn {
   padding: 12px 20px;
-  border: 2px solid var(--green);
+  border: 2px solid var(--arrange-fill);
   border-radius: 10px;
-  background: var(--green-soft);
+  background: var(--arrange-fill-soft);
   font-size: 1.1rem;
-  color: var(--green);
+  color: var(--arrange-fill);
   cursor: pointer;
   transition: background 0.2s, transform 0.15s, opacity 0.2s;
   user-select: none;
 }
-.arrange-answer-btn:hover { background: #d4f0e4; transform: scale(1.03); }
+.arrange-answer-btn:hover { background: var(--arrange-fill-light); transform: scale(1.03); }
 .arrange-answer-btn.dragging { opacity: 0.4; }
 .arrange-answer-btn.answer-correct {
   border-color: var(--green);
   background: rgba(58,138,51,0.12);
   color: var(--green);
+}
+.arrange-answer-btn.wrong {
+  border-color: var(--red);
+  background: rgba(224, 85, 85, 0.08);
+  color: var(--red);
 }
 .arrange-pool {
   display: flex;

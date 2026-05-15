@@ -19,7 +19,6 @@ DisplayHandler.prototype = {
   _callbacks: null,
   _currentExampleAudio: null,
   _recorder: null,
-  _currentRecordingUrl: null,
 
   init: function(config, callbacks) {
     this._config = config;
@@ -72,7 +71,9 @@ DisplayHandler.prototype = {
 
     var pinyinEl = document.createElement('div');
     pinyinEl.className = 'vocab-pinyin';
-    pinyinEl.textContent = showPinyin ? (w.pinyin || '') : '';
+    pinyinEl.dataset.toggle = 'pinyin';
+    pinyinEl.textContent = w.pinyin || '';
+    pinyinEl.style.visibility = showPinyin ? '' : 'hidden';
 
     var pos = document.createElement('div');
     pos.className = 'vocab-pos';
@@ -80,12 +81,14 @@ DisplayHandler.prototype = {
 
     var en = document.createElement('div');
     en.className = 'vocab-en';
-    en.textContent = showEnglish ? (w.en || '') : '';
+    en.dataset.toggle = 'en';
+    en.textContent = w.en || '';
+    en.style.visibility = showEnglish ? '' : 'hidden';
 
     body.appendChild(hanzi);
-    if (showPinyin) body.appendChild(pinyinEl);
+    body.appendChild(pinyinEl);
     if (w.pos) body.appendChild(pos);
-    if (showEnglish) body.appendChild(en);
+    body.appendChild(en);
 
     item.appendChild(spine);
     item.appendChild(body);
@@ -97,7 +100,7 @@ DisplayHandler.prototype = {
     var playBtn = document.createElement('button');
     playBtn.className = 'ctrl-btn-sm';
     playBtn.innerHTML = '&#9654;';
-    if (w.audio) {
+    if (w.audio != null) {
       playBtn.title = '播放音频';
       var self = this;
       playBtn.addEventListener('click', function(e) {
@@ -128,7 +131,7 @@ DisplayHandler.prototype = {
     var self = this;
     recBtn.addEventListener('click', function() { self._toggleRecord(recBtn, playRecBtn); });
     playRecBtn.addEventListener('click', function() {
-      if (self._currentRecordingUrl) self._playRecordingUrl(self._currentRecordingUrl, playRecBtn);
+      if (playRecBtn._recUrl) self._playRecordingUrl(playRecBtn._recUrl, playRecBtn);
     });
 
     return item;
@@ -154,11 +157,15 @@ DisplayHandler.prototype = {
 
     var pinyinEl = document.createElement('div');
     pinyinEl.className = 'example-pinyin';
-    pinyinEl.textContent = showPinyin ? (ex.pinyin || '') : '';
+    pinyinEl.dataset.toggle = 'pinyin';
+    pinyinEl.textContent = ex.pinyin || '';
+    pinyinEl.style.visibility = showPinyin ? '' : 'hidden';
 
     var en = document.createElement('div');
     en.className = 'example-en';
-    en.textContent = showEnglish ? (ex.en || '') : '';
+    en.dataset.toggle = 'en';
+    en.textContent = ex.en || '';
+    en.style.visibility = showEnglish ? '' : 'hidden';
 
     textCol.appendChild(hanzi);
     textCol.appendChild(pinyinEl);
@@ -170,7 +177,7 @@ DisplayHandler.prototype = {
     var playBtn = document.createElement('button');
     playBtn.className = 'ctrl-btn-sm';
     playBtn.innerHTML = '&#9654;';
-    if (ex.audio) {
+    if (ex.audio != null) {
       playBtn.title = '播放音频';
       playBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -205,7 +212,7 @@ DisplayHandler.prototype = {
     recBtn.addEventListener('click', function() { self._toggleRecord(recBtn, playRecBtn); });
 
     playRecBtn.addEventListener('click', function() {
-      if (self._currentRecordingUrl) self._playRecordingUrl(self._currentRecordingUrl, playRecBtn);
+      if (playRecBtn._recUrl) self._playRecordingUrl(playRecBtn._recUrl, playRecBtn);
     });
 
     return item;
@@ -230,8 +237,9 @@ DisplayHandler.prototype = {
       recBtn.classList.remove('recording');
       recBtn.innerHTML = '&#127908;';
     } else {
-      var getMedia = navigator.mediaDevices && navigator.mediaDevices.getUserMedia
-        || navigator.getUserMedia.bind(navigator);
+      var getMedia = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices))
+          || (navigator.getUserMedia && navigator.getUserMedia.bind(navigator));
+      if (!getMedia) { console.warn('Microphone API not available'); alert('Microphone not supported'); return; }
       getMedia({ audio: true }).then(function(stream) {
         var recorder = new MediaRecorder(stream);
         var chunks = [];
@@ -239,10 +247,10 @@ DisplayHandler.prototype = {
         recorder.onstop = function() {
           stream.getTracks().forEach(function(t) { t.stop(); });
           var blob = new Blob(chunks, { type: 'audio/webm' });
-          self._currentRecordingUrl = URL.createObjectURL(blob);
+          playRecBtn._recUrl = URL.createObjectURL(blob);
           playRecBtn.disabled = false;
           playRecBtn.style.opacity = '1';
-          self._playRecordingUrl(self._currentRecordingUrl, playRecBtn);
+          self._playRecordingUrl(playRecBtn._recUrl, playRecBtn);
         };
         self._recorder = recorder;
         recorder.start();
@@ -256,7 +264,7 @@ DisplayHandler.prototype = {
     var audio = new Audio(url);
     audio.play().catch(function() {});
     var self = this;
-    audio.onended = function() { btn.innerHTML = '&#127908;'; };
+    audio.onended = function() { btn.innerHTML = '&#128266;'; };
   },
 
   /* ── 播放音频 ────────────────────────────────────────── */
@@ -294,12 +302,7 @@ DisplayHandler.prototype = {
       });
     }
 
-    // 下一页按钮
-    var nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-      nextBtn.onclick = function() { self._callbacks.onComplete(); };
-    }
-  }
+      }
 };
 
 /* ── postMessage 入口 ───────────────────────────────── */
