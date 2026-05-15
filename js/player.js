@@ -229,6 +229,8 @@ function applyTransform(frame) {
   frame.style.transform      = 'translate(' + offsetX + 'px,' + offsetY + 'px) scale(' + scale + ')';
   frame.style.transformOrigin = 'top left'; // 以左上角为基准缩放
 
+  window._playerScale = scale;
+
   // 同步给 assistant 应用相同缩放，保持位置跟随幻灯片
   var assistantEl = document.getElementById('assistant');
   if (assistantEl) {
@@ -541,7 +543,8 @@ function sendSlideData(frame, slideData) {
     var payload = Object.assign({}, slideData, {
       courseId: course.id,
       audioBase: '/courses/' + course.id + '/',
-      imgBase: '/courses/' + course.id + '/'
+      imgBase: '/courses/' + course.id + '/',
+      scale: window._playerScale || 1
     });
     frame.contentWindow.postMessage({ type: 'slideData', data: payload }, '*');
   } catch (e) {

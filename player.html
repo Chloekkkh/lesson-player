@@ -128,12 +128,19 @@
 
   function clamp(v, min, max) { return Math.max(min, Math.min(v, max)); }
 
-  assistant.addEventListener('mousedown', function(e) {
+  function getCoords(e) {
+    if (e.touches && e.touches.length === 1) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    if (e.changedTouches && e.changedTouches.length === 1) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+    return { x: e.clientX, y: e.clientY };
+  }
+
+  function onDragStart(e) {
+    var coords = getCoords(e);
     var onAvatar = e.target.closest('.assistant-avatar');
     if (onAvatar) {
       e.preventDefault();
-      startMX = e.clientX;
-      startMY = e.clientY;
+      startMX = coords.x;
+      startMY = coords.y;
       isDragging = true;
       dragStarted = false;
     } else {
@@ -151,23 +158,21 @@
 
       startLeft = parseInt(assistant.style.left) || 0;
       startTop = parseInt(assistant.style.top) || 0;
-      startMX = e.clientX;
-      startMY = e.clientY;
+      startMX = coords.x;
+      startMY = coords.y;
     }
-  });
+  }
 
-  document.addEventListener('mousemove', function(e) {
+  function onDragMove(e) {
     if (!isDragging) return;
-
-    var dx = e.clientX - startMX;
-    var dy = e.clientY - startMY;
+    var coords = getCoords(e);
+    var dx = coords.x - startMX;
+    var dy = coords.y - startMY;
     var dist = Math.sqrt(dx * dx + dy * dy);
 
-    // 移动超过 5px 才算拖拽
     if (!dragStarted && dist > 10) {
       dragStarted = true;
       assistant.classList.add('dragging');
-      // 统一为 left/top 定位
       if (assistant.style.right !== 'auto') {
         assistant.style.left = (window.innerWidth - assistant.offsetWidth - 20) + 'px';
         assistant.style.top = (window.innerHeight - assistant.offsetHeight - 20) + 'px';
@@ -184,17 +189,15 @@
     var maxTop = window.innerHeight - assistant.offsetHeight;
     assistant.style.left = clamp(startLeft + dx, 0, maxLeft) + 'px';
     assistant.style.top  = clamp(startTop + dy, 0, maxTop) + 'px';
-  });
+  }
 
-  document.addEventListener('mouseup', function(e) {
+  function onDragEnd(e) {
     if (isDragging && !dragStarted) {
-      // 是一次点击（未超过阈值）
       if (e.target.closest('.assistant-avatar')) {
         subtitleOn = !subtitleOn;
         window.subtitleOn = subtitleOn;
         avatar.classList.toggle('muted', !subtitleOn);
         if (subtitleOn) {
-          // 只有字幕曾经显示过才显示气泡
           if (window.subtitleShown) {
             bubble.classList.remove('hidden');
           }
@@ -206,7 +209,14 @@
     isDragging = false;
     dragStarted = false;
     assistant.classList.remove('dragging');
-  });
+  }
+
+  assistant.addEventListener('mousedown', onDragStart);
+  assistant.addEventListener('touchstart', onDragStart, { passive: false });
+  document.addEventListener('mousemove', onDragMove);
+  document.addEventListener('touchmove', onDragMove, { passive: false });
+  document.addEventListener('mouseup', onDragEnd);
+  document.addEventListener('touchend', onDragEnd);
 })();
 </script>
 

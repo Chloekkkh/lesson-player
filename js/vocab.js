@@ -333,6 +333,7 @@ VocabHandler.prototype = {
 /* ── postMessage 入口 ───────────────────────────────── */
 window.addEventListener('message', function(e) {
   if (e.data && e.data.type === 'slideData') {
+    document.documentElement.style.setProperty('--player-scale', e.data.data.scale || 1);
     var handler = new VocabHandler();
     handler.init(e.data.data, {
       onComplete: function() { postToParent('displayComplete', {}); }

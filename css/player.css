@@ -455,3 +455,103 @@
   color: var(--ink);
   white-space: pre-wrap;
 }
+
+/* ── MOBILE LANDSCAPE (viewport <= 900px) ──────────────────── */
+@media (max-width: 900px) {
+  .player-container {
+    padding: 8px 4px;
+  }
+
+  .course-header {
+    margin-bottom: 8px;
+  }
+  .course-header h1 {
+    font-size: 1.1rem;
+  }
+  .course-header p {
+    display: none;
+  }
+
+  .back-link {
+    margin-bottom: 6px;
+    font-size: 0.75rem;
+  }
+
+  .progress-bar-wrap {
+    margin-top: 6px;
+  }
+  .progress-time {
+    font-size: 0.7rem;
+  }
+
+  .status-bar {
+    margin-top: 6px;
+    font-size: 0.8rem;
+  }
+  .click-hint {
+    display: none;
+  }
+
+  .ctrl-bar {
+    margin-top: 2px;
+  }
+  .ctrl-btn {
+    width: 36px;
+    height: 36px;
+  }
+  .ctrl-btn svg {
+    width: 26px;
+    height: 26px;
+  }
+  .ctrl-play {
+    width: 36px;
+    height: 36px;
+  }
+  .page-counter {
+    font-size: 12px;
+    padding: 0 6px;
+  }
+
+  .dots {
+    margin-top: 8px;
+    gap: 8px;
+  }
+  .dot {
+    width: 16px;
+    height: 16px;
+  }
+
+  .nav-arrow {
+    opacity: 0.7;
+    width: 48px;
+    height: 48px;
+  }
+  .nav-arrow-left {
+    left: 6px;
+  }
+  .nav-arrow-right {
+    right: 6px;
+  }
+  .nav-arrow svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .assistant-avatar {
+    width: 44px;
+    height: 44px;
+  }
+  .assistant-bubble {
+    width: 200px;
+    font-size: 0.85rem;
+    right: 52px;
+  }
+
+  .confirm-overlay {
+    bottom: 20px;
+  }
+  .confirm-overlay button {
+    padding: 8px 20px;
+    font-size: 0.85rem;
+  }
+}

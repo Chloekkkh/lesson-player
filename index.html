@@ -50,7 +50,7 @@
     /* GRID */
     .courses-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 24px;
     }
 
@@ -148,6 +148,16 @@
 
     /* ERROR */
     .error-msg { text-align: center; padding: 40px; color: #e05555; }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      body { padding: 24px 12px; }
+      .header { margin-bottom: 32px; }
+      .header h1 { font-size: 2rem; }
+      .header p { font-size: 0.9rem; }
+      .courses-grid { gap: 16px; }
+      .tools-section { margin-top: 32px; }
+    }
   </style>
 </head>
 <body>

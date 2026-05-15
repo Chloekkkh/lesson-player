@@ -73,7 +73,7 @@ body {
 }
 
 .exercise-start-title {
-  font-size: 2.2rem;
+  font-size: calc(2.2rem * min(1.35, 1 / max(0.5, var(--player-scale, 1))));
   font-weight: 800;
   color: var(--green);
   margin: 0 0 10px;

@@ -25,7 +25,10 @@ var totalLines = 0;
 
 // ── 入口 ────────────────────────────────────────────────
 window.addEventListener('message', function(e) {
-  if (e.data && e.data.type === 'slideData') init(e.data.data);
+  if (e.data && e.data.type === 'slideData') {
+    document.documentElement.style.setProperty('--player-scale', e.data.data.scale || 1);
+    init(e.data.data);
+  }
   if (e.data && e.data.type === 'stopAudio') {
     audio.pause();
     rpAudio.pause();

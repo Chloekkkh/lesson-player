@@ -189,6 +189,7 @@ window.addEventListener('message', function handler(e) {
   var msg = e.data;
   if (!msg || msg.type !== 'slideData') return;
   window.removeEventListener('message', handler);
+  document.documentElement.style.setProperty('--player-scale', msg.data.scale || 1);
   Exercise.init(msg.data);
 });
 
