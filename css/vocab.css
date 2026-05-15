@@ -36,12 +36,13 @@
   flex: 1;
   overflow-y: auto;
   gap: 0px;
-  padding: 10px 40px 0;
+  padding: 10px 180px 0;
 }
 
 /* ── VOCAB ITEM — 水平行（Grid 5列对齐） ─────────────────── */
 .vocab-item {
   display: grid;
+  height: 100vh;
   grid-template-columns: 72px 100px auto 1fr 109px;
   align-items: center;
   gap: 12px;

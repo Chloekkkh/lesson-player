@@ -458,9 +458,6 @@
 
 /* ── MOBILE LANDSCAPE (viewport <= 900px) ──────────────────── */
 @media (max-width: 900px) {
-  .player-container {
-    padding: 8px 4px;
-  }
 
   .course-header {
     margin-bottom: 8px;
