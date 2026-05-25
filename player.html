@@ -84,6 +84,9 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z"/></svg>
     </button>
     <span class="page-counter" id="pageCounter">1 / 1</span>
+    <button class="ctrl-btn" id="btnSlideNav" title="幻灯片列表 (S)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+    </button>
     <div class="ctrl-vol">
       <div class="vol-popup" id="volPopup">
         <input type="range" class="vol-slider-pop" id="volumeSliderPop" min="0" max="100" value="80">
@@ -105,6 +108,22 @@
 
   <!-- Dots -->
   <div class="dots" id="dots"></div>
+
+  <!-- Slide Navigation Panel -->
+  <div class="slide-nav-overlay" id="slideNavOverlay"></div>
+  <div class="slide-nav-panel" id="slideNavPanel">
+    <div class="slide-nav-header">
+      <h3 class="slide-nav-title" id="slideNavTitle">幻灯片列表</h3>
+      <button class="slide-nav-close" id="btnSlideNavClose" title="关闭">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="slide-nav-list" id="slideNavList">
+      <!-- populated by JS -->
+    </div>
+  </div>
 </div>
 
 <!-- Audio -->

@@ -78,6 +78,13 @@ var btnReplay    = $('btnReplay');
 var navArrowLeft  = $('navArrowLeft');
 var navArrowRight = $('navArrowRight');
 
+var btnSlideNav      = $('btnSlideNav');
+var slideNavOverlay  = $('slideNavOverlay');
+var slideNavPanel    = $('slideNavPanel');
+var slideNavList     = $('slideNavList');
+var btnSlideNavClose = $('btnSlideNavClose');
+var slideNavOpen     = false;
+
 // 初始化音量
 audioEl.volume = 0.8;
 volumeSliderPop.addEventListener('input', function() {
@@ -135,6 +142,7 @@ function init() {
       // 构建页面元素
       // buildDots();       // 生成圆点导航（已禁用）
       buildIframes(courseId); // 创建所有幻灯片 iframe
+      buildSlideNav();         // 构建幻灯片导航面板
       applyTransformAll();     // 等比缩放适配窗口
 
       // 加载第 0 页（第一页）
@@ -157,7 +165,97 @@ function init() {
  * 每个圆点对应一页幻灯片，点击可跳转到对应页
  */
 function buildDots() {
-  // 圆点导航已禁用
+  buildSlideNav();
+}
+
+function buildSlideNav() {
+  if (!slideNavList) return;
+  slideNavList.innerHTML = '';
+
+  var typeNames = {
+    content:  '内容',
+    vocab:    '生词',
+    exercise: '练习',
+    display:  '展示',
+    dialogue: '对话',
+    video:    '视频'
+  };
+
+  var typeIcons = {
+    content:  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="1" width="10" height="14" rx="1.5"/><line x1="5.5" y1="5" x2="10.5" y2="5"/><line x1="5.5" y1="8" x2="10.5" y2="8"/><line x1="5.5" y1="11" x2="8.5" y2="11"/></svg>',
+    vocab:    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 2h5l2 2h5v10H2V2z"/><path d="M2 2v12"/><path d="M2 4h5l2 2"/></svg>',
+    exercise: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M11.5 1.5l3 3-9 9H2.5v-3l9-9z"/><line x1="10" y1="3" x2="13" y2="6"/></svg>',
+    display:  '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="2" width="14" height="9" rx="1"/><line x1="5" y1="14" x2="11" y2="14"/><line x1="8" y1="11" x2="8" y2="14"/></svg>',
+    dialogue: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 10h-.5A1.5 1.5 0 011 8.5v-5A1.5 1.5 0 012.5 2h7A1.5 1.5 0 0111 3.5V5"/><rect x="4" y="5" width="10" height="8" rx="1.5"/><circle cx="6.5" cy="9" r=".7" fill="currentColor" stroke="none"/><circle cx="9" cy="9" r=".7" fill="currentColor" stroke="none"/><circle cx="11.5" cy="9" r=".7" fill="currentColor" stroke="none"/></svg>',
+    video:    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><polygon points="6.5,5 6.5,11 11,8" fill="currentColor" stroke="none"/></svg>'
+  };
+
+  course.slides.forEach(function(slide, i) {
+    var item = document.createElement('button');
+    item.className = 'slide-nav-item type-' + slide.type;
+    item.setAttribute('data-index', i);
+
+    item.innerHTML =
+      '<span class="slide-nav-type-icon">' + (typeIcons[slide.type] || '') + '</span>' +
+      '<span class="slide-nav-index">' + (i + 1) + '</span>' +
+      '<span class="slide-nav-label">' + escapeHTML(slide.title) + '</span>' +
+      '<span class="slide-nav-type-dot type-' + slide.type + '"></span>';
+
+    item.addEventListener('click', function() {
+      closeSlideNav();
+      goToSlide(i);
+    });
+
+    slideNavList.appendChild(item);
+  });
+}
+
+function escapeHTML(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function updateSlideNavActive() {
+  if (!slideNavList) return;
+  var items = slideNavList.querySelectorAll('.slide-nav-item');
+  items.forEach(function(item, i) {
+    item.classList.toggle('active', i === current);
+  });
+
+  // Update header title with progress
+  var titleEl = $('slideNavTitle');
+  if (titleEl) {
+    titleEl.textContent = '第 ' + (current + 1) + ' / ' + course.slides.length + ' 页';
+  }
+
+  if (slideNavOpen) {
+    var activeItem = slideNavList.querySelector('.slide-nav-item.active');
+    if (activeItem) {
+      activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+}
+
+function openSlideNav() {
+  slideNavOpen = true;
+  slideNavPanel.classList.add('visible');
+  document.body.classList.add('nav-open');
+  updateSlideNavActive();
+}
+
+function closeSlideNav() {
+  slideNavOpen = false;
+  slideNavPanel.classList.remove('visible');
+  document.body.classList.remove('nav-open');
+}
+
+function toggleSlideNav() {
+  if (slideNavOpen) {
+    closeSlideNav();
+  } else {
+    openSlideNav();
+  }
 }
 
 /**
@@ -340,6 +438,7 @@ function loadSlide(index, isInit) {
 
   // 更新状态
   current       = index;
+  updateSlideNavActive(); // 同步导航面板高亮
   exerciseReady = false; // 重置练习作答状态
   confirmOverlay.classList.remove('visible'); // 隐藏确认按钮
   confirmOverlay.style.pointerEvents = ''; // 重置暂停时设的 none
@@ -1050,6 +1149,10 @@ btnFullscreen.addEventListener('click', function() {
   }
 });
 
+btnSlideNav.addEventListener('click', toggleSlideNav);
+slideNavOverlay.addEventListener('click', closeSlideNav);
+btnSlideNavClose.addEventListener('click', closeSlideNav);
+
 /* ═══════════════════════════════════════════════════════
    KEYBOARD — 键盘快捷键
    ═══════════════════════════════════════════════════════ */
@@ -1075,6 +1178,15 @@ document.addEventListener('keydown', function(e) {
       document.exitFullscreen();
     } else {
       player.requestFullscreen();
+    }
+  } else if (e.key === 's' || e.key === 'S') {
+    e.preventDefault();
+    toggleSlideNav();
+  } else if (e.key === 'Escape') {
+    if (slideNavOpen) {
+      closeSlideNav();
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen();
     }
   }
 });
