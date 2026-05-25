@@ -69,6 +69,45 @@
     },
     {
       "index": 3,
+      "type": "exercise",
+      "title": "练习",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "match",
+          "pairs": [
+            {
+              "left": "左",
+              "right": "右"
+            },
+            {
+              "left": "左",
+              "right": "右"
+            },
+            {
+              "left": "左",
+              "right": "右"
+            },
+            {
+              "left": "左",
+              "right": "右"
+            },
+            {
+              "left": "左",
+              "right": "右"
+            }
+          ],
+          "pinyinMap": {},
+          "leftType": "text",
+          "rightType": "text",
+          "direction": "vertical"
+        }
+      ],
+      "audio": "systemAssets/audio/exercise.mp3",
+      "showPinyin": true
+    },
+    {
+      "index": 4,
       "type": "content",
       "title": "第 2 页",
       "audio": "assets/ppt/audio/ppt_2.mp3",
@@ -149,7 +188,7 @@
       "backgroundImage": "assets/ppt/img/ppt_2.PNG"
     },
     {
-      "index": 5,
+      "index": 6,
       "type": "display",
       "title": "生词与例句",
       "vocab": [
@@ -184,7 +223,7 @@
       "audio": "systemAssets/audio/display.mp3"
     },
     {
-      "index": 6,
+      "index": 7,
       "type": "display",
       "title": "生词与例句",
       "vocab": [
@@ -225,7 +264,7 @@
       "showEnglish": true
     },
     {
-      "index": 7,
+      "index": 8,
       "type": "display",
       "title": "生词与例句",
       "vocab": [
@@ -259,7 +298,7 @@
       "showEnglish": true
     },
     {
-      "index": 8,
+      "index": 9,
       "type": "display",
       "title": "生词与例句",
       "vocab": [
@@ -293,7 +332,7 @@
       "showEnglish": true
     },
     {
-      "index": 9,
+      "index": 10,
       "type": "exercise",
       "title": "Practice!",
       "questions": [
@@ -372,7 +411,7 @@
       "audio": "systemAssets/audio/exercise.mp3"
     },
     {
-      "index": 10,
+      "index": 11,
       "type": "dialogue",
       "title": "课文 dialogue",
       "audio": "systemAssets/audio/dialogue.mp3",
@@ -433,7 +472,7 @@
       "dialogueAudio": "assets/dialogue/audio/d1.mp3"
     },
     {
-      "index": 11,
+      "index": 12,
       "type": "content",
       "title": "第 7 页",
       "audio": "assets/ppt/audio/ppt_3.mp3",
@@ -482,7 +521,7 @@
       "backgroundImage": "assets/ppt/img/ppt_3.PNG"
     },
     {
-      "index": 12,
+      "index": 13,
       "type": "exercise",
       "title": "Quiz Time!",
       "questions": [
