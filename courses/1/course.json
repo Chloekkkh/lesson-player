@@ -618,6 +618,39 @@
       ],
       "showPinyin": true,
       "audio": "systemAssets/audio/exercise.mp3"
+    },
+    {
+      "index": 13,
+      "type": "exercise",
+      "title": "Hanzi Writing！",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "trace",
+          "char": "谢",
+          "pinyin": "xiè",
+          "en": "thanks",
+          "stars": {
+            "1": 0.3,
+            "2": 0.6,
+            "3": 0.85
+          }
+        },
+        {
+          "id": "q2",
+          "type": "trace",
+          "char": "你",
+          "pinyin": "nǐ",
+          "en": "thanks",
+          "stars": {
+            "1": 0.3,
+            "2": 0.6,
+            "3": 0.85
+          }
+        }
+      ],
+      "audio": "",
+      "showPinyin": true
     }
   ]
 }
