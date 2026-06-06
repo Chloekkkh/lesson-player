@@ -485,6 +485,14 @@ function playRpLine(data) {
     // 轮到用户：显示录音 UI
     showRecordUI(line);
   } else {
+    // 隐藏录音 UI（当前是对方在说话）
+    var hint = document.getElementById('rpRecordHint');
+    var area = document.getElementById('rpRecordArea');
+    var doneBtn = document.getElementById('rpActionDone');
+    if (hint) hint.style.display = 'none';
+    if (area) area.style.display = 'none';
+    if (doneBtn) doneBtn.style.display = 'none';
+
     // 对方：自动播放音频，波纹效果
     var bubble = document.getElementById('bubble-' + rpIndex);
     if (bubble) bubble.classList.add('speaking');
