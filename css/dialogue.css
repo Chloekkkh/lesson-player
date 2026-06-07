@@ -43,10 +43,11 @@ body {
   padding: 0 28px;
   height: 40px;
   border-bottom: none;
-  gap: 16px;
+  position: relative;
 }
 .nav-back-btn {
   flex-shrink: 0;
+  z-index: 1;
   background: none;
   border: none;
   color: var(--green);
@@ -67,7 +68,9 @@ body {
   text-align: center;
 }
 .stage-badge {
-  display: inline-block;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   background: var(--green-soft);
   color: var(--green-deep);
   font-size: 12px;
@@ -75,15 +78,10 @@ body {
   padding: 4px 16px;
   border-radius: 50px;
   border: 1px solid rgba(34,168,110,0.2);
-  text-align: center;
-  margin: 0 auto;
+  white-space: nowrap;
 }
 .nav-progress {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--body);
-  min-width: 80px;
-  text-align: right;
+  display: none;
 }
 
 /* ── 主视图容器（课文精读） ──────────────────────────── */
@@ -105,7 +103,7 @@ body {
 
 /* ── 左侧控制面板（单卡片） ──────────────── */
 .dlg-left-panel {
-  flex: 0 0 360px;
+  flex: 0 0 306px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -115,7 +113,7 @@ body {
   background: #eeeef1;
   border-radius: var(--radius-lg);
   border: 1px solid #e3e4e8;
-  padding: 20px 32px;
+  padding: 28px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;

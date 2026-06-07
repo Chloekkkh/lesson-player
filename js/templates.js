@@ -224,7 +224,7 @@ function dialogueTemplate(slideNum, courseTitle) {
 
   <!-- 页面标题 -->
   <div class="page-header">
-    <h2 id="ctrlTitle"></h2>
+    <h2><span class="page-icon">💬</span><span id="ctrlTitle"></span></h2>
   </div>
 
   <!-- ═══ 全局导航条（三视图共享） ════════════════════ -->
