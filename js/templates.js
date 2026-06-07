@@ -230,7 +230,7 @@ function dialogueTemplate(slideNum, courseTitle) {
   <!-- ═══ 全局导航条（三视图共享） ════════════════════ -->
   <div class="dlg-nav-bar" id="dlgNavBar">
     <button class="nav-back-btn" id="navBackBtn">← Back</button>
-    <span class="nav-stage-title" id="navStageTitle">课文精读</span>
+    <span class="stage-badge" id="stageBadge">Intensive Reading · 精读课</span>
     <span class="nav-progress" id="navProgress"></span>
   </div>
 
@@ -251,24 +251,35 @@ function dialogueTemplate(slideNum, courseTitle) {
         <div class="ctrl-audio-time">
           <span id="audioCurTime">0:00</span> / <span id="audioDur">0:00</span>
         </div>
-        <!-- 语速 -->
-        <div class="speed-row">
-          <span class="speed-label">语速</span>
-          <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
-          <span class="speed-current" id="speedCurrent">1.0x</span>
-        </div>
-        <!-- 切换开关 -->
-        <div class="lang-row">
-          <label class="toggle-switch">
-            <input type="checkbox" id="pinyinToggle" checked>
-            <span class="toggle-slider"></span>
-            <span>Pinyin</span>
-          </label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="englishToggle" checked>
-            <span class="toggle-slider"></span>
-            <span>English</span>
-          </label>
+        <!-- 语速 + 开关组 -->
+        <div class="controls-group">
+          <div class="speed-row">
+            <span class="speed-label">语速 / Speed</span>
+            <div class="speed-selector">
+              <select class="speed-select" id="speedSelect">
+                <option value="0.8">0.8x</option>
+                <option value="1.0" selected>1.0x</option>
+                <option value="1.2">1.2x</option>
+                <option value="1.4">1.4x</option>
+              </select>
+            </div>
+          </div>
+          <div class="lang-row">
+            <div class="control-row">
+              <span class="control-label">Pinyin</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="pinyinToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="control-row">
+              <span class="control-label">English</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="englishToggle" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
         </div>
         <!-- 按钮区 -->
         <button class="enter-practice-btn" id="enterPracticeBtn">
@@ -298,7 +309,6 @@ function dialogueTemplate(slideNum, courseTitle) {
 
   <!-- ═══ 视图2：选择角色（全屏） ═══════════════════════ -->
   <div class="dlg-view dlg-role-select-view" id="dlgRoleSelectView">
-    <img class="role-select-bg" id="roleSelectBg" alt="">
     <div class="role-select-content">
       <h2 class="role-select-heading">🎭 选择你的角色</h2>
       <p class="role-select-sub">Choose your role for this conversation</p>

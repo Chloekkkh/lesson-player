@@ -209,14 +209,11 @@ function bindAudioEvents(data) {
     };
   }
 
-  // 语速滑动条
-  var speedSlider = document.getElementById('speedSlider');
-  var speedCurrent = document.getElementById('speedCurrent');
-  if (speedSlider) {
-    speedSlider.oninput = function() {
-      var speed = parseFloat(this.value);
-      audio.playbackRate = speed;
-      if (speedCurrent) speedCurrent.textContent = speed.toFixed(1) + 'x';
+  // 语速选择
+  var speedSelect = document.getElementById('speedSelect');
+  if (speedSelect) {
+    speedSelect.onchange = function() {
+      audio.playbackRate = parseFloat(this.value);
     };
   }
 }
@@ -371,13 +368,6 @@ function switchToPractice(data) {
   // 暂停精读音频
   audio.pause();
 
-  // 设置模糊背景图
-  var sceneImg = document.getElementById('sceneImg');
-  var roleBg = document.getElementById('roleSelectBg');
-  if (roleBg && sceneImg && sceneImg.src) {
-    roleBg.src = sceneImg.src;
-  }
-
   // 设置角色选项
   document.getElementById('rpChooseAvatarA').src = data.imgBase + data.speakers[0].avatar;
   document.getElementById('rpChooseAvatarB').src = data.imgBase + data.speakers[1].avatar;
@@ -398,22 +388,32 @@ function showView(viewId) {
   if (textView) textView.style.display = (viewId === 'text') ? 'flex' : 'none';
   if (roleView) roleView.style.display = (viewId === 'roleSelect') ? 'flex' : 'none';
   if (practiceView) practiceView.style.display = (viewId === 'practice') ? 'flex' : 'none';
+  updateBadge(viewId);
   updateNavBar(viewId);
+}
+
+function updateBadge(viewId) {
+  var badge = document.getElementById('stageBadge');
+  if (!badge) return;
+  if (viewId === 'text') {
+    badge.textContent = 'Intensive Reading · 精读课';
+  } else if (viewId === 'roleSelect') {
+    badge.textContent = 'Choose Your Role';
+  } else if (viewId === 'practice') {
+    badge.textContent = 'Role Play · 实战练习';
+  }
 }
 
 function updateNavBar(viewId) {
   var backBtn = document.getElementById('navBackBtn');
-  var titleEl = document.getElementById('navStageTitle');
   var progEl = document.getElementById('navProgress');
 
   if (viewId === 'text') {
     if (backBtn) backBtn.classList.add('hidden');
-    if (titleEl) titleEl.textContent = 'Intensive Reading';
     if (progEl) progEl.textContent = '';
     if (backBtn) backBtn.onclick = null;
   } else if (viewId === 'roleSelect') {
     if (backBtn) backBtn.classList.remove('hidden');
-    if (titleEl) titleEl.textContent = 'Choose Your Role';
     if (progEl) progEl.textContent = '';
     if (backBtn) backBtn.onclick = function() {
       rpAudio.pause();
@@ -423,7 +423,6 @@ function updateNavBar(viewId) {
     };
   } else if (viewId === 'practice') {
     if (backBtn) backBtn.classList.remove('hidden');
-    if (titleEl) titleEl.textContent = 'Role Play — Practical Practice';
     if (progEl) progEl.textContent = '第 ' + (rpIndex + 1) + ' / ' + totalLines + ' 句';
     if (backBtn) backBtn.onclick = function() {
       rpAudio.pause();
