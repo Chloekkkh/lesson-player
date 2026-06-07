@@ -348,11 +348,37 @@ body {
   overflow: hidden;
 }
 
-/* 场景与课文互斥切换 */
-.scene-card .scene-top { display: flex; flex: 1; flex-direction: column; min-height: 0; }
-.scene-card .text-section { display: none; }
-.scene-card.focus-mode .scene-top { display: none; }
-.scene-card.focus-mode .text-section { display: flex; flex: 1; }
+/* 场景与课文互斥切换 — 交叉淡入淡出 */
+.scene-card {
+  position: relative;
+}
+.scene-card .scene-top,
+.scene-card .text-section {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+.scene-card .scene-top {
+  opacity: 1; visibility: visible;
+  z-index: 1;
+}
+.scene-card .text-section {
+  opacity: 0; visibility: hidden;
+  z-index: 0;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 14px 18px;
+}
+.scene-card.focus-mode .scene-top {
+  opacity: 0; visibility: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+.scene-card.focus-mode .text-section {
+  opacity: 1; visibility: visible;
+  z-index: 1;
+}
 .text-section.locked { pointer-events: none; }
 
 /* 场景图区 */
@@ -414,14 +440,6 @@ body {
 .spk-pinyin { font-size: 11px; color: var(--body); }
 
 /* 课文文本区 */
-.text-section {
-  flex: 1;
-  overflow-y: auto;
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 14px 18px;
-  transition: all 0.4s ease;
-}
 .dlg-text-list { display: flex; flex-direction: column; gap: 12px; }
 
 .dlg-text-item {
