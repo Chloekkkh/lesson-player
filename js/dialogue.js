@@ -100,8 +100,8 @@ function init(data) {
     var html = '<div class="dlg-text-item" id="dlg-line-' + i + '">' +
       '<div class="dlg-text-avatar">' + avatar + '</div>' +
       '<div class="dlg-text-content">' +
-      '<div class="dlg-text-hanzi">' + wrapped + '</div>' +
       '<div class="dlg-text-pinyin">' + line.pinyin + '</div>' +
+      '<div class="dlg-text-hanzi">' + wrapped + '</div>' +
       '<div class="dlg-text-en">' + line.en + '</div>' +
       '</div>' +
       '</div>';
@@ -209,11 +209,14 @@ function bindAudioEvents(data) {
     };
   }
 
-  // 语速选择
-  var speedSelect = document.getElementById('speedSelect');
-  if (speedSelect) {
-    speedSelect.onchange = function() {
-      audio.playbackRate = parseFloat(this.value);
+  // 语速滑动条
+  var speedSlider = document.getElementById('speedSlider');
+  var speedCurrent = document.getElementById('speedCurrent');
+  if (speedSlider) {
+    speedSlider.oninput = function() {
+      var speed = parseFloat(this.value);
+      audio.playbackRate = speed;
+      if (speedCurrent) speedCurrent.textContent = speed.toFixed(1) + 'x';
     };
   }
 }
@@ -488,11 +491,25 @@ function bindPracticeEvents(data) {
     resetPractice(data);
   };
 
-  // 完成成果
+  // 完成成果 → 弹出确认
   document.getElementById('rpDoneBtn').onclick = function() {
+    var overlay = document.getElementById('rpFinishOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  };
+
+  // 确认弹窗 — 取消
+  document.getElementById('rpFinishCancel').onclick = function() {
+    var overlay = document.getElementById('rpFinishOverlay');
+    if (overlay) overlay.style.display = 'none';
+  };
+
+  // 确认弹窗 — 确定完成
+  document.getElementById('rpFinishConfirm').onclick = function() {
     clearRecordingState();
     showView('text');
     state = 'INTRO';
+    var overlay = document.getElementById('rpFinishOverlay');
+    if (overlay) overlay.style.display = 'none';
     parent.postMessage({ type: 'playerMessage', action: 'rolePlayComplete' }, '*');
   };
 }

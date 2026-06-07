@@ -69,6 +69,14 @@ body.nav-open {
 }
 .course-header p { margin: 0; font-size: 0.9rem; color: var(--body); }
 
+.player-course-title {
+  text-align: center;
+  margin: 12px 0 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
 /* ── SLIDES WRAPPER ───────────────────────────────────────── */
 .slides-wrapper {
   position: relative;

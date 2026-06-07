@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HSK 1 - Dialogue 10</title>
+  <title>HSK1 Lesson1 - Dialogue 10</title>
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/common.css">
   <link rel="stylesheet" href="/css/dialogue.css">
@@ -43,15 +43,9 @@
         <!-- 语速 + 开关组 -->
         <div class="controls-group">
           <div class="speed-row">
-            <span class="speed-label">语速 / Speed</span>
-            <div class="speed-selector">
-              <select class="speed-select" id="speedSelect">
-                <option value="0.8">0.8x</option>
-                <option value="1.0" selected>1.0x</option>
-                <option value="1.2">1.2x</option>
-                <option value="1.4">1.4x</option>
-              </select>
-            </div>
+            <span class="speed-label">Speed</span>
+            <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
+            <span class="speed-current" id="speedCurrent">1.0x</span>
           </div>
           <div class="lang-row">
             <div class="control-row">
@@ -125,31 +119,35 @@
     <div class="practice-layout">
       <!-- 左侧面板 -->
       <div class="rp-left-panel">
-        <!-- 组1：我的角色 -->
-        <div class="rp-group rp-my-role" id="rpMyRole">
+        <!-- 我的角色 -->
+        <div class="rp-role-section">
           <img class="rp-my-avatar" id="rpMyAvatar" src="">
           <div class="rp-my-name" id="rpMyName"></div>
           <div class="rp-my-pinyin" id="rpMyPinyin"></div>
         </div>
-        <!-- 组2：进度圆点 -->
-        <div class="rp-group rp-progress-group">
+        <!-- 进度圆点 -->
+        <div class="rp-progress-section">
           <div class="rp-progress-dots" id="rpProgressDots"></div>
           <div class="rp-progress-label">第 <span id="rpCur">1</span> / <span id="rpTotal2">1</span> 句</div>
         </div>
-        <!-- 组3：开关 -->
-        <div class="rp-group rp-lang-toggles">
-          <label class="toggle-switch">
-            <input type="checkbox" id="rpPinyinToggle" checked>
-            <span class="toggle-slider"></span>
-            <span>Pinyin</span>
-          </label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="rpEnglishToggle" checked>
-            <span class="toggle-slider"></span>
-            <span>English</span>
-          </label>
+        <!-- 开关 -->
+        <div class="rp-toggles-section">
+          <div class="control-row">
+            <span class="control-label">Pinyin</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="rpPinyinToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="control-row">
+            <span class="control-label">English</span>
+            <label class="toggle-switch">
+              <input type="checkbox" id="rpEnglishToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>
-        <!-- 放弃（弱化） -->
+        <!-- 放弃 -->
         <button class="rp-giveup-btn" id="rpGiveupBtn">Quit</button>
       </div>
 
@@ -181,6 +179,18 @@
             <div class="rp-result-btns">
               <button class="rp-result-btn rp-result-again" id="rpAgainBtn">Retry</button>
               <button class="rp-result-btn rp-result-done" id="rpDoneBtn">Finish</button>
+            </div>
+          </div>
+          <!-- 完成确认弹窗 -->
+          <div class="rp-finish-overlay" id="rpFinishOverlay" style="display:none">
+            <div class="rp-finish-card">
+              <div class="rp-finish-icon">🎉</div>
+              <div class="rp-finish-title">完成练习</div>
+              <div class="rp-finish-sub">确定要结束本次对话练习吗？</div>
+              <div class="rp-finish-btns">
+                <button class="rp-finish-cancel" id="rpFinishCancel">继续练习</button>
+                <button class="rp-finish-confirm" id="rpFinishConfirm">确定完成</button>
+              </div>
             </div>
           </div>
         </div>
