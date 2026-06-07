@@ -3,8 +3,7 @@
 :root {
   --admin-sidebar-w: 220px;
   --admin-header-h: 56px;
-  --admin-radius: 8px;
-  --admin-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --admin-shadow: 0 2px 12px rgba(0,0,0,0.08);
   --admin-shadow-hover: 0 4px 20px rgba(0,0,0,0.12);
 }
 
@@ -73,7 +72,7 @@ body {
   margin: 8px 12px;
   padding: 10px;
   background: rgba(79,195,247,0.2);
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   color: #4fc3f7;
   font-weight: 500;
   text-align: center;
@@ -105,7 +104,7 @@ body {
 /* ── Cards ─────────────────────────────── */
 .card {
   background: #fff;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   box-shadow: var(--admin-shadow);
   padding: 24px;
   margin-bottom: 16px;
@@ -127,7 +126,7 @@ body {
   gap: 6px;
   padding: 8px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s;
@@ -151,7 +150,7 @@ body {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #ddd;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-size: 0.9rem;
   font-family: inherit;
   transition: border-color 0.15s;
@@ -172,7 +171,7 @@ body {
 
 .course-card {
   background: #fff;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   box-shadow: var(--admin-shadow);
   padding: 20px;
   cursor: pointer;
@@ -207,7 +206,7 @@ body {
   align-items: center;
   gap: 12px;
   background: #fff;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   box-shadow: var(--admin-shadow);
   padding: 14px 16px;
   cursor: pointer;
@@ -244,7 +243,7 @@ body {
   text-align: center;
   padding: 16px;
   border: 2px dashed #ddd;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   color: #aaa;
   cursor: pointer;
   font-size: 0.9rem;
@@ -257,7 +256,7 @@ body {
   margin-top: 32px;
   padding: 16px;
   background: #fff8e1;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   border: 1px solid #ffe082;
 }
 .unconfigured-area h3 { font-size: 0.9rem; color: #f57c00; margin-bottom: 12px; }
@@ -267,7 +266,7 @@ body {
   justify-content: space-between;
   padding: 8px 12px;
   background: #fff;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 6px;
   font-size: 0.88rem;
 }
@@ -285,7 +284,7 @@ body {
 
 .modal {
   background: #fff;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   padding: 28px;
   min-width: 400px;
   max-width: 600px;
@@ -318,7 +317,7 @@ body {
 
 .slide-type-badge {
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
@@ -348,7 +347,7 @@ body {
 /* ── Question Cards ─────────────────────────── */
 .question-card {
   border: 1px solid #e0e0e0;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   margin-bottom: 12px;
   overflow: hidden;
 }
@@ -367,7 +366,7 @@ body {
 .q-number { font-weight: 700; color: #aaa; min-width: 24px; }
 .q-type-badge {
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-size: 0.75rem;
   font-weight: 600;
   background: #e0e0e0;
@@ -392,14 +391,14 @@ body {
 .vocab-table .form-input, .vocab-table .form-select { font-size: 0.85rem; padding: 5px 8px; }
 
 /* ── Timeline ─────────────────────────────── */
-.timeline-wrapper { background: #fff; border-radius: var(--admin-radius); padding: 20px; margin-bottom: 20px; }
+.timeline-wrapper { background: #fff; border-radius: var(--radius-sm); padding: 20px; margin-bottom: 20px; }
 
 .timeline-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .timeline-controls .btn { padding: 6px 12px; font-size: 0.85rem; }
 
-.timeline-bar-wrap { position: relative; height: 40px; background: #eee; border-radius: 20px; margin-bottom: 16px; cursor: pointer; }
-.timeline-bar-progress { position: absolute; left: 0; top: 0; height: 100%; background: #4fc3f7; border-radius: 20px; transition: width 0.1s; }
-.timeline-bar-cursor { position: absolute; top: -4px; width: 4px; height: 48px; background: #2a3446; border-radius: 2px; transform: translateX(-50%); }
+.timeline-bar-wrap { position: relative; height: 40px; background: #eee; border-radius: var(--radius-lg); margin-bottom: 16px; cursor: pointer; }
+.timeline-bar-progress { position: absolute; left: 0; top: 0; height: 100%; background: #4fc3f7; border-radius: var(--radius-lg); transition: width 0.1s; }
+.timeline-bar-cursor { position: absolute; top: -4px; width: 4px; height: 48px; background: #2a3446; border-radius: var(--radius-xs); transform: translateX(-50%); }
 
 .timeline-legend { display: flex; gap: 20px; font-size: 0.82rem; color: #888; margin-bottom: 12px; }
 .timeline-legend span::before { content: '▪ '; }
@@ -411,7 +410,7 @@ body {
 .toggle-slider {
   position: absolute; inset: 0;
   background: #ccc;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: background 0.2s;
 }
@@ -436,7 +435,7 @@ body {
   padding: 12px 20px;
   background: #2a3446;
   color: #fff;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   font-size: 0.88rem;
   opacity: 0;
   transform: translateY(10px);
@@ -474,7 +473,7 @@ body {
 .inline-edit {
   border: 1px solid transparent;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   transition: border-color 0.15s;
   background: transparent;
   font-family: inherit;
@@ -499,7 +498,7 @@ body {
   gap: 6px;
   padding: 20px;
   border: 2px solid #e0e0e0;
-  border-radius: var(--admin-radius);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   text-align: center;
@@ -535,7 +534,7 @@ body {
   height: 337px;
   background: #f0f0f0;
   border: 2px solid #ddd;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -559,7 +558,7 @@ body {
   position: absolute;
   border: 2px solid #4fc3f7;
   background: rgba(79,195,247,0.15);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   box-sizing: border-box;
   pointer-events: none;
 }
@@ -595,7 +594,7 @@ body {
   align-items: center;
   padding: 8px;
   background: #f8f9fa;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   margin-bottom: 6px;
   border: 1px solid #eee;
 }

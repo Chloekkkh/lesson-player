@@ -40,6 +40,7 @@ function init(data) {
   state = 'INTRO';
   myRole = null;
   rpIndex = 0;
+  showView('text');
   showPinyin = data.showPinyin !== false;
   showEnglish = data.showEnglish !== false;
 
@@ -366,11 +367,16 @@ function showVocabPopup(hl, v) {
 
 function switchToPractice(data) {
   state = 'PRACTICE_SELECT';
-  var overlay = document.getElementById('rpOverlay');
-  overlay.classList.add('show');
 
   // 暂停精读音频
   audio.pause();
+
+  // 设置模糊背景图
+  var sceneImg = document.getElementById('sceneImg');
+  var roleBg = document.getElementById('roleSelectBg');
+  if (roleBg && sceneImg && sceneImg.src) {
+    roleBg.src = sceneImg.src;
+  }
 
   // 设置角色选项
   document.getElementById('rpChooseAvatarA').src = data.imgBase + data.speakers[0].avatar;
@@ -378,15 +384,59 @@ function switchToPractice(data) {
   document.getElementById('rpChooseNameA').textContent = data.speakers[0].name;
   document.getElementById('rpChooseNameB').textContent = data.speakers[1].name;
   document.getElementById('rpTotal').textContent = totalLines;
+  document.getElementById('rpTotal2').textContent = totalLines;
 
-  // 显示角色选择阶段
-  showPracticeStage('select');
   clearChat();
+  showView('roleSelect');
+}
+
+function showView(viewId) {
+  // viewId: 'text' | 'roleSelect' | 'practice'
+  var textView = document.getElementById('dlgMainView');
+  var roleView = document.getElementById('dlgRoleSelectView');
+  var practiceView = document.getElementById('dlgPracticeView');
+  if (textView) textView.style.display = (viewId === 'text') ? 'flex' : 'none';
+  if (roleView) roleView.style.display = (viewId === 'roleSelect') ? 'flex' : 'none';
+  if (practiceView) practiceView.style.display = (viewId === 'practice') ? 'flex' : 'none';
+  updateNavBar(viewId);
+}
+
+function updateNavBar(viewId) {
+  var backBtn = document.getElementById('navBackBtn');
+  var titleEl = document.getElementById('navStageTitle');
+  var progEl = document.getElementById('navProgress');
+
+  if (viewId === 'text') {
+    if (backBtn) backBtn.classList.add('hidden');
+    if (titleEl) titleEl.textContent = 'Intensive Reading';
+    if (progEl) progEl.textContent = '';
+    if (backBtn) backBtn.onclick = null;
+  } else if (viewId === 'roleSelect') {
+    if (backBtn) backBtn.classList.remove('hidden');
+    if (titleEl) titleEl.textContent = 'Choose Your Role';
+    if (progEl) progEl.textContent = '';
+    if (backBtn) backBtn.onclick = function() {
+      rpAudio.pause();
+      clearRecordingState();
+      showView('text');
+      state = 'INTRO';
+    };
+  } else if (viewId === 'practice') {
+    if (backBtn) backBtn.classList.remove('hidden');
+    if (titleEl) titleEl.textContent = 'Role Play — Practical Practice';
+    if (progEl) progEl.textContent = '第 ' + (rpIndex + 1) + ' / ' + totalLines + ' 句';
+    if (backBtn) backBtn.onclick = function() {
+      rpAudio.pause();
+      audio.pause();
+      clearRecordingState();
+      showView('roleSelect');
+      state = 'PRACTICE_SELECT';
+    };
+  }
 }
 
 function showPracticeStage(stage) {
-  // stage: 'select' | 'playing' | 'result'
-  document.getElementById('rpRoleSelect').style.display = stage === 'select' ? 'block' : 'none';
+  // stage: 'select' | 'playing' | 'result' — 仅用于练习视图内部
   document.getElementById('rpPracticeControls').style.display = stage === 'playing' ? 'flex' : 'none';
   document.getElementById('rpResultOverlay').style.display = stage === 'result' ? 'flex' : 'none';
 }
@@ -397,20 +447,13 @@ function clearChat() {
 }
 
 function bindPracticeEvents(data) {
-  // 返回精读
-  document.getElementById('rpBackBtn').onclick = function() {
-    rpAudio.pause();
-    clearRecordingState();
-    document.getElementById('rpOverlay').classList.remove('show');
-    state = 'INTRO';
-  };
-
-  // 放弃练习
+  // 放弃练习 → 返回角色选择
   document.getElementById('rpGiveupBtn').onclick = function() {
     rpAudio.pause();
+    audio.pause();
     clearRecordingState();
-    document.getElementById('rpOverlay').classList.remove('show');
-    state = 'INTRO';
+    showView('roleSelect');
+    state = 'PRACTICE_SELECT';
   };
 
   // 选择角色 A / B
@@ -449,7 +492,8 @@ function bindPracticeEvents(data) {
   // 完成成果
   document.getElementById('rpDoneBtn').onclick = function() {
     clearRecordingState();
-    document.getElementById('rpOverlay').classList.remove('show');
+    showView('text');
+    state = 'INTRO';
     parent.postMessage({ type: 'playerMessage', action: 'rolePlayComplete' }, '*');
   };
 }
@@ -462,11 +506,39 @@ function chooseRole(roleId, data) {
   var spk = speakerMap[roleId];
   document.getElementById('rpMyAvatar').src = data.imgBase + spk.avatar;
   document.getElementById('rpMyName').textContent = spk.name;
+  var pinyinEl = document.getElementById('rpMyPinyin');
+  if (pinyinEl) pinyinEl.textContent = spk.pinyin || '';
+
+  // 生成进度圆点
+  buildProgressDots();
 
   state = 'PRACTICE_PLAYING';
+  showView('practice');
   showPracticeStage('playing');
   applyRpVisibility();
   playRpLine(data);
+}
+
+function buildProgressDots() {
+  var container = document.getElementById('rpProgressDots');
+  if (!container) return;
+  container.innerHTML = '';
+  for (var i = 0; i < totalLines; i++) {
+    var dot = document.createElement('span');
+    dot.className = 'rp-dot';
+    dot.id = 'rp-dot-' + i;
+    container.appendChild(dot);
+  }
+}
+
+function updateProgressDots() {
+  for (var i = 0; i < totalLines; i++) {
+    var dot = document.getElementById('rp-dot-' + i);
+    if (!dot) continue;
+    dot.className = 'rp-dot';
+    if (i < rpIndex) dot.classList.add('done');
+    if (i === rpIndex) dot.classList.add('current');
+  }
 }
 
 function playRpLine(data) {
@@ -475,8 +547,10 @@ function playRpLine(data) {
 
   // 更新进度
   document.getElementById('rpCur').textContent = rpIndex + 1;
-  var pct = ((rpIndex) / totalLines) * 100;
-  document.getElementById('rpProgressFill').style.width = pct + '%';
+  updateProgressDots();
+  // 更新导航条进度
+  var navProg = document.getElementById('navProgress');
+  if (navProg) navProg.textContent = '第 ' + (rpIndex + 1) + ' / ' + totalLines + ' 句';
 
   // 添加气泡
   addChatBubble(line, isMy, data);
@@ -486,12 +560,12 @@ function playRpLine(data) {
     showRecordUI(line);
   } else {
     // 隐藏录音 UI（当前是对方在说话）
-    var hint = document.getElementById('rpRecordHint');
+    var sentenceEl = document.getElementById('rpRecordSentence');
     var area = document.getElementById('rpRecordArea');
-    var doneBtn = document.getElementById('rpActionDone');
-    if (hint) hint.style.display = 'none';
+    var actions = document.getElementById('rpRecordActions');
+    if (sentenceEl) sentenceEl.style.display = 'none';
     if (area) area.style.display = 'none';
-    if (doneBtn) doneBtn.style.display = 'none';
+    if (actions) actions.style.display = 'none';
 
     // 对方：自动播放音频，波纹效果
     var bubble = document.getElementById('bubble-' + rpIndex);
@@ -562,9 +636,10 @@ function playLineAudio(line, data, onEnd) {
         }, 30000);
       }).catch(function(err) {
         console.warn('playLineAudio play() rejected:', err && err.name, err && err.message);
+        var actions = document.getElementById('rpRecordActions');
         var doneBtn = document.getElementById('rpActionDone');
+        if (actions) actions.style.display = 'flex';
         if (doneBtn) {
-          doneBtn.style.display = 'inline-block';
           doneBtn.disabled = false;
           doneBtn.textContent = 'Next ▶';
         }
@@ -606,7 +681,13 @@ function onUserReadDone(data) {
 
 function onAllLinesComplete(data) {
   state = 'PRACTICE_RESULT';
-  document.getElementById('rpProgressFill').style.width = '100%';
+  // 所有圆点标记为完成
+  for (var i = 0; i < totalLines; i++) {
+    var dot = document.getElementById('rp-dot-' + i);
+    if (dot) { dot.className = 'rp-dot done'; }
+  }
+  var navProg = document.getElementById('navProgress');
+  if (navProg) navProg.textContent = '完成';
   showPracticeStage('result');
 }
 
@@ -618,7 +699,13 @@ function resetPractice(data) {
   clearChat();
   clearRecordingState();
   showPracticeStage('playing');
-  document.getElementById('rpProgressFill').style.width = '0%';
+  // 重置进度圆点
+  for (var i = 0; i < totalLines; i++) {
+    var dot = document.getElementById('rp-dot-' + i);
+    if (dot) { dot.className = 'rp-dot'; }
+  }
+  var navProg = document.getElementById('navProgress');
+  if (navProg) navProg.textContent = '第 1 / ' + totalLines + ' 句';
   playRpLine(data);
 }
 
@@ -640,31 +727,28 @@ function showRecordUI(line) {
   }
   mediaRecorder = null;
 
-  // 显示录音提示和区域，隐藏"我读完了"
-  var hint = document.getElementById('rpRecordHint');
-  var area = document.getElementById('rpRecordArea');
-  var doneBtn = document.getElementById('rpActionDone');
-  if (hint) {
-    hint.style.display = 'block';
+  // 显示句子提示
+  var sentenceEl = document.getElementById('rpRecordSentence');
+  if (sentenceEl) {
+    sentenceEl.style.display = 'flex';
     var hanziSpan = document.getElementById('rpRecordHanzi');
     if (hanziSpan) hanziSpan.textContent = line.hanzi;
   }
+  // 显示录音区域
+  var area = document.getElementById('rpRecordArea');
   if (area) area.style.display = 'flex';
-  if (doneBtn) {
-    doneBtn.style.display = 'none';
-    doneBtn.disabled = true;
-  }
+  // 隐藏回放+完成按钮行
+  var actions = document.getElementById('rpRecordActions');
+  if (actions) actions.style.display = 'none';
 
-  // 重置录音状态（每句话独立），隐藏回放按钮
+  // 重置录音状态（每句话独立）
   audioChunks = [];
   recordedBlob = null;
   isRecording = false;
-  var playRecBtn = document.getElementById('playRecBtn');
-  if (playRecBtn) playRecBtn.style.display = 'none';
 }
 
 function startRecording() {
-  // 防止重复点击 — 同步设置标志，避免快速按下-释放绕过状态机
+  // 防止重复点击
   if (isRecording) return;
   isRecording = true;
 
@@ -673,8 +757,10 @@ function startRecording() {
   if (!getMedia) {
     console.warn('Microphone API not available');
     isRecording = false;
+    var actions = document.getElementById('rpRecordActions');
     var doneBtn = document.getElementById('rpActionDone');
-    if (doneBtn) { doneBtn.style.display = 'inline-block'; doneBtn.disabled = false; }
+    if (actions) actions.style.display = 'flex';
+    if (doneBtn) doneBtn.disabled = false;
     return;
   }
   getMedia({ audio: true }).then(function(stream) {
@@ -685,12 +771,11 @@ function startRecording() {
     };
     mediaRecorder.onstop = function() {
       recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      // 显示回放按钮，启用完成按钮
-      var playRecBtn = document.getElementById('playRecBtn');
+      // 显示回放+完成按钮
+      var actions = document.getElementById('rpRecordActions');
       var doneBtn = document.getElementById('rpActionDone');
-      if (playRecBtn) playRecBtn.style.display = 'inline-block';
+      if (actions) actions.style.display = 'flex';
       if (doneBtn) {
-        doneBtn.style.display = 'inline-block';
         doneBtn.disabled = false;
       }
       // 停止所有 track
@@ -703,11 +788,10 @@ function startRecording() {
     console.warn('录音权限被拒绝:', err);
     isRecording = false;
     // 即使没权限，也让用户点"我读完了"
+    var actions = document.getElementById('rpRecordActions');
     var doneBtn = document.getElementById('rpActionDone');
-    if (doneBtn) {
-      doneBtn.style.display = 'inline-block';
-      doneBtn.disabled = false;
-    }
+    if (actions) actions.style.display = 'flex';
+    if (doneBtn) doneBtn.disabled = false;
   });
 }
 

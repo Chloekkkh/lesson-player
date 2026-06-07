@@ -222,44 +222,42 @@ function dialogueTemplate(slideNum, courseTitle) {
 <body>
 <div class="dlg-card">
 
-  <!-- 页面标题（与 display 页一致） -->
+  <!-- 页面标题 -->
   <div class="page-header">
     <h2 id="ctrlTitle"></h2>
   </div>
 
-  <!-- ── 主视图：课文精读 ─────────────────────────────── -->
-  <div class="dlg-main-view" id="dlgMainView">
+  <!-- ═══ 全局导航条（三视图共享） ════════════════════ -->
+  <div class="dlg-nav-bar" id="dlgNavBar">
+    <button class="nav-back-btn" id="navBackBtn">← Back</button>
+    <span class="nav-stage-title" id="navStageTitle">课文精读</span>
+    <span class="nav-progress" id="navProgress"></span>
+  </div>
 
-    <!-- 左侧控制面板 -->
+  <!-- ═══ 视图1：课文精读 ═══════════════════════════════ -->
+  <div class="dlg-view dlg-view-text" id="dlgMainView">
+
+    <!-- 左侧控制面板（单卡片） -->
     <div class="dlg-left-panel">
-      <!-- 卡片1：课程信息+音频控制 -->
-      <div class="ctrl-card">
-        <div class="ctrl-audio-player">
-          <button class="ctrl-play-btn" id="playBtn">
-            <span id="playIcon">▶</span>
-          </button>
-          <div class="ctrl-audio-body">
-            <div class="ctrl-progress-bar">
-              <div class="ctrl-progress-fill" id="audioProgressFill"></div>
-            </div>
-            <div class="ctrl-audio-time">
-              <span id="audioCurTime">0:00</span> / <span id="audioDur">0:00</span>
-            </div>
-          </div>
-        </div>
-        <button class="ctrl-text-toggle" id="textToggle">
-          <span id="textToggleLabel">Show transcript</span>
+      <div class="dlg-ctrl-panel">
+        <!-- 播放按钮（居中大圆） -->
+        <button class="ctrl-play-btn" id="playBtn">
+          <span id="playIcon">▶</span>
         </button>
-      </div>
-
-      <!-- 卡片2：工具栏 -->
-      <div class="tool-card">
-        <div class="speed-slider-wrap">
-          <span class="speed-label">0.8x</span>
+        <!-- 进度条 + 时间 -->
+        <div class="ctrl-progress-bar">
+          <div class="ctrl-progress-fill" id="audioProgressFill"></div>
+        </div>
+        <div class="ctrl-audio-time">
+          <span id="audioCurTime">0:00</span> / <span id="audioDur">0:00</span>
+        </div>
+        <!-- 语速 -->
+        <div class="speed-row">
+          <span class="speed-label">语速</span>
           <input type="range" id="speedSlider" class="speed-slider" min="0.8" max="1.4" step="0.1" value="1.0">
-          <span class="speed-label">1.4x</span>
           <span class="speed-current" id="speedCurrent">1.0x</span>
         </div>
+        <!-- 切换开关 -->
         <div class="lang-row">
           <label class="toggle-switch">
             <input type="checkbox" id="pinyinToggle" checked>
@@ -272,51 +270,75 @@ function dialogueTemplate(slideNum, courseTitle) {
             <span>English</span>
           </label>
         </div>
+        <!-- 按钮区 -->
         <button class="enter-practice-btn" id="enterPracticeBtn">
-          Enter Role Play →
+          🎭 进入角色扮演 →
+        </button>
+        <button class="ctrl-text-toggle" id="textToggle">
+          <span id="textToggleLabel">Show transcript</span>
         </button>
       </div>
     </div>
 
-    <!-- 右侧内容面板：场景模拟+课文精读整合卡片 -->
+    <!-- 右侧内容面板 -->
     <div class="dlg-right-panel" id="dlgRightPanel">
       <div class="scene-card" id="sceneCard">
-        <!-- 场景顶部：图片+头像，始终显示 -->
         <div class="scene-top">
           <div class="scene-section">
             <img class="scene-img" id="sceneImg" alt="场景">
           </div>
           <div class="speakers-row" id="speakersRow"></div>
         </div>
-        <!-- 课文文本：解锁后显示，可通过"显示/隐藏课文内容"切换 -->
         <div class="text-section" id="textSection">
           <div class="dlg-text-list" id="dlgTextList"></div>
         </div>
       </div>
     </div>
-  </div><!-- /dlg-main-view -->
+  </div><!-- /dlgMainView -->
 
-  <!-- ── 角色扮演浮层 ─────────────────────────────────── -->
-  <div class="rp-overlay" id="rpOverlay">
+  <!-- ═══ 视图2：选择角色（全屏） ═══════════════════════ -->
+  <div class="dlg-view dlg-role-select-view" id="dlgRoleSelectView">
+    <img class="role-select-bg" id="roleSelectBg" alt="">
+    <div class="role-select-content">
+      <h2 class="role-select-heading">🎭 选择你的角色</h2>
+      <p class="role-select-sub">Choose your role for this conversation</p>
+      <div class="role-select-cards">
+        <button class="role-card" id="rpChooseA">
+          <img class="role-card-avatar" id="rpChooseAvatarA" src="">
+          <div class="role-card-name" id="rpChooseNameA"></div>
+        </button>
+        <div class="role-vs">
+          <span class="role-vs-line"></span>
+          <span class="role-vs-text">VS</span>
+          <span class="role-vs-line"></span>
+        </div>
+        <button class="role-card" id="rpChooseB">
+          <img class="role-card-avatar" id="rpChooseAvatarB" src="">
+          <div class="role-card-name" id="rpChooseNameB"></div>
+        </button>
+      </div>
+      <p class="role-select-hint" id="rpTotalHint">共 <span id="rpTotal">1</span> 句对话</p>
+    </div>
+  </div><!-- /dlgRoleSelectView -->
 
-    <!-- 左上角返回按钮 -->
-    <button class="rp-back-btn" id="rpBackBtn">← Back</button>
-
-    <div class="rp-layout">
-
+  <!-- ═══ 视图3：对话练习（全屏） ═══════════════════════ -->
+  <div class="dlg-view dlg-practice-view" id="dlgPracticeView">
+    <div class="practice-layout">
       <!-- 左侧面板 -->
       <div class="rp-left-panel">
-        <div class="rp-my-role" id="rpMyRole">
+        <!-- 组1：我的角色 -->
+        <div class="rp-group rp-my-role" id="rpMyRole">
           <img class="rp-my-avatar" id="rpMyAvatar" src="">
           <div class="rp-my-name" id="rpMyName"></div>
+          <div class="rp-my-pinyin" id="rpMyPinyin"></div>
         </div>
-        <div class="rp-progress-bar-wrap">
-          <div class="rp-progress-label">Line <span id="rpCur">1</span> / <span id="rpTotal">1</span></div>
-          <div class="rp-progress-track">
-            <div class="rp-progress-fill" id="rpProgressFill"></div>
-          </div>
+        <!-- 组2：进度圆点 -->
+        <div class="rp-group rp-progress-group">
+          <div class="rp-progress-dots" id="rpProgressDots"></div>
+          <div class="rp-progress-label">第 <span id="rpCur">1</span> / <span id="rpTotal2">1</span> 句</div>
         </div>
-        <div class="rp-lang-toggles">
+        <!-- 组3：开关 -->
+        <div class="rp-group rp-lang-toggles">
           <label class="toggle-switch">
             <input type="checkbox" id="rpPinyinToggle" checked>
             <span class="toggle-slider"></span>
@@ -328,6 +350,7 @@ function dialogueTemplate(slideNum, courseTitle) {
             <span>English</span>
           </label>
         </div>
+        <!-- 放弃（弱化） -->
         <button class="rp-giveup-btn" id="rpGiveupBtn">Quit</button>
       </div>
 
@@ -335,32 +358,22 @@ function dialogueTemplate(slideNum, courseTitle) {
       <div class="rp-right-panel">
         <div class="chat-container" id="chatContainer"></div>
         <div class="rp-action-bar" id="rpActionBar">
-          <!-- 角色选择阶段 -->
-          <div class="rp-role-select" id="rpRoleSelect">
-            <p class="rp-role-prompt">Choose your role:</p>
-            <div class="rp-role-options">
-              <button class="rp-role-opt" id="rpChooseA">
-                <img class="rp-opt-avatar" id="rpChooseAvatarA" src="">
-                <span id="rpChooseNameA"></span>
-              </button>
-              <button class="rp-role-opt" id="rpChooseB">
-                <img class="rp-opt-avatar" id="rpChooseAvatarB" src="">
-                <span id="rpChooseNameB"></span>
-              </button>
-            </div>
-          </div>
           <!-- 练习进行中 -->
           <div class="rp-practice-controls" id="rpPracticeControls" style="display:none">
-            <div class="record-hint" id="rpRecordHint" style="display:none">
-              Your turn: <span class="record-hanzi" id="rpRecordHanzi"></span>
+            <div class="record-sentence" id="rpRecordSentence" style="display:none">
+              <span class="record-sentence-label">轮到你了</span>
+              <span class="record-sentence-text" id="rpRecordHanzi"></span>
             </div>
-            <div class="record-area" id="rpRecordArea" style="display:none">
+            <div class="record-area-new" id="rpRecordArea" style="display:none">
               <button class="record-btn" id="recordBtn">
-                <span class="record-icon">🎙</span>
+                <span class="record-icon">🎤</span>
               </button>
-              <button class="play-rec-btn" id="playRecBtn" style="display:none">🔊 Playback</button>
+              <span class="record-hint-text">按住录音 · 松开停止</span>
             </div>
-            <button class="rp-action-done" id="rpActionDone" disabled>Done ✓</button>
+            <div class="record-actions" id="rpRecordActions" style="display:none">
+              <button class="play-rec-btn" id="playRecBtn">🔊 回放</button>
+              <button class="rp-action-done" id="rpActionDone" disabled>✓ 读完了</button>
+            </div>
           </div>
           <!-- 结束反馈 -->
           <div class="rp-result-overlay" id="rpResultOverlay" style="display:none">
@@ -373,9 +386,8 @@ function dialogueTemplate(slideNum, courseTitle) {
           </div>
         </div>
       </div>
-
-    </div><!-- /rp-layout -->
-  </div><!-- /rp-overlay -->
+    </div><!-- /practice-layout -->
+  </div><!-- /dlgPracticeView -->
 
   <!-- 词汇浮层 -->
   <div class="dlg-vocab-popup" id="vocabPopup">

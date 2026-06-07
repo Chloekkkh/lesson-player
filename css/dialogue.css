@@ -19,11 +19,11 @@ body {
 
 /* ── MAIN CARD ─────────────────────────────────────────────── */
 .dlg-card {
-  background: #fff;
-  border-radius: 24px;
+  background: #f9fbfa;
+  border-radius: var(--radius-xl);
   width: 100%;
   height: 100%;
-  box-shadow: 0 12px 48px rgba(34,168,110,0.10);
+  box-shadow: 0 12px 48px rgba(34,168,110,0.08);
   overflow: hidden;
   position: relative;
   display: flex;
@@ -35,8 +35,47 @@ body {
    一、课文精读 — 主视图布局
    ═══════════════════════════════════════════════════════════ */
 
-/* ── 主视图容器 ─────────────────────────────────────────── */
-.dlg-main-view {
+/* ── 全局导航条（三视图共享） ──────────────────────────── */
+.dlg-nav-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  height: 40px;
+  border-bottom: 1px solid #dce3df;
+  gap: 16px;
+}
+.nav-back-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--radius-xs) var(--radius-sm);
+  border-radius: var(--radius-full);
+  transition: background 0.2s, opacity 0.2s;
+}
+.nav-back-btn:hover { background: var(--green-soft); }
+.nav-back-btn.hidden { opacity: 0; pointer-events: none; }
+.nav-stage-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+}
+.nav-progress {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--body);
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ── 主视图容器（课文精读） ──────────────────────────── */
+.dlg-view-text {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -46,119 +85,108 @@ body {
   overflow: hidden;
 }
 
-/* ── 页面标题（与 vocab/display 页一致） ─────────────── */
-.dlg-page-header {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 16px 40px 8px;
-  gap: 0;
-  flex-direction: column;
-}
-.dlg-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--green);
-  margin: 0;
-}
-.dlg-subtitle {
-  font-size: 1.05rem;
-  color: var(--body);
-  margin: 4px 0 0;
-  line-height: 1.6;
-}
-
-/* 页面标题 flex 约束（与 display 页 .page-header h2 一致） */
+/* ── 页面标题 ───────────────────────────────────── */
 .dlg-card > .page-header {
   flex-shrink: 0;
   padding: 16px 40px 8px;
 }
 
-/* ── 左侧控制面板 ──────────────────────────────────────── */
+/* ── 左侧控制面板（单卡片） ──────────────── */
 .dlg-left-panel {
-  flex: 0 0 220px;
+  flex: 0 0 360px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  justify-content: center;
 }
 
-.ctrl-card,
-.tool-card {
-  background: #f7fcf9;
-  border-radius: 18px;
-  padding: 18px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 2px solid transparent;
-  transition: border-color 0.2s;
-}
-
-/* 音频播放器：垂直排列，播放按钮在上 */
-.ctrl-audio-player {
+.dlg-ctrl-panel {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 20px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
 }
 
+/* 大播放按钮 */
 .ctrl-play-btn {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   background: var(--green);
   color: #fff;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(34,168,110,0.3);
-  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 0 0 8px rgba(34,168,110,0.10), 0 6px 24px rgba(34,168,110,0.35);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
 }
-.ctrl-play-btn:hover { background: var(--green-deep); transform: scale(1.06); }
+.ctrl-play-btn:hover { background: var(--green-deep); transform: scale(1.08); box-shadow: 0 0 0 12px rgba(34,168,110,0.14), 0 8px 32px rgba(34,168,110,0.4); }
 .ctrl-play-btn.playing { animation: pulse-btn 2s ease-in-out infinite; }
 
 @keyframes pulse-btn {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34,168,110,0.5); }
-  50%       { box-shadow: 0 0 0 10px rgba(34,168,110,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,168,110,0.5), 0 0 0 8px rgba(34,168,110,0.10); }
+  50%       { box-shadow: 0 0 0 14px rgba(34,168,110,0), 0 0 0 16px rgba(34,168,110,0.04); }
 }
 
-.ctrl-audio-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-
+/* 进度条 */
 .ctrl-progress-bar {
+  width: 100%;
   height: 5px;
-  background: #e0e6f0;
-  border-radius: 3px;
+  background: #e4ece6;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   cursor: pointer;
+  flex-shrink: 0;
 }
 .ctrl-progress-fill {
   height: 100%;
   background: var(--green);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   width: 0%;
   transition: width 0.25s linear;
+  position: relative;
+}
+.ctrl-progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--green);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
 }
 .ctrl-audio-time {
   font-size: 11px;
   color: var(--body);
+  flex-shrink: 0;
 }
 
-/* 语速滑动条 */
-.speed-slider-wrap {
+/* 语速 — 紧凑横排（带顶部分隔线） */
+.speed-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
+  flex-shrink: 0;
+  padding-top: 16px;
+  border-top: 1px solid #e8edea;
 }
-.speed-label {
+.speed-row .speed-label {
   font-size: 11px;
   color: var(--body);
   flex-shrink: 0;
+  min-width: 28px;
 }
 .speed-current {
   font-size: 12px;
@@ -172,7 +200,7 @@ body {
   -webkit-appearance: none;
   appearance: none;
   height: 5px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: #e0e6f0;
   outline: none;
   cursor: pointer;
@@ -197,35 +225,24 @@ body {
   border: none;
 }
 
-/* 显示/隐藏课文按钮 — 与开始对话练习按钮样式一致 */
+/* 显示课文 — 次要按钮 */
 .ctrl-text-toggle {
-  padding: 10px 14px;
-  border-radius: 50px;
-  border: none;
-  background: var(--green);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid #d0e0d8;
+  background: transparent;
+  color: #888;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   width: 100%;
-  box-shadow: 0 4px 16px rgba(34,168,110,0.3);
-  transition: background 0.2s, transform 0.15s, opacity 0.2s;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
-.ctrl-text-toggle:hover { background: var(--green-deep); transform: translateY(-1px); }
-.ctrl-text-toggle:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  background: #c0c8d0;
-  box-shadow: none;
-  transform: none;
-}
+.ctrl-text-toggle:hover { background: #f0f7f3; color: var(--green); border-color: var(--green); }
+.ctrl-text-toggle:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* 工具栏卡片 */
-.lang-toggles {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+/* ── 开关与 CTA 按钮 ───────────────────── */
 .lang-row {
   display: flex;
   gap: 12px;
@@ -254,8 +271,8 @@ body {
   position: absolute;
   left: 2px;
   top: 2px;
-  width: 14px;
-  height: 14px;
+  width: var(--radius-md);
+  height: var(--radius-md);
   background: #fff;
   border-radius: 50%;
   transition: transform 0.2s;
@@ -264,18 +281,21 @@ body {
 .toggle-switch input:checked + .toggle-slider::before { transform: translateX(14px); }
 
 .enter-practice-btn {
-  padding: 10px 14px;
-  border-radius: 50px;
+  padding: 11px 16px;
+  border-radius: var(--radius-full);
   border: none;
-  background: var(--green);
+  background: linear-gradient(135deg, #22a86e, #1a8d5a);
   color: #fff;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(34,168,110,0.3);
-  transition: background 0.2s, transform 0.15s, opacity 0.2s;
+  width: 100%;
+  flex-shrink: 0;
+  margin-top: 8px;
+  box-shadow: 0 4px 20px rgba(34,168,110,0.35);
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s, opacity 0.2s;
 }
-.enter-practice-btn:hover { background: var(--green-deep); transform: translateY(-1px); }
+.enter-practice-btn:hover { background: linear-gradient(135deg, #1a8d5a, #146f45); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(34,168,110,0.45); }
 .enter-practice-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -293,50 +313,43 @@ body {
   transition: all 0.4s ease;
 }
 
-/* 场景模拟卡片：填满右面板 */
 .scene-card {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #f7fcf9;
-  border-radius: 20px;
-  border: 2px solid rgba(34,168,110,0.12);
-  box-shadow: 0 8px 32px rgba(34,168,110,0.08);
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.05);
   overflow: hidden;
 }
 
-/* ── 互斥切换：课文与场景互斥显示 ─────────────────────── */
-/* 默认（无focus-mode）：场景可见，课文隐藏 */
-.scene-card .scene-top { display: flex; flex: 1; flex-direction: column; }
+/* 场景与课文互斥切换 */
+.scene-card .scene-top { display: flex; flex: 1; flex-direction: column; min-height: 0; }
 .scene-card .text-section { display: none; }
-
-/* focus-mode：课文可见，场景隐藏 */
 .scene-card.focus-mode .scene-top { display: none; }
 .scene-card.focus-mode .text-section { display: flex; flex: 1; }
-
-/* 解锁状态：locked只控制交互，display由focus-mode决定 */
 .text-section.locked { pointer-events: none; }
 
-/* ── 场景图区域 ──────────────────────────────────────── */
+/* 场景图区 */
 .scene-section {
-    flex: 6;
-    padding: 24px;
-    overflow: hidden;
-    background: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
+  flex: 6;
+  padding: 16px;
+  overflow: hidden;
+  background: #f9fbfa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 .scene-img {
-  width: 100%;
-  height: 100%;
-  border-radius: 10px;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
 }
 
-/* ── 人物头像行 ──────────────────────────────────────── */
+/* 人物头像行 */
 .speakers-row {
   flex: 4;
   display: flex;
@@ -344,7 +357,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 0 16px;
-  background: #fff;
+  background: #f9fbfa;
   min-height: 0;
 }
 .speaker-badge {
@@ -353,8 +366,8 @@ body {
   align-items: center;
   gap: 4px;
   padding: 8px 16px;
-  background: #f7fcf9;
-  border-radius: 14px;
+  background: #fff;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   transition: all 0.3s ease;
 }
@@ -365,8 +378,7 @@ body {
   box-shadow: 0 0 0 3px rgba(34,168,110,0.2);
 }
 .spk-avatar {
-  width: 52px;
-  height: 52px;
+  width: 52px; height: 52px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid var(--green);
@@ -381,7 +393,7 @@ body {
   flex: 1;
   overflow-y: auto;
   background: #fafefe;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 14px 18px;
   transition: all 0.4s ease;
 }
@@ -392,7 +404,7 @@ body {
   gap: 10px;
   align-items: flex-start;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 2px solid transparent;
   transition: background 0.3s, border-color 0.3s;
 }
@@ -416,18 +428,18 @@ body {
 .dlg-vocab-hl {
   background: rgba(34,168,110,0.15);
   color: var(--green-deep);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   padding: 0 2px;
   cursor: pointer;
   font-weight: 500;
 }
 .dlg-vocab-hl:hover { background: rgba(34,168,110,0.28); }
 
-/* ── 词汇浮层 ─────────────────────────────────────────── */
+/* 词汇浮层 */
 .dlg-vocab-popup {
   position: fixed;
   background: #fff;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 14px 18px;
   box-shadow: 0 12px 48px rgba(34,168,110,0.18);
   max-width: 220px;
@@ -437,43 +449,138 @@ body {
 .dlg-vocab-popup.show { display: block; }
 .vp-hanzi { font-size: 22px; font-weight: bold; color: var(--ink); margin-bottom: 3px; }
 .vp-pinyin { font-size: 13px; color: var(--green); margin-bottom: 3px; }
-.vp-pos { font-size: 11px; color: var(--body); margin-bottom: 3px; }
-.vp-en { font-size: 13px; color: var(--ink); }
+.vp-pos   { font-size: 11px; color: var(--body); margin-bottom: 3px; }
+.vp-en    { font-size: 13px; color: var(--ink); }
 
 /* ═══════════════════════════════════════════════════════════
-   二、实战练习 — 角色扮演浮层
+   二、全屏视图系统（课文 / 选角色 / 练习）
    ═══════════════════════════════════════════════════════════ */
 
-.rp-overlay {
-  display: none;
-  position: absolute;
-  inset: 0;
-  background: rgba(245,247,249,0.97);
-  z-index: 100;
-  padding: 20px 24px;
-}
-.rp-overlay.show { display: flex; flex-direction: column; }
+/* 所有视图默认隐藏 */
+.dlg-view { display: none; }
 
-/* 返回按钮 */
-.rp-back-btn {
+/* ── 视图2：选择角色 ──────────────────────────────── */
+.dlg-role-select-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: #f7fcf9;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.role-select-bg {
   position: absolute;
-  top: 20px;
-  left: 24px;
-  background: none;
-  border: none;
-  color: var(--green);
-  font-size: 14px;
-  font-weight: 600;
+  inset: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  object-fit: cover;
+  filter: blur(16px);
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.role-select-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 40px;
+}
+
+.role-select-heading {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.role-select-sub {
+  font-size: 0.95rem;
+  color: var(--body);
+  margin: 0;
+}
+
+.role-select-cards {
+  display: flex;
+  gap: 32px;
+  margin-top: 8px;
+}
+
+.role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 36px;
+  border-radius: var(--radius-xl);
+  border: 3px solid #d0e8d8;
+  background: #fff;
   cursor: pointer;
-  z-index: 10;
-  padding: 6px 12px;
-  border-radius: 50px;
-  transition: background 0.2s;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px rgba(34,168,110,0.06);
 }
-.rp-back-btn:hover { background: var(--green-soft); }
+.role-card:hover {
+  border-color: var(--green);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(34,168,110,0.15);
+}
 
-/* 浮层主布局 */
-.rp-layout {
+.role-card-avatar {
+  width: 96px; height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--green);
+}
+
+.role-card-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* VS 分隔 */
+.role-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+}
+.role-vs-line {
+  width: 1px;
+  height: 30px;
+  background: #d0e0d8;
+}
+.role-vs-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ccc;
+  letter-spacing: 2px;
+}
+
+.role-select-hint {
+  font-size: 0.85rem;
+  color: var(--body);
+  margin: 0;
+}
+
+/* ── 视图3：对话练习 ──────────────────────────────── */
+.dlg-practice-view {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 20px 24px;
+  background: #f5f7f9;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.practice-layout {
   display: flex;
   width: 100%;
   height: 100%;
@@ -481,97 +588,108 @@ body {
   padding-top: 28px;
 }
 
-/* ── 左侧面板 ──────────────────────────────────────────── */
+/* 左侧面板 */
 .rp-left-panel {
-  flex: 0 0 240px;
+  flex: 0 0 220px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
   align-items: center;
 }
 
-.rp-my-role {
+.rp-group {
+  width: 100%;
+  padding: 14px;
+  background: #f7fcf9;
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px;
-  background: #f7fcf9;
-  border-radius: 16px;
-  width: 100%;
+  gap: 8px;
+  margin-bottom: 12px;
 }
+
+/* 我的角色 */
+.rp-my-role { padding: 18px 14px; gap: 6px; }
 .rp-my-avatar {
-  width: 64px; height: 64px;
+  width: 72px; height: 72px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--green);
 }
-.rp-my-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+.rp-my-name { font-size: 16px; font-weight: 700; color: var(--ink); }
+.rp-my-pinyin { font-size: 12px; color: var(--body); }
 
-.rp-progress-bar-wrap {
-  width: 100%;
-  background: #f7fcf9;
-  border-radius: 14px;
-  padding: 12px 14px;
+/* 进度圆点 */
+.rp-progress-group { padding: 14px; }
+.rp-progress-dots {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 7px;
+}
+.rp-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #d8dde3;
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.rp-dot.done { background: var(--green); }
+.rp-dot.current {
+  background: var(--green);
+  transform: scale(1.3);
+  box-shadow: 0 0 0 3px rgba(34,168,110,0.25);
+  animation: dot-pulse 1.6s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(34,168,110,0.25); }
+  50%      { box-shadow: 0 0 0 8px rgba(34,168,110,0.05); }
 }
 .rp-progress-label {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--body);
   text-align: center;
-}
-.rp-progress-track {
-  height: 6px;
-  background: #e0e6f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-.rp-progress-fill {
-  height: 100%;
-  background: var(--green);
-  border-radius: 3px;
-  transition: width 0.4s ease;
-  width: 0%;
+  margin-top: 2px;
 }
 
+/* 语言开关 */
 .rp-lang-toggles {
   display: flex;
   flex-direction: column;
   gap: 8px;
   width: 100%;
   background: #f7fcf9;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 12px 14px;
+  margin-bottom: 12px;
 }
 
+/* 放弃按钮 */
 .rp-giveup-btn {
   width: 100%;
-  padding: 9px;
-  border-radius: 50px;
-  border: 2px solid #d0e0d8;
-  background: #fff;
-  color: var(--body);
-  font-size: 13px;
+  padding: 7px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: #aaa;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
-.rp-giveup-btn:hover { border-color: #e74c3c; color: #e74c3c; }
+.rp-giveup-btn:hover { color: #e74c3c; }
 
-/* ── 右侧对话区 ────────────────────────────────────────── */
+/* 右侧对话区 */
 .rp-right-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: #fff;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 8px 32px rgba(34,168,110,0.08);
   overflow: hidden;
 }
 
-/* 聊天容器 */
 .chat-container {
   flex: 1;
   overflow-y: auto;
@@ -594,14 +712,8 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.chat-bubble.left  {
-  align-self: flex-start;
-  flex-direction: row;
-}
-.chat-bubble.right {
-  align-self: flex-end;
-  flex-direction: row-reverse;
-}
+.chat-bubble.left  { align-self: flex-start; flex-direction: row; }
+.chat-bubble.right { align-self: flex-end; flex-direction: row-reverse; }
 
 .bubble-avatar {
   width: 36px; height: 36px;
@@ -619,12 +731,12 @@ body {
 
 .chat-bubble.left  .bubble-body {
   background: #f1f3f4;
-  border-radius: 16px 16px 16px 4px;
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px;
   padding: 10px 14px;
 }
 .chat-bubble.right .bubble-body {
   background: #e8a817;
-  border-radius: 16px 16px 4px 16px;
+  border-radius: var(--radius-lg) var(--radius-lg) 4px var(--radius-lg);
   padding: 10px 14px;
   color: #fff;
 }
@@ -636,7 +748,6 @@ body {
 .chat-bubble.right .bubble-pinyin,
 .chat-bubble.right .bubble-en { color: #fff; }
 
-/* 当前说话气泡 — 波纹效果 */
 .chat-bubble.speaking .bubble-body {
   box-shadow: 0 0 0 3px rgba(232,168,23,0.35);
   animation: ripple-bubble 1.2s ease-out infinite;
@@ -647,19 +758,17 @@ body {
   100% { box-shadow: 0 0 0 0 rgba(232,168,23,0); }
 }
 
-/* 用户当前待读句子 */
 .chat-bubble.current.right .bubble-body {
   border: 2.5px solid #e8a817;
   box-shadow: 0 0 0 4px rgba(232,168,23,0.15);
 }
 
-/* 系统提示气泡 */
 .chat-system {
   align-self: center;
   font-size: 12px;
   color: var(--body);
   background: #f1f3f4;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   padding: 5px 14px;
   max-width: 80%;
   text-align: center;
@@ -675,38 +784,6 @@ body {
   justify-content: center;
 }
 
-/* 角色选择 */
-.rp-role-select { text-align: center; width: 100%; }
-.rp-role-prompt {
-  font-size: 15px;
-  color: var(--body);
-  margin-bottom: 14px;
-}
-.rp-role-options { display: flex; gap: 16px; justify-content: center; }
-.rp-role-opt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 14px 20px;
-  border-radius: 16px;
-  border: 2px solid #d0e8d8;
-  background: #f7fcf9;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink);
-  transition: all 0.2s;
-}
-.rp-role-opt:hover { border-color: var(--green); background: rgba(34,168,110,0.05); }
-.rp-opt-avatar {
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--green);
-}
-
-/* 练习进行中 */
 .rp-practice-controls {
   width: 100%;
   display: flex;
@@ -715,28 +792,27 @@ body {
   gap: 10px;
 }
 
-/* 录音提示 */
-.record-hint {
-  font-size: 14px;
-  color: var(--body);
-  text-align: center;
-}
-.record-hanzi {
-  font-weight: 600;
-  color: var(--green);
-  margin-left: 4px;
-}
-
-/* 录音区域 */
-.record-area {
+/* 录音句子展示 */
+.record-sentence {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.record-sentence-label { font-size: 12px; color: var(--body); }
+.record-sentence-text { font-size: 22px; font-weight: 700; color: var(--green); }
+
+/* 录音按钮区 */
+.record-area-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .record-btn {
-  width: 56px;
-  height: 56px;
+  width: 72px; height: 72px;
   border-radius: 50%;
   border: none;
   background: #e74c3c;
@@ -745,25 +821,35 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 14px rgba(231,76,60,0.35);
+  box-shadow: 0 6px 20px rgba(231,76,60,0.40);
   transition: background 0.2s, transform 0.15s;
   position: relative;
 }
 .record-btn:hover { background: #c0392b; transform: scale(1.06); }
+.record-btn:active { transform: scale(0.95); }
 .record-btn.recording {
   background: #c0392b;
-  animation: rec-pulse 1s ease-in-out infinite;
+  animation: rec-pulse 0.8s ease-in-out infinite;
 }
-.record-icon { font-size: 20px; }
+.record-icon { font-size: 28px; }
 
 @keyframes rec-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.55); }
-  50%       { box-shadow: 0 0 0 14px rgba(231,76,60,0); }
+  50%      { box-shadow: 0 0 0 18px rgba(231,76,60,0); }
 }
 
-.play-rec-btn {
-  padding: 8px 16px;
-  border-radius: 50px;
+.record-hint-text { font-size: 12px; color: #999; }
+
+/* 回放 + 完成 并排 */
+.record-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+.record-actions .play-rec-btn {
+  padding: 9px 18px;
+  border-radius: var(--radius-full);
   border: 2px solid var(--green);
   background: #fff;
   color: var(--green);
@@ -772,23 +858,22 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
-.play-rec-btn:hover { background: var(--green-soft); }
+.record-actions .play-rec-btn:hover { background: var(--green-soft); }
 
-/* 完成按钮 */
-.rp-action-done {
-  padding: 10px 36px;
-  border-radius: 50px;
+.record-actions .rp-action-done {
+  padding: 9px 24px;
+  border-radius: var(--radius-full);
   border: none;
   background: var(--green);
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(34,168,110,0.3);
   transition: background 0.2s, transform 0.15s;
 }
-.rp-action-done:hover { background: var(--green-deep); transform: scale(1.03); }
-.rp-action-done:disabled {
+.record-actions .rp-action-done:hover { background: var(--green-deep); transform: scale(1.03); }
+.record-actions .rp-action-done:disabled {
   background: #ccc;
   cursor: not-allowed;
   box-shadow: none;
@@ -815,15 +900,11 @@ body {
   justify-content: center;
   box-shadow: 0 4px 20px rgba(46,204,113,0.4);
 }
-.rp-result-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--ink);
-}
+.rp-result-title { font-size: 20px; font-weight: 700; color: var(--ink); }
 .rp-result-btns { display: flex; gap: 12px; margin-top: 4px; }
 .rp-result-btn {
   padding: 9px 22px;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   border: none;
   font-size: 14px;
   font-weight: 600;
@@ -843,6 +924,6 @@ body {
 }
 .rp-result-done:hover { background: var(--green-deep); }
 
-/* ── 进度条进度数值隐藏控制 ────────────────────────────── */
+/* ── 拼音/英文隐藏控制 ────────────────────── */
 .pinyin-hidden .bubble-pinyin { visibility: hidden; }
 .english-hidden .bubble-en { visibility: hidden; }

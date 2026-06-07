@@ -30,7 +30,7 @@ body {
 /* ── CARD ─────────────────────────────────────────────────── */
 .exercise-card {
   background: #fff;
-  border-radius: 24px;
+  border-radius: var(--radius-xl);
   padding: 45px 40px 28px;
   width: 100%;
   height: 100%;
@@ -95,7 +95,7 @@ body {
   color: #fff;
   background: var(--green);
   border: none;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   cursor: pointer;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   align-self: center;
@@ -154,7 +154,7 @@ body {
   width: 36px;
   height: 20px;
   background: #ccc;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   position: relative;
   transition: background 0.2s;
 }
@@ -185,7 +185,7 @@ body {
   padding: 6px 18px;
   background: var(--green);
   color: #fff;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -219,7 +219,7 @@ body {
   bottom: 0;
   width: 4px;
   background: var(--green);
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 /* ── PROGRESS BAR ────────────────────────────────────────── */
@@ -240,13 +240,13 @@ body {
   flex: 1;
   height: 8px;
   background: #e0e6f0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
 }
 .ex-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, var(--green), #3acf8a);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   transition: width 0.3s ease;
 }
 .ex-progress-text {
@@ -292,7 +292,7 @@ body {
   gap: 14px;
   padding: 14px 20px 14px 14px;
   border: 2px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: #fff;
   font-size: 1.05rem;
   color: var(--ink);
@@ -364,7 +364,7 @@ body {
 .fill-input {
   padding: 14px 20px;
   border: 2px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   font-size: 1.1rem;
   font-family: inherit;
   width: 100%;
@@ -381,7 +381,7 @@ body {
 .fill-opt-card {
   padding: 10px 20px;
   border: 2px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: #fff;
   font-size: 1.1rem;
   font-family: inherit;
@@ -409,7 +409,7 @@ body {
   gap: 10px;
   background: #f9fafb;
   border: 1.5px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 10px 16px;
 }
 .fill-q-num {
@@ -426,7 +426,7 @@ body {
   color: var(--ink);
   word-break: break-word;
 }
-}
+
 .blank-slot {
   display: inline-block;
   min-width: 120px;
@@ -437,7 +437,7 @@ body {
   color: var(--blue);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
-  border-radius: 4px 4px 0 0;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
   text-align: center;
   margin: 0 3px;
 }
@@ -449,7 +449,7 @@ body {
   font-size: 1.1rem;
   background: rgba(34,168,110,0.12);
   border: 1.5px solid var(--green);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--green-deep);
   font-weight: 600;
   cursor: pointer;
@@ -460,7 +460,7 @@ body {
 .filled-slot.opt-wrong   { background: rgba(224,85,85,0.12); border-color: var(--red);   color: var(--red); }
 
 .fill-shared-options {
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 14px 20px 10px;
 }
 .fill-options-label {
@@ -492,7 +492,7 @@ body {
 .match-btn {
   padding: 12px 20px;
   border: 2px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: #fff;
   font-size: 1.1rem;
   font-family: inherit;
@@ -567,7 +567,7 @@ body {
   background: var(--green);
   color: #fff;
   border: none;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   font-size: 1.05rem;
   font-family: inherit;
   font-weight: 700;
@@ -675,7 +675,7 @@ body {
 .arrange-answer {
   min-height: 64px;
   border: 2px dashed var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   padding: 8px;
   margin: 0 auto 20px;
   display: flex;
@@ -710,7 +710,7 @@ body {
 .arrange-answer-btn {
   padding: 12px 20px;
   border: 2px solid var(--arrange-fill);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--arrange-fill-soft);
   font-size: 1.1rem;
   color: var(--arrange-fill);
@@ -743,7 +743,7 @@ body {
 .arrange-pool-btn {
   padding: 12px 20px;
   border: 2px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: #fff;
   font-size: 1.1rem;
   font-family: inherit;
@@ -829,7 +829,7 @@ body {
   position: absolute;
   inset: 0;
   background-color: #fff;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   border: 2px solid #c0c8d8;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='none' stroke='%23dde4f0' stroke-width='1' stroke-dasharray='4 2'/%3E%3Cline x1='50%25' y1='0' x2='50%25' y2='100%25' stroke='%23dde4f0' stroke-width='1' stroke-dasharray='4 2'/%3E%3Cline x1='0' y1='50%25' x2='100%25' y2='50%25' stroke='%23dde4f0' stroke-width='1' stroke-dasharray='4 2'/%3E%3Cline x1='0' y1='0' x2='100%25' y2='100%25' stroke='%23dde4f0' stroke-width='1' stroke-dasharray='4 2'/%3E%3Cline x1='100%25' y1='0' x2='0' y2='100%25' stroke='%23dde4f0' stroke-width='1' stroke-dasharray='4 2'/%3E%3C/svg%3E");
   background-size: 100% 100%;
@@ -843,7 +843,7 @@ body {
 }
 .trace-btn {
   padding: 8px 18px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 2px solid var(--green);
   background: var(--green-soft);
   color: var(--green);
@@ -905,7 +905,7 @@ body {
 .video-btn {
   padding: 16px 36px;
   border: none;
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   font-size: 1.2rem;
   font-weight: 700;
   font-family: inherit;
@@ -985,7 +985,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -1010,7 +1010,7 @@ body {
 .stats-btn {
   padding: 14px 40px;
   border: none;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   font-size: 1.05rem;
   font-weight: 700;
   font-family: inherit;
