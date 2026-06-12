@@ -532,6 +532,7 @@ function loadSlide(index, isInit) {
 
   // exercise / display / video / dialogue 页面：让点击穿透到 iframe（选项/按钮可点）
   clickInterceptor.style.pointerEvents = (slide.type === 'exercise' || slide.type === 'vocab' || slide.type === 'display' || slide.type === 'video' || slide.type === 'dialogue') ? 'none' : 'auto';
+  clickInterceptor.style.display = (slide.type === 'video') ? 'none' : '';
 
   // 统一音频加载：所有 slide 类型，有 audio 字段就加载旁白
   if (slide.audio) {
@@ -573,6 +574,7 @@ function loadSlide(index, isInit) {
     nextFrame.style.top = '0';
     nextFrame.style.left = '0';
     pauseScreen.style.display = 'none'; // 立即隐藏，不遮挡视频
+    clickInterceptor.style.display = 'none'; // 避免阻塞 iframe 内视频控件的 touch 事件
     playing = false;
     statusIndicator.className = 'status-indicator paused';
     statusText.textContent = '播放视频中';
