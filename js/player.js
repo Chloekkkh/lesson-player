@@ -495,12 +495,15 @@ function loadSlide(index, isInit) {
   // 向 iframe 发送当前页的题目数据（video 类型先加载 iframe）
   if (nextFrame) {
     if (slide.type === 'video' && nextFrame._videoDeferred) {
+      nextFrame._videoDeferred = false;
       var iframeOnload = function() {
         nextFrame.removeEventListener('load', iframeOnload);
         sendSlideData(nextFrame, slide);
       };
       nextFrame.addEventListener('load', iframeOnload);
       nextFrame.src = 'courses/' + course.id + '/slides/' + slide.index + '.html';
+    } else if (slide.type === 'video') {
+      // 重新进入视频页：不发 slideData，保持视频当前状态（暂停、进度不变）
     } else {
       // sendSlideData 内部会检查 _ready：未加载完成时自动积压，等 load 事件触发后再发
       sendSlideData(nextFrame, slide);

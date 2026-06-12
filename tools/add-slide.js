@@ -173,7 +173,6 @@ function videoTemplate(slideNum, courseTitle) {
       if (msg.type === 'slideData') {
         if (msg.data.video) {
           videoEl.src = '/courses/' + msg.data.courseId + '/' + msg.data.video;
-          videoEl.play().catch(function() {});
         }
       }
       if (msg.type === 'stopAudio') videoEl.pause();
