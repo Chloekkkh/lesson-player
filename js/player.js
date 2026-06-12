@@ -101,17 +101,22 @@ document.addEventListener('click', function() {
   volPopup.classList.remove('visible');
 });
 
-function updateVolumeIcon(vol) {
+function updateVolumeIcon(v) {
   var high = btnVolume.querySelector('.icon-vol-high');
   var low = btnVolume.querySelector('.icon-vol-low');
   var mute = btnVolume.querySelector('.icon-vol-mute');
   high.style.display = 'none';
   low.style.display = 'none';
   mute.style.display = 'none';
-  if (vol == 0) mute.style.display = '';
-  else if (vol < 0.1) low.style.display = '';
+  if (v <= 0) mute.style.display = '';
+  else if (v < 30) low.style.display = '';
   else high.style.display = '';
 }
+
+// 防止点击滑块时弹窗关闭
+volPopup.addEventListener('click', function(e) {
+  e.stopPropagation();
+});
 
 /* ═══════════════════════════════════════════════════════
    INIT — 初始化播放器

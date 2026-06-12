@@ -358,13 +358,13 @@ body.nav-open {
   position: absolute;
   bottom: calc(100% + 12px);
   left: 50%;
-  transform: translateX(-50%) rotate(-90deg);
+  transform: translateX(-50%);
   transform-origin: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 28px;
+  width: 130px;
+  height: 36px;
   background: rgba(255,255,255,0.25);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -380,7 +380,7 @@ body.nav-open {
 .vol-slider-pop {
   -webkit-appearance: none;
   appearance: none;
-  width: 56px;
+  width: 100px;
   height: 4px;
   border-radius: var(--radius-xs);
   background: rgba(255,255,255,0.5);
