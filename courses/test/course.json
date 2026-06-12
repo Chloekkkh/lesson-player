@@ -45,6 +45,16 @@
     },
     {
       "index": 3,
+      "type": "content",
+      "title": "第 4 页",
+      "audio": "assets/ppt/audio/lxjj.m4a",
+      "subtitles": [],
+      "spotlights": [],
+      "spotlightZones": [],
+      "backgroundImage": "assets/ppt/img/1.png"
+    },
+    {
+      "index": 4,
       "type": "video",
       "title": "视频学习",
       "video": "assets/vedio/vedio2.mp4",

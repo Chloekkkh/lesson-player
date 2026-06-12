@@ -3,60 +3,73 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>test - 视频 2</title>
-  <link rel="stylesheet" href="/css/shared.css">
-  <link rel="stylesheet" href="/css/exercise.css">
+  <title>test - 第3页</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Microsoft YaHei UI","PingFang SC",sans-serif;
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      width: 1200px;
+      height: 675px;
+      background-size: cover;
+      background-position: center;
+      background-color: #f5f5f5;
+    }
+    .hotspot {
+      position: absolute;
+      background: transparent;
+    }
+  </style>
 </head>
 <body>
-  <div class="video-slide">
-    <video id="videoEl" playsinline controls preload="auto"></video>
-    <div class="video-end-overlay" id="videoEndOverlay">
-      <button class="video-btn video-btn-replay" id="btnReplay">&#8634; 重播</button>
-      <button class="video-btn video-btn-next"   id="btnNext">&#9654;&#9654; 下一页</button>
-    </div>
-  </div>
+  <div class="slide-bg"></div>
+  <div id="hotspot-container"></div>
 
+  <script src="/js/spotlight.js"></script>
   <script>
-    function postToParent(action) {
-      try { parent.postMessage({ type: 'playerMessage', action: action }, '*'); } catch(e) {}
+    Spotlight.init({ dimness: 0.75, container: document.body });
+
+    function renderHotspots(zones) {
+      var container = document.getElementById('hotspot-container');
+      zones.forEach(function(zone) {
+        var div = document.createElement('div');
+        div.id = zone.elementId;
+        div.className = 'hotspot';
+        div.style.cssText = 'position:absolute;left:' + zone.x + '%;top:' + zone.y + '%;width:' + zone.w + '%;height:' + zone.h + '%;';
+        container.appendChild(div);
+      });
     }
 
-    var videoEl   = document.getElementById('videoEl');
-    var overlay   = document.getElementById('videoEndOverlay');
-    var btnReplay = document.getElementById('btnReplay');
-    var btnNext   = document.getElementById('btnNext');
-
-    btnReplay.addEventListener('click', function(e) {
-      e.stopPropagation();
-      videoEl.currentTime = 0;
-      videoEl.play().catch(function() {});
-      overlay.style.display = 'none';
-    });
-
-    btnNext.addEventListener('click', function(e) {
-      e.stopPropagation();
-      postToParent('displayComplete');
-    });
-
-    videoEl.addEventListener('ended', function() {
-      overlay.style.display = 'flex';
-    });
-
-    videoEl.addEventListener('error', function() {
-      console.error('Video load failed');
-      overlay.style.display = 'flex';
-    });
+    var zonesRendered = false;
 
     window.addEventListener('message', function(e) {
       var msg = e.data;
       if (!msg) return;
+
+      if (msg.spotlightZones && !zonesRendered) {
+        zonesRendered = true;
+        renderHotspots(msg.spotlightZones);
+      }
+
       if (msg.type === 'slideData') {
-        if (msg.data.video) {
-          videoEl.src = '/courses/' + msg.data.courseId + '/' + msg.data.video;
-          videoEl.play().catch(function() {});
+        if (msg.data.backgroundImage) {
+          var bg = document.querySelector('.slide-bg');
+          if (bg) bg.style.backgroundImage = 'url(/courses/' + msg.data.courseId + '/' + msg.data.backgroundImage + ')';
+        }
+        if (msg.data.spotlightZones && !zonesRendered) {
+          zonesRendered = true;
+          renderHotspots(msg.data.spotlightZones);
         }
       }
-      if (msg.type === 'stopAudio') videoEl.pause();
+      if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
+      if (msg.type === 'spotlightClear') Spotlight.clear();
     });
   </script>
 </body>
