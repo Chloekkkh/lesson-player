@@ -57,6 +57,12 @@
         }
       ],
       "showPinyin": true
+    },
+    {
+      "index": 4,
+      "type": "video",
+      "title": "视频学习",
+      "video": ""
     }
   ]
 }

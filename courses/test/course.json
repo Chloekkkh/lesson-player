@@ -1,0 +1,54 @@
+{
+  "id": "test",
+  "title": "test",
+  "description": "",
+  "author": "teacher",
+  "created": "2026-06-12",
+  "slides": [
+    {
+      "index": 1,
+      "type": "video",
+      "title": "视频学习",
+      "video": "assets/vedio/vedio1.mp4",
+      "audio": ""
+    },
+    {
+      "index": 2,
+      "type": "exercise",
+      "title": "练习",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "read",
+          "question": "李老师昨天通过几轮调整，生成了一组基本可用的 HSK5 级阅读练习题。现在，她想把这次经验整理成以后可以复用的教学模板。如果要整理成标准化教学模板，下面三个选项中，哪一种做法更合适？",
+          "audio": "",
+          "options": [
+            {
+              "id": "A",
+              "text": "把昨天那组题的完整提示语保存下来，下次只替换主题词和关键词。"
+            },
+            {
+              "id": "B",
+              "text": "从昨天的生成结果和修改过程里，提取稳定结构、可替换字段和教师核查点，整理成模板。"
+            },
+            {
+              "id": "C",
+              "text": "为了保持稳定，后续题目尽量延续昨天那组题的主题类型、设问角度和答案呈现方式。"
+            }
+          ],
+          "answer": "A",
+          "layout": "vertical"
+        }
+      ],
+      "audio": "",
+      "showPinyin": true
+    },
+    {
+      "index": 3,
+      "type": "video",
+      "title": "视频学习",
+      "video": "assets/vedio/vedio2.mp4",
+      "audio": ""
+    }
+  ]
+}

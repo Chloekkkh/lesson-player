@@ -127,17 +127,14 @@ function videoTemplate(slideNum, courseTitle) {
 </head>
 <body>
   <div class="video-slide">
-    <video id="videoEl" playsinline></video>
+    <video id="videoEl" playsinline controls preload="auto"></video>
     <div class="video-end-overlay" id="videoEndOverlay">
       <button class="video-btn video-btn-replay" id="btnReplay">&#8634; 重播</button>
       <button class="video-btn video-btn-next"   id="btnNext">&#9654;&#9654; 下一页</button>
     </div>
   </div>
 
-  <script src="/js/spotlight.js"></script>
   <script>
-    Spotlight.init({ dimness: 0.75, container: document.body });
-
     function postToParent(action) {
       try { parent.postMessage({ type: 'playerMessage', action: action }, '*'); } catch(e) {}
     }
@@ -150,7 +147,7 @@ function videoTemplate(slideNum, courseTitle) {
     btnReplay.addEventListener('click', function(e) {
       e.stopPropagation();
       videoEl.currentTime = 0;
-      videoEl.play();
+      videoEl.play().catch(function() {});
       overlay.style.display = 'none';
     });
 
@@ -163,17 +160,21 @@ function videoTemplate(slideNum, courseTitle) {
       overlay.style.display = 'flex';
     });
 
+    videoEl.addEventListener('error', function() {
+      console.error('Video load failed');
+      overlay.style.display = 'flex';
+    });
+
     window.addEventListener('message', function(e) {
       var msg = e.data;
       if (!msg) return;
       if (msg.type === 'slideData') {
         if (msg.data.video) {
           videoEl.src = '/courses/' + msg.data.courseId + '/' + msg.data.video;
-          videoEl.play();
+          videoEl.play().catch(function() {});
         }
       }
-      if (msg.type === 'spotlight') Spotlight.spotlight(msg.elementId);
-      if (msg.type === 'spotlightClear') Spotlight.clear();
+      if (msg.type === 'stopAudio') videoEl.pause();
     });
   </script>
 </body>

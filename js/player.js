@@ -280,7 +280,11 @@ function buildIframes(courseId) {
     iframe.style.zIndex = i === 0 ? '2' : '1';  // z-index 用内联保留，opacity/pointerEvents 交给 CSS .active 类
 
     // 设置 iframe 加载的页面路径（video 类型延迟到切换时再加载）
-    iframe.src = slide.type === 'video' ? '' : 'courses/' + courseId + '/slides/' + slide.index + '.html';
+    if (slide.type === 'video') {
+      iframe._videoDeferred = true;
+    } else {
+      iframe.src = 'courses/' + courseId + '/slides/' + slide.index + '.html';
+    }
 
     // 监听 iframe load 事件，可靠地等待其 JS 就绪后再发送数据
     iframe.addEventListener('load', function() {
@@ -483,7 +487,7 @@ function loadSlide(index, isInit) {
 
   // 向 iframe 发送当前页的题目数据（video 类型先加载 iframe）
   if (nextFrame) {
-    if (slide.type === 'video' && !nextFrame.src) {
+    if (slide.type === 'video' && nextFrame._videoDeferred) {
       var iframeOnload = function() {
         nextFrame.removeEventListener('load', iframeOnload);
         sendSlideData(nextFrame, slide);
@@ -551,6 +555,8 @@ function loadSlide(index, isInit) {
   if (slide.type === 'video') {
     // 视频由 iframe 内部自己管理
     // 播完后 iframe 发 displayComplete → player 翻页
+    nextFrame.style.zIndex = '5'; // 高于 clickInterceptor(3)，使视频控件可交互
+    pauseScreen.style.display = 'none'; // 立即隐藏，不遮挡视频
     playing = false;
     statusIndicator.className = 'status-indicator paused';
     statusText.textContent = '播放视频中';
