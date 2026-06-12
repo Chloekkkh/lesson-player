@@ -320,6 +320,8 @@ function buildIframes(courseId) {
  * @param {HTMLIFrameElement} frame - 要缩放的 iframe
  */
 function applyTransform(frame) {
+  // 视频 iframe 不需要 transform（原生控件在 transform 下拖拽失效）
+  if (frame._skipTransform) return;
   var scaleX   = player.offsetWidth  / SLIDE_W;  // 宽度缩放比例
   var scaleY   = player.offsetHeight / SLIDE_H; // 高度缩放比例
   var scale    = Math.min(scaleX, scaleY);       // 取较小值（不变形）
@@ -555,7 +557,13 @@ function loadSlide(index, isInit) {
   if (slide.type === 'video') {
     // 视频由 iframe 内部自己管理
     // 播完后 iframe 发 displayComplete → player 翻页
-    nextFrame.style.zIndex = '5'; // 高于 clickInterceptor(3)，使视频控件可交互
+    // 去掉 transform 缩放，让视频原生控件（进度条拖拽）正常工作
+    nextFrame._skipTransform = true;
+    nextFrame.style.transform = 'none';
+    nextFrame.style.width = '100%';
+    nextFrame.style.height = '100%';
+    nextFrame.style.top = '0';
+    nextFrame.style.left = '0';
     pauseScreen.style.display = 'none'; // 立即隐藏，不遮挡视频
     playing = false;
     statusIndicator.className = 'status-indicator paused';
