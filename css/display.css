@@ -14,8 +14,8 @@
   --example-bg: #f5f7fa;
   --shadow-sm:  0 2px 8px rgba(0,0,0,0.06);
   --shadow-hover: 0 12px 32px rgba(0,0,0,0.14);
-  --radius-card: 20px;
-  --radius-item: 16px;
+  --radius-card: var(--radius-lg);
+  --radius-item: var(--radius-lg);
 }
 
 /* ── DISPLAY CARD ──────────────────────────────────────── */
@@ -133,7 +133,7 @@ div#exampleCol {
   color: #fff;
   background: var(--green);
   padding: 3px 12px;
-  border-radius: 20px;
+  border-radius: var(--radius-lg);
   white-space: nowrap;
   letter-spacing: 0.02em;
 }
@@ -232,7 +232,7 @@ div#exampleCol {
 
 .vocab-next-btn {
   padding: 12px 40px;
-  border-radius: 50px;
+  border-radius: var(--radius-full);
   border: none;
   background: var(--green);
   color: #fff;

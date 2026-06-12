@@ -45,7 +45,7 @@ body {
 .toggle-switch input { display: none; }
 .toggle-switch .toggle-slider {
   width: 36px; height: 20px;
-  background: #ccc; border-radius: 20px;
+  background: #ccc; border-radius: var(--radius-lg);
   position: relative; transition: background 0.2s;
 }
 .toggle-switch .toggle-slider::before {

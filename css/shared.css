@@ -19,6 +19,12 @@
   --yellow-soft: rgba(212, 160, 23, 0.1);
   --shadow:    0 28px 60px rgba(32, 55, 102, 0.08);
   --radius:    26px;
+  --radius-xs:  4px;
+  --radius-sm:  8px;
+  --radius-md:  14px;
+  --radius-lg:  20px;
+  --radius-xl:  24px;
+  --radius-full: 50px;
 }
 
 * {
