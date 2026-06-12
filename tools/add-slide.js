@@ -126,6 +126,7 @@ function videoTemplate(slideNum, courseTitle) {
   <title>${courseTitle} - 视频 ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
   <link rel="stylesheet" href="/css/exercise.css">
+  <style>body{width:100%;height:100%}.video-slide{width:100%;height:100%}</style>
 </head>
 <body>
   <div class="video-slide">

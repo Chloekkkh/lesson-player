@@ -57,6 +57,7 @@ var statusIndicator = $('statusIndicator'); // 状态指示点（绿/红/黄）
 var statusText      = $('statusText');      // 状态文字（播放中/已暂停/请确认答案）
 var progressFill    = $('progressFill');     // 进度条填充条
 var progressTimeEl  = $('progressTime');     // 进度时间文字
+var progressBarWrap = document.querySelector('.progress-bar-wrap');
 var audioEl         = $('audioEl');         // HTML5 音频元素
 var confirmOverlay  = $('confirmOverlay');   // 练习题确认按钮浮层
 var confirmBtn      = $('confirmBtn');      // 确认答案按钮
@@ -325,8 +326,6 @@ function buildIframes(courseId) {
  * @param {HTMLIFrameElement} frame - 要缩放的 iframe
  */
 function applyTransform(frame) {
-  // 视频 iframe 不需要 transform（原生控件在 transform 下拖拽失效）
-  if (frame._skipTransform) return;
   var scaleX   = player.offsetWidth  / SLIDE_W;  // 宽度缩放比例
   var scaleY   = player.offsetHeight / SLIDE_H; // 高度缩放比例
   var scale    = Math.min(scaleX, scaleY);       // 取较小值（不变形）
@@ -511,6 +510,7 @@ function loadSlide(index, isInit) {
   }
 
   // 重置进度条
+  if (progressBarWrap) progressBarWrap.style.visibility = '';
   progressFill.style.width = '0%';
   progressTimeEl.textContent = formatTime(timerTotal / 1000) + ' / ' + formatTime(timerTotal / 1000);
 
@@ -564,17 +564,8 @@ function loadSlide(index, isInit) {
 
   // ═══ 视频页（video）═══
   if (slide.type === 'video') {
-    // 视频由 iframe 内部自己管理
-    // 播完后 iframe 发 displayComplete → player 翻页
-    // 去掉 transform 缩放，让视频原生控件（进度条拖拽）正常工作
-    nextFrame._skipTransform = true;
-    nextFrame.style.transform = 'none';
-    nextFrame.style.width = '100%';
-    nextFrame.style.height = '100%';
-    nextFrame.style.top = '0';
-    nextFrame.style.left = '0';
-    pauseScreen.style.display = 'none'; // 立即隐藏，不遮挡视频
-    clickInterceptor.style.display = 'none'; // 避免阻塞 iframe 内视频控件的 touch 事件
+    pauseScreen.style.display = 'none';
+    if (progressBarWrap) progressBarWrap.style.visibility = 'hidden';
     playing = false;
     statusIndicator.className = 'status-indicator paused';
     statusText.textContent = '播放视频中';
