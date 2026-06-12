@@ -90,6 +90,7 @@ function videoTemplate(slideNum, courseTitle) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${courseTitle} - 视频 ${slideNum}</title>
   <link rel="stylesheet" href="/css/shared.css">
+  <link rel="stylesheet" href="/css/exercise.css">
 </head>
 <body>
   <div class="video-slide">
